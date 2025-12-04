@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "noEmitOnError": true,
+    "target": "es2024",
+    "module": "es2022",
+    "moduleResolution": "node",
+    "jsx": "react",
+    "jsxFactory": "h",
+    "jsxFragmentFactory": "Fragment",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
+  }
+}

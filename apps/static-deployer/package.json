@@ -1,0 +1,29 @@
+{
+  "name": "application-template",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "/src/index",
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "scripts": {
+    "build": "tsx ../../compiler/compiler.ts temp/index.ts temp/index.ts && rollup -c rollup.config.mjs && jco componentize --wit ../../webassembly/component-bindings.wit --world-name hostbindings  --out out/component.wasm --disable=all  out/index.js"
+  },
+  "devDependencies": {
+    "@bytecodealliance/componentize-js": "^0.18.4",
+    "@bytecodealliance/jco": "^1.15.2",
+    "@bytecodealliance/preview2-shim": "^0.17.4",
+    "@rollup/plugin-commonjs": "^28.0.6",
+    "@rollup/plugin-node-resolve": "^16.0.1",
+    "@rollup/plugin-typescript": "^12.1.4",
+    "rollup": "^4.53.2",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.2"
+  },
+  "dependencies": {
+    "lucide-preact": "^0.553.0",
+    "preact": "^10.27.2",
+    "preact-render-to-string": "^6.6.1",
+    "vastrum-lib": "file:../../application-lib"
+  }
+}

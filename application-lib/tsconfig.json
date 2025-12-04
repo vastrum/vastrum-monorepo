@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "es2024",
+    "lib": ["ES2024"],
+    "moduleDetection": "force",
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "strict": true,
+    //"noUnusedLocals": true,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "skipLibCheck": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "strictPropertyInitialization": false,
+    "noImplicitAny": false
+  },
+  "include": ["src"]
+}

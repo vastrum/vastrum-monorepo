@@ -1,0 +1,23 @@
+package volans:component;
+
+
+world hostbindings {
+    import runtimebindings : interface {   
+        //Metadata
+        blocktime: func() -> u64;
+
+        //Register pages
+        registerstaticroute: func(route: string, html: string);
+        //register_route: func(route: string, data: string, templatePath: string);
+        
+        //Database operations
+        dbquery: func(json: string) -> string;
+        dbcreatetable: func(json: string);
+        dbupdateentry: func(json: string);
+        dbinsertentry: func(json: string);    
+    
+    }
+    export contractbindings : interface {
+      makecall: func(s: string) -> string;
+    }
+}

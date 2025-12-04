@@ -1,0 +1,33 @@
+[package]
+name = "node"
+version = "1.0.0"
+edition = "2024"
+
+
+[dependencies]
+bytes = "1.10.1"
+ed25519-consensus = "2.1.0"
+futures = "0.3.31"
+tokio = { version = "1.47.1", features = ["full", "tracing"] }
+tokio-stream = "0.1.17"
+tokio-util = { version = "0.7.16", features = ["full"]}
+tracing = "0.1.41"
+tracing-subscriber = {version = "0.3.20", features = ["fmt", "ansi", "env-filter", "tracing-log"]}
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+serde_repr = "0.1"
+rand = "0.8.5"
+rocksdb = "0.24.0"
+wasmtime = {version = "34.0", features = ["cranelift"]} 
+wasmtime-wasi = "34.0"
+rusqlite = { version = "0.37.0", features = ["bundled"] }
+axum = { version = "0.7.9", features = ["ws"] }
+tower = "0.5.2"
+tower-http = { version = "0.6", features = ["cors"] }
+shared-types = { path = "../shared-types" }
+sha2 = "0.10.9"
+borsh = {version = "1.6.0", features = ["derive"]}
+hex = "0.4"
+
+[dev-dependencies]
+faux = "^0.1"
