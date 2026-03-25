@@ -1,0 +1,22 @@
+[package]
+name = "runtime-tests"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+name = "example_abi"
+path = "src/lib.rs"
+
+[dependencies]
+vastrum-abi.workspace = true
+runtime-tests-abi = { path = "../abi" }
+vastrum-native-lib.workspace = true
+vastrum-shared-types.workspace = true
+vastrum-rpc-client.workspace = true
+tokio = { version = "1.49.0", features = ["full", "tracing"] }
+serde = "1.0"
+serde_json = "1.0"
+
+[dev-dependencies]
+serial_test = "3"
+

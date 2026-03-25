@@ -1,0 +1,338 @@
+@import "tailwindcss";
+
+@theme {
+    --color-app-bg-secondary: #ffffff;
+    --color-app-border: #e5e7eb;
+    --color-app-text-primary: #374151;
+    --color-app-text-secondary: #6b7280;
+    --color-app-accent: #0088cc;
+}
+
+@layer base {
+    button,
+    [role="button"] {
+        cursor: pointer;
+    }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
+  background-color: #eef0f3;
+  color: #333;
+}
+
+
+.category-badge:hover {
+  opacity: 0.8;
+}
+
+.tag:hover {
+  background-color: #ddd;
+}
+
+.btn:hover {
+  opacity: 0.9;
+}
+
+.quote-btn:hover {
+  color: #666 !important;
+  border-color: #bbb !important;
+}
+
+.page-btn:hover:not(:disabled) {
+  background-color: #f5f5f5 !important;
+  border-color: #bbb !important;
+}
+
+
+.input-field {
+  width: 100%;
+  background: #fff;
+  border: 1px solid #e9e9e9;
+  color: #333;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 14px;
+  transition: border-color 0.15s;
+}
+
+.input-field:focus {
+  outline: none;
+  border-color: #08c;
+}
+
+/* Markdown content styles */
+.markdown-content {
+  color: #333;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.markdown-content > *:first-child {
+  margin-top: 0;
+}
+
+.markdown-content > *:last-child {
+  margin-bottom: 0;
+}
+
+/* Headings */
+.markdown-content h1,
+.markdown-content h2,
+.markdown-content h3,
+.markdown-content h4,
+.markdown-content h5,
+.markdown-content h6 {
+  margin: 1.5em 0 0.5em;
+  font-weight: 600;
+  line-height: 1.3;
+  color: #222;
+}
+
+.markdown-content h1 { font-size: 1.5em; }
+.markdown-content h2 { font-size: 1.3em; }
+.markdown-content h3 { font-size: 1.15em; }
+.markdown-content h4 { font-size: 1em; }
+.markdown-content h5 { font-size: 0.9em; }
+.markdown-content h6 { font-size: 0.85em; color: #666; }
+
+/* Paragraphs */
+.markdown-content p {
+  margin: 0.75em 0;
+}
+
+/* Links */
+.markdown-content a {
+  color: #08c;
+  text-decoration: none;
+}
+
+.markdown-content a:hover {
+  text-decoration: underline;
+}
+
+/* Bold and italic */
+.markdown-content strong {
+  font-weight: 600;
+}
+
+.markdown-content em {
+  font-style: italic;
+}
+
+/* Strikethrough */
+.markdown-content del,
+.markdown-content s {
+  text-decoration: line-through;
+  color: #919191;
+}
+
+/* Inline code */
+.markdown-content code {
+  background-color: #f4f4f4;
+  padding: 0.2em 0.4em;
+  border-radius: 3px;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 0.9em;
+}
+
+/* Code blocks */
+.markdown-content pre {
+  background-color: #1e1e1e;
+  border-radius: 6px;
+  padding: 16px;
+  overflow-x: auto;
+  margin: 1em 0;
+}
+
+.markdown-content pre code {
+  background: none;
+  padding: 0;
+  color: #d4d4d4;
+  font-size: 0.85em;
+  line-height: 1.5;
+}
+
+/* Highlight.js theme (VS Code dark) */
+.markdown-content .hljs-keyword { color: #569cd6; }
+.markdown-content .hljs-string { color: #ce9178; }
+.markdown-content .hljs-number { color: #b5cea8; }
+.markdown-content .hljs-comment { color: #6a9955; }
+.markdown-content .hljs-function { color: #dcdcaa; }
+.markdown-content .hljs-class { color: #4ec9b0; }
+.markdown-content .hljs-variable { color: #9cdcfe; }
+.markdown-content .hljs-operator { color: #d4d4d4; }
+.markdown-content .hljs-punctuation { color: #d4d4d4; }
+.markdown-content .hljs-property { color: #9cdcfe; }
+.markdown-content .hljs-attr { color: #9cdcfe; }
+.markdown-content .hljs-built_in { color: #4ec9b0; }
+.markdown-content .hljs-title { color: #dcdcaa; }
+.markdown-content .hljs-params { color: #9cdcfe; }
+.markdown-content .hljs-literal { color: #569cd6; }
+.markdown-content .hljs-type { color: #4ec9b0; }
+.markdown-content .hljs-meta { color: #c586c0; }
+.markdown-content .hljs-regexp { color: #d16969; }
+.markdown-content .hljs-symbol { color: #b5cea8; }
+.markdown-content .hljs-tag { color: #569cd6; }
+.markdown-content .hljs-name { color: #569cd6; }
+.markdown-content .hljs-selector-tag { color: #d7ba7d; }
+.markdown-content .hljs-selector-id { color: #d7ba7d; }
+.markdown-content .hljs-selector-class { color: #d7ba7d; }
+
+/* Lists */
+.markdown-content ul,
+.markdown-content ol {
+  margin: 0.75em 0;
+  padding-left: 1.5em;
+}
+
+.markdown-content li {
+  margin: 0.25em 0;
+}
+
+.markdown-content li > ul,
+.markdown-content li > ol {
+  margin: 0.25em 0;
+}
+
+/* Blockquotes - Discourse-style quote cards */
+.markdown-content blockquote {
+  margin: 1em 0;
+  padding: 12px 16px;
+  border: 1px solid #e1e3e5;
+  border-radius: 8px;
+  background-color: #f1f3f5;
+  color: #444;
+}
+
+.markdown-content blockquote > *:first-child {
+  margin-top: 0;
+}
+
+.markdown-content blockquote > *:last-child {
+  margin-bottom: 0;
+}
+
+.markdown-content blockquote > p:first-child > strong:first-child {
+  color: #888;
+  font-weight: 500;
+  font-size: 0.9em;
+  display: block;
+  margin-bottom: 4px;
+}
+
+/* Tables */
+.markdown-content table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1em 0;
+}
+
+.markdown-content th,
+.markdown-content td {
+  border: 1px solid #ddd;
+  padding: 8px 12px;
+  text-align: left;
+}
+
+.markdown-content th {
+  background-color: #f4f4f4;
+  font-weight: 600;
+}
+
+.markdown-content tr:nth-child(even) {
+  background-color: #fafafa;
+}
+
+.markdown-content tr:hover {
+  background-color: #f5f5f5;
+}
+
+/* Horizontal rule */
+.markdown-content hr {
+  border: none;
+  border-top: 1px solid #e9e9e9;
+  margin: 1.5em 0;
+}
+
+/* Images */
+.markdown-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+}
+
+/* Quote cards */
+.quote-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #e1e3e5;
+  border-radius: 8px;
+  background-color: #f1f3f5;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+}
+
+.quote-card-avatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.quote-card-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.quote-card-author {
+  color: #888;
+  font-weight: 600;
+  font-size: 0.85em;
+}
+
+.quote-card-content {
+  color: #666;
+  font-size: 0.85em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.quote-card-dismiss {
+  background: none;
+  border: none;
+  color: #999;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.quote-card-dismiss:hover {
+  color: #555;
+}
+
+.delete-btn {
+  color: #d44 !important;
+  border-color: #e8c0c0 !important;
+}
+
+.delete-btn:hover {
+  color: #a00 !important;
+  border-color: #d44 !important;
+}

@@ -1,0 +1,71 @@
+[package]
+name = "helios-core"
+version = "1.0.0"
+edition = "2021"
+
+[dependencies]
+# self crates
+helios-common = { path = "../common" }
+
+# execution
+alloy = { version = "1.0.37", features = [
+    "rpc-types",
+    "consensus",
+    "rlp",
+    "k256",
+    "provider-http",
+    "sol-types",
+    "network",
+    "ssz",
+    "json-rpc",
+    "signers",
+    "rand",
+] }
+alloy-trie = { version = "0.9.1", features = ["ethereum"] }
+revm = { version = "29.0.1", default-features = false, features = [
+    "std",
+    "serde",
+    "optional_block_gas_limit",
+    "optional_eip3607",
+    "optional_no_base_fee",
+] }
+# async/futures
+futures = "0.3.23"
+async-trait = "0.1.57"
+tokio = { version = "1", features = ["rt", "sync", "macros"] }
+
+
+# io
+reqwest = { version = "0.12.4", features = ["json", "gzip", "deflate", "zstd", "brotli", "hickory-dns"] }
+
+serde = { version = "1.0.143", features = ["derive"] }
+serde_json = "1.0.85"
+
+
+# misc
+eyre = "0.6.8"
+
+hex = "0.4.3"
+
+tracing = "0.1.37"
+
+thiserror = "1.0.37"
+url = { version = "2.5.2", features = ["serde"] }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+jsonrpsee = { version = "0.19.0", features = ["full"] }
+openssl = { version = "0.10", features = ["vendored"] }
+
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen-futures = "0.4.33"
+gloo-timers = { version = "0.3.0", features = ["futures"] }
+wasmtimer = "0.2.0"
+getrandom = { version = "0.3.1", features = ["wasm_js"] }
+
+[target.wasm32-unknown-unknown.dependencies]
+parking_lot = { version = "0.12.2" }
+
+#[dev-dependencies]
+#helios-test-utils = { path = "../tests/test-utils" }
+#helios-ethereum = { path = "../ethereum" }

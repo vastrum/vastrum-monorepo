@@ -1,0 +1,12 @@
+backend/node_modules
+frontend/dist
+frontend/node_modules
+frontend/wasm/pkg
+frontend/wasm/target
+out
+tiles/planet.mbtiles
+tiles/*.osm.pbf
+tiles/*.zip
+tiles/coastline/
+tiles/landcover/
+tiles/tmp-store/

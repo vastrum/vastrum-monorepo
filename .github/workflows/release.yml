@@ -1,0 +1,102 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    name: Build ${{ matrix.target }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            runner: ubuntu-24.04
+          - target: x86_64-apple-darwin
+            runner: macos-15
+          - target: aarch64-apple-darwin
+            runner: macos-15
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }},wasm32-unknown-unknown
+
+      - uses: Swatinem/rust-cache@v2.9.1
+        with:
+          key: ${{ matrix.target }}
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 'lts/*'
+
+      - name: Install wasm-pack
+        run: cargo install wasm-pack@0.14.0 --locked
+
+      - name: Install LLVM (macOS)
+        if: runner.os == 'macOS'
+        run: brew install llvm
+
+      - name: Set wasm32 C compiler (macOS)
+        if: runner.os == 'macOS'
+        run: echo "CC_wasm32_unknown_unknown=$(brew --prefix llvm)/bin/clang" >> $GITHUB_ENV
+
+      - name: Install system dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y clang build-essential liblz4-dev
+
+      - name: Build
+        run: cargo build --release --target ${{ matrix.target }} -p vastrum-cli
+        env:
+          MACOSX_DEPLOYMENT_TARGET: "10.15"
+
+      - name: Smoke test
+        run: ./target/${{ matrix.target }}/release/vastrum-cli --version
+
+      - name: Package
+        run: tar czf vastrum-cli-${{ matrix.target }}.tar.gz -C target/${{ matrix.target }}/release vastrum-cli
+
+      - name: Generate SHA256 checksum
+        run: |
+          if [ "$RUNNER_OS" = "macOS" ]; then
+            shasum -a 256 vastrum-cli-${{ matrix.target }}.tar.gz > vastrum-cli-${{ matrix.target }}.tar.gz.sha256
+          else
+            sha256sum vastrum-cli-${{ matrix.target }}.tar.gz > vastrum-cli-${{ matrix.target }}.tar.gz.sha256
+          fi
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: vastrum-cli-${{ matrix.target }}
+          path: |
+            vastrum-cli-${{ matrix.target }}.tar.gz
+            vastrum-cli-${{ matrix.target }}.tar.gz.sha256
+
+  release:
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: |
+            artifacts/*.tar.gz
+            artifacts/*.tar.gz.sha256

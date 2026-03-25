@@ -1,0 +1,21 @@
+[package]
+name = "vastrum-cli"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+anyhow = "1.0.102"
+clap = { version = "4.5.60", features = ["derive"] }
+vastrum-node.workspace = true
+tokio = { version = "1.49.0", features = ["full", "tracing"] }
+webbrowser = "1.1.0"
+vastrum-git-lib = { path = "../../apps/gitter/vastrum-git-lib" }
+vastrum-shared-types.workspace = true
+vastrum-native-lib.workspace = true
+indicatif = "0.18"
+rust-embed = "8"
+dirs = "6.0.0"
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(madsim)'] }
+

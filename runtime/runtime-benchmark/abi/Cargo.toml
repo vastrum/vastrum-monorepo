@@ -1,0 +1,10 @@
+[package]
+name = "runtime-benchmark-abi"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+vastrum-abi.workspace = true
+
+[build-dependencies]
+vastrum-abi-codegen.workspace = true

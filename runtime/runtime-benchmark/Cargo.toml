@@ -1,0 +1,16 @@
+[package]
+name = "runtime-benchmark"
+version = "0.1.0"
+edition = "2024"
+
+[[bin]]
+name = "runtime-benchmark"
+path = "src/main.rs"
+
+[dependencies]
+vastrum-native-lib.workspace = true
+vastrum-node.workspace = true
+vastrum-shared-types.workspace = true
+vastrum-runtime-shared.workspace = true
+borsh = { version = "1.6.0" }
+rand = "0.9"

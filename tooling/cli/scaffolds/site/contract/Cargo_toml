@@ -1,0 +1,12 @@
+[package]
+name = "{{name}}-contract"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+borsh = { version = "1", default-features = false, features = ["derive"] }
+vastrum-contract-macros = { git = "{{git_repo}}" }
+vastrum-runtime-lib = { git = "{{git_repo}}" }

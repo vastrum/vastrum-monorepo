@@ -1,0 +1,66 @@
+[package]
+name = "vastrum-helios-worker-wasm"
+version = "1.0.0"
+edition = "2024"
+
+
+
+[lib]
+crate-type = ["cdylib"]
+
+
+[dependencies]
+wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.4"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1.0"
+serde-wasm-bindgen = "0.6"
+vastrum-shared-types.workspace = true
+hex = "0.4"
+alloy = { version = "1.7.3", features = [
+    "rpc-types",
+    "consensus",
+    "rlp",
+    "k256",
+    "provider-http",
+    "sol-types",
+    "network",
+    "ssz",
+    "json-rpc",
+    "signers",
+] }
+eyre = "0.6.12"
+url = "2.5.8"
+helios-common = { path = "../../vendored-helios/common" }
+helios-ethereum = { path = "../../vendored-helios/ethereum" }
+console_error_panic_hook = "0.1.7"
+getrandom = { version = "0.4", features = ["wasm_js"] }
+getrandom_02 = { package = "getrandom", version = "0.2", features = ["js"] }
+gloo-timers = { version = "0.3.0", features = ["futures"] }
+futures = "0.3"
+
+
+[dependencies.web-sys]
+version = "0.3"
+features = [
+    "console",
+    "Window",
+    "Request",
+    "RequestInit",
+    "RequestMode",
+    "Response",
+    "Headers",
+    "Crypto",
+    "Storage",
+    "HtmlIFrameElement",
+    "MessageEvent",
+    "Document",
+    "PopStateEvent",
+    "Blob",                                                                   
+    "BlobPropertyBag",                                                        
+    "Url",                                                                    
+    "Worker",                                                                 
+    "WorkerOptions",                                                          
+    "WorkerType",                                                             
+    "MessageEvent",   
+]

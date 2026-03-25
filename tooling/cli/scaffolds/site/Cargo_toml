@@ -1,0 +1,8 @@
+[workspace]
+members = [
+    "contract",
+    "abi",
+    "deploy",
+    "frontend/wasm",
+]
+resolver = "2"

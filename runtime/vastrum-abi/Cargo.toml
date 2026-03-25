@@ -1,0 +1,14 @@
+[package]
+name = "vastrum-abi"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+vastrum-rpc-client.workspace = true
+vastrum-native-types.workspace = true
+vastrum-runtime-shared.workspace = true
+vastrum-shared-types.workspace = true
+borsh = { version = "1.6", features = ["derive"] }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+vastrum-native-lib.workspace = true

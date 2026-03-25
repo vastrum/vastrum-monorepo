@@ -1,0 +1,55 @@
+@import "tailwindcss";
+
+@theme {
+    --color-app-bg-primary: #0d1117;
+    --color-app-bg-secondary: #161b22;
+    --color-app-bg-tertiary: #21262d;
+    --color-app-border: #30363d;
+    --color-app-text-primary: #e6edf3;
+    --color-app-text-secondary: #8b949e;
+    --color-app-accent-green: #238636;
+    --color-app-accent-blue: #1f6feb;
+    --color-app-accent-purple: #8957e5;
+    --color-app-accent-red: #da3633;
+    --color-app-accent-orange: #d29922;
+    --color-app-hover: #30363d40;
+    --font-sans: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+    --animate-scale-in: scaleIn 0.1s ease-out;
+}
+
+@keyframes scaleIn {
+    0% { transform: scale(0.98); }
+    100% { transform: scale(1); }
+}
+
+@layer base {
+    html, body {
+        @apply bg-app-bg-primary text-app-text-primary;
+    }
+
+    button,
+    [role="button"] {
+        cursor: pointer;
+    }
+}
+
+@layer utilities {
+    .scrollbar-thin::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    .scrollbar-thin::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .scrollbar-thin::-webkit-scrollbar-thumb {
+        background: #30363d;
+        border-radius: 4px;
+    }
+
+    .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+        background: #484f58;
+    }
+}

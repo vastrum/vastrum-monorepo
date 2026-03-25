@@ -1,0 +1,8 @@
+backend/node_modules
+vastrum-frontend/dist
+vastrum-frontend/node_modules
+vastrum-frontend/wasm/pkg
+vastrum-frontend/wasm/target
+helios-frontend/dist
+helios-frontend/node_modules
+out

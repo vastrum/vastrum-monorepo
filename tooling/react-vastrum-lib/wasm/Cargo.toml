@@ -1,0 +1,39 @@
+[package]
+name = "vastrum-react-lib"
+version = "1.0.0"
+edition = "2024"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.4"
+serde = "1.0"
+serde-wasm-bindgen = "0.6"
+gloo-timers = { version = "0.3", features = ["futures"] }
+vastrum-frontend-lib.workspace = true
+vastrum-shared-types.workspace = true
+getrandom = { version = "0.4", features = ["wasm_js"] }
+getrandom_02 = { package = "getrandom", version = "0.2", features = ["js"] }
+
+[dependencies.web-sys]
+version = "0.3"
+features = [
+    "console",
+    "Window",
+    "Request",
+    "RequestInit",
+    "RequestMode",
+    "Response",
+    "Headers",
+    "Crypto",
+    "Storage",
+    "HtmlIFrameElement",
+    "MessageEvent",
+    "Document",
+    "CustomEvent",
+    "CustomEventInit",
+    "History",
+    "PopStateEvent",
+]

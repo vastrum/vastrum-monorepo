@@ -1,0 +1,10 @@
+[package]
+name = "concourse-abi"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+vastrum-abi = { version = "0.1.0", path = "../../../runtime/vastrum-abi" }
+
+[build-dependencies]
+vastrum-abi-codegen = { version = "0.1.0", path = "../../../runtime/abi-codegen" }

@@ -1,0 +1,10 @@
+[package]
+name = "{{name}}-abi"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+vastrum-abi = { git = "{{git_repo}}" }
+
+[build-dependencies]
+vastrum-abi-codegen = { git = "{{git_repo}}" }

@@ -1,0 +1,25 @@
+[package]
+name = "helios-test-utils"
+version = "1.0.0"
+edition = "2021"
+
+[dependencies]
+alloy = { version = "1.0.37", features = [
+    "rpc-types",
+    "consensus",
+    "rlp",
+    "k256",
+    "provider-http",
+    "sol-types",
+    "network",
+    "ssz",
+    "json-rpc",
+    "signers",
+] }
+serde = { version = "1.0.143", features = ["derive"] }
+serde_json = "1.0.85"
+
+# self crates
+helios-common = { path = "../../common" }
+helios-core = { path = "../../core" }
+helios-ethereum = { path = "../../ethereum" }

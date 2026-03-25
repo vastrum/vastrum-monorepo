@@ -1,0 +1,48 @@
+[package]
+name = "vastrum-node"
+version = "1.0.0"
+edition = "2024"
+
+
+[dependencies]
+bytes = "1.11.1"
+tokio = { version = "0.2", package = "madsim-tokio", features = ["full", "tracing"] }
+tracing = "0.1.44"
+tracing-subscriber = {version = "0.3.22", features = ["fmt", "ansi", "env-filter"]}
+rand = "0.10.0"
+ed25519-consensus = "2.1.0"
+rand_core_06 = { package = "rand_core", version = "0.6", features = ["std"] }
+rocksdb = {version = "0.24.0", default-features = false, features = ["lz4", "bindgen-runtime"]}
+wasmtime = {version = "42.0", default-features = false, features = ["cranelift", "runtime", "std"]}
+axum = "0.8.8"
+tower-http = { version = "0.6", features = ["cors", "compression-gzip"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+vastrum-shared-types.workspace = true
+borsh = {version = "1.6.0", features = ["derive"]}
+dirs = "6.0.0"
+reqwest = { version = "0.13", features = ["json", "stream"] }
+vastrum-runtime-shared.workspace = true
+vastrum-bindings-host.workspace = true
+madsim = { version = "0.2.34", optional = true }
+chacha20poly1305 = { version = "0.10.1", features = ["alloc"] }
+hkdf = "0.12.4"
+sha2 = "0.10.9"
+eyre = "0.6.12"
+parking_lot = "0.12.5"
+vastrum-webrtc-direct-server.workspace = true
+rust-embed = "8"
+mime_guess = "2"
+hex = "0.4"
+rayon = "1"
+jmt = { path = "../vendored-jmt-main", default-features = false, features = ["std", "sha2"] }
+anyhow = "1"
+
+[dev-dependencies]
+madsim = "0.2.34"
+
+[features]
+madsim_compliant = ["dep:madsim"]
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(madsim)'] }

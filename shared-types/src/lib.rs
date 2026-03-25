@@ -1,3 +1,12 @@
 pub mod borsh;
+pub mod compression;
 pub mod crypto;
+pub mod frontend;
+pub mod genesis;
+pub mod iframerpc;
+pub mod indexer;
+pub mod limits;
+pub mod ports;
+pub mod proof_verification;
+pub mod transactioning;
 pub mod types;

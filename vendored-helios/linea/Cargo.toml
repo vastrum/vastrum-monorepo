@@ -1,0 +1,44 @@
+[package]
+name = "helios-linea"
+version = "1.0.0"
+edition = "2021"
+
+[dependencies]
+# config
+figment = { version = "0.10.7", features = ["toml", "env"] }
+
+# async/futures
+tokio = { version = "1", features = ["rt", "sync", "macros"] }
+
+
+# io
+serde = { version = "1.0.143", features = ["derive"] }
+
+#misc
+alloy = { version = "1.0.37", features = [
+    "rpc-types",
+    "consensus",
+    "rlp",
+    "k256",
+    "provider-http",
+    "sol-types",
+    "network",
+    "ssz",
+    "json-rpc",
+    "signers",
+] }
+async-trait = "0.1.57"
+eyre = "0.6.8"
+
+tracing = "0.1.37"
+
+strum = { version = "0.26.2", features = ["derive"] }
+url = "2.5.0"
+reqwest = "0.12"
+
+helios-common = { path = "../common" }
+helios-core = { path = "../core" }
+helios-ethereum = { path = "../ethereum" }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen-futures = "0.4.37"

@@ -1,0 +1,12 @@
+[workspace]
+members = [
+    "common",
+    "core",
+    "ethereum",
+    "ethereum/consensus-core",
+    "helios-ts",
+    "helios-tests"
+    #"tests/test-utils",      
+]
+resolver = "2"
+

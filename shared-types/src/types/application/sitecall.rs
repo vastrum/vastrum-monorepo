@@ -1,7 +1,7 @@
 #[derive(BorshSerialize, BorshDeserialize, Debug, Eq, PartialEq, Clone)]
 pub struct SiteCall {
     pub site_id: Sha256Digest,
-    pub args: Vec<u8>,
+    pub calldata: Vec<u8>,
 }
 
 #[allow(unused_imports)]

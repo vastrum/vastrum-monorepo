@@ -1,0 +1,15 @@
+[package]
+name = "web-client-integration-tests"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+vastrum-abi.workspace = true
+web-client-integration-tests-abi = { path = "../abi" }
+vastrum-native-lib.workspace = true
+vastrum-shared-types.workspace = true
+tokio = { version = "1.49.0", features = ["full", "tracing"] }
+
+[dev-dependencies]
+headless_chrome = "1.0.21"
+serial_test = "3"

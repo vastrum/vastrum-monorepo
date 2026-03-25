@@ -1,0 +1,64 @@
+<svg width="100%" viewBox="0 0 800 350" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="350" rx="6" fill="white"/>
+
+  <text x="400" y="26" text-anchor="middle" style="fill:rgb(20, 20, 19);stroke:none;font-family:'Anthropic Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;font-weight:500;text-anchor:middle">B-Tree (Order 3)</text>
+
+  <text x="5" y="74" style="fill:rgb(130, 130, 125);stroke:none;font-family:'Anthropic Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:11px;font-weight:400">Root</text>
+  <text x="5" y="174" style="fill:rgb(130, 130, 125);stroke:none;font-family:'Anthropic Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:11px;font-weight:400">Internal</text>
+  <text x="5" y="272" style="fill:rgb(130, 130, 125);stroke:none;font-family:'Anthropic Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:11px;font-weight:400">Leaves</text>
+
+  <line x1="388" y1="93" x2="200" y2="155" stroke="rgba(31, 30, 29, 0.28)" stroke-width="1"/>
+  <line x1="412" y1="93" x2="600" y2="155" stroke="rgba(31, 30, 29, 0.28)" stroke-width="1"/>
+
+  <line x1="167" y1="193" x2="80"  y2="280" stroke="rgba(31, 30, 29, 0.28)" stroke-width="1"/>
+  <line x1="200" y1="193" x2="200" y2="280" stroke="rgba(31, 30, 29, 0.28)" stroke-width="1"/>
+  <line x1="232" y1="193" x2="320" y2="280" stroke="rgba(31, 30, 29, 0.28)" stroke-width="1"/>
+
+  <line x1="567" y1="193" x2="480" y2="280" stroke="rgba(31, 30, 29, 0.28)" stroke-width="1"/>
+  <line x1="600" y1="193" x2="600" y2="280" stroke="rgba(31, 30, 29, 0.28)" stroke-width="1"/>
+  <line x1="632" y1="193" x2="720" y2="280" stroke="rgba(31, 30, 29, 0.28)" stroke-width="1"/>
+
+  <rect x="376" y="55" width="48" height="38" rx="4" style="fill:rgb(219, 234, 254);stroke:rgb(37, 99, 235);stroke-width:0.5px"/>
+  <text x="400" y="74" text-anchor="middle" dominant-baseline="central" style="fill:rgb(29, 78, 216);stroke:none;font-family:'Anthropic Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;font-weight:500;text-anchor:middle;dominant-baseline:central">35</text>
+
+  <rect x="151" y="155" width="48" height="38" rx="4" style="fill:rgb(219, 234, 254);stroke:rgb(37, 99, 235);stroke-width:0.5px"/>
+  <text x="175" y="174" text-anchor="middle" dominant-baseline="central" style="fill:rgb(29, 78, 216);stroke:none;font-family:'Anthropic Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;font-weight:500;text-anchor:middle;dominant-baseline:central">15</text>
+  <rect x="200" y="155" width="48" height="38" rx="4" style="fill:rgb(219, 234, 254);stroke:rgb(37, 99, 235);stroke-width:0.5px"/>
+  <text x="224" y="174" text-anchor="middle" dominant-baseline="central" style="fill:rgb(29, 78, 216);stroke:none;font-family:'Anthropic Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;font-weight:500;text-anchor:middle;dominant-baseline:central">25</text>
+
+  <rect x="551" y="155" width="48" height="38" rx="4" style="fill:rgb(219, 234, 254);stroke:rgb(37, 99, 235);stroke-width:0.5px"/>
+  <text x="575" y="174" text-anchor="middle" dominant-baseline="central" style="fill:rgb(29, 78, 216);stroke:none;font-family:'Anthropic Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;font-weight:500;text-anchor:middle;dominant-baseline:central">50</text>
+  <rect x="600" y="155" width="48" height="38" rx="4" style="fill:rgb(219, 234, 254);stroke:rgb(37, 99, 235);stroke-width:0.5px"/>
+  <text x="624" y="174" text-anchor="middle" dominant-baseline="central" style="fill:rgb(29, 78, 216);stroke:none;font-family:'Anthropic Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;font-weight:500;text-anchor:middle;dominant-baseline:central">70</text>
+
+  <rect x="31"  y="280" width="48" height="38" rx="4" style="fill:rgb(219, 234, 254);stroke:rgb(37, 99, 235);stroke-width:0.5px"/>
+  <text x="55"  y="299" text-anchor="middle" dominant-baseline="central" style="fill:rgb(29, 78, 216);stroke:none;font-family:'Anthropic Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;font-weight:500;text-anchor:middle;dominant-baseline:central">5</text>
+  <rect x="80"  y="280" width="48" height="38" rx="4" style="fill:rgb(219, 234, 254);stroke:rgb(37, 99, 235);stroke-width:0.5px"/>
+  <text x="104" y="299" text-anchor="middle" dominant-baseline="central" style="fill:rgb(29, 78, 216);stroke:none;font-family:'Anthropic Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;font-weight:500;text-anchor:middle;dominant-baseline:central">10</text>
+
+  <rect x="151" y="280" width="48" height="38" rx="4" style="fill:rgb(219, 234, 254);stroke:rgb(37, 99, 235);stroke-width:0.5px"/>
+  <text x="175" y="299" text-anchor="middle" dominant-baseline="central" style="fill:rgb(29, 78, 216);stroke:none;font-family:'Anthropic Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;font-weight:500;text-anchor:middle;dominant-baseline:central">18</text>
+  <rect x="200" y="280" width="48" height="38" rx="4" style="fill:rgb(219, 234, 254);stroke:rgb(37, 99, 235);stroke-width:0.5px"/>
+  <text x="224" y="299" text-anchor="middle" dominant-baseline="central" style="fill:rgb(29, 78, 216);stroke:none;font-family:'Anthropic Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;font-weight:500;text-anchor:middle;dominant-baseline:central">22</text>
+
+  <rect x="271" y="280" width="48" height="38" rx="4" style="fill:rgb(219, 234, 254);stroke:rgb(37, 99, 235);stroke-width:0.5px"/>
+  <text x="295" y="299" text-anchor="middle" dominant-baseline="central" style="fill:rgb(29, 78, 216);stroke:none;font-family:'Anthropic Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;font-weight:500;text-anchor:middle;dominant-baseline:central">28</text>
+  <rect x="320" y="280" width="48" height="38" rx="4" style="fill:rgb(219, 234, 254);stroke:rgb(37, 99, 235);stroke-width:0.5px"/>
+  <text x="344" y="299" text-anchor="middle" dominant-baseline="central" style="fill:rgb(29, 78, 216);stroke:none;font-family:'Anthropic Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;font-weight:500;text-anchor:middle;dominant-baseline:central">32</text>
+
+  <rect x="431" y="280" width="48" height="38" rx="4" style="fill:rgb(219, 234, 254);stroke:rgb(37, 99, 235);stroke-width:0.5px"/>
+  <text x="455" y="299" text-anchor="middle" dominant-baseline="central" style="fill:rgb(29, 78, 216);stroke:none;font-family:'Anthropic Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;font-weight:500;text-anchor:middle;dominant-baseline:central">40</text>
+  <rect x="480" y="280" width="48" height="38" rx="4" style="fill:rgb(219, 234, 254);stroke:rgb(37, 99, 235);stroke-width:0.5px"/>
+  <text x="504" y="299" text-anchor="middle" dominant-baseline="central" style="fill:rgb(29, 78, 216);stroke:none;font-family:'Anthropic Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;font-weight:500;text-anchor:middle;dominant-baseline:central">45</text>
+
+  <rect x="551" y="280" width="48" height="38" rx="4" style="fill:rgb(219, 234, 254);stroke:rgb(37, 99, 235);stroke-width:0.5px"/>
+  <text x="575" y="299" text-anchor="middle" dominant-baseline="central" style="fill:rgb(29, 78, 216);stroke:none;font-family:'Anthropic Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;font-weight:500;text-anchor:middle;dominant-baseline:central">55</text>
+  <rect x="600" y="280" width="48" height="38" rx="4" style="fill:rgb(219, 234, 254);stroke:rgb(37, 99, 235);stroke-width:0.5px"/>
+  <text x="624" y="299" text-anchor="middle" dominant-baseline="central" style="fill:rgb(29, 78, 216);stroke:none;font-family:'Anthropic Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;font-weight:500;text-anchor:middle;dominant-baseline:central">60</text>
+
+  <rect x="671" y="280" width="48" height="38" rx="4" style="fill:rgb(219, 234, 254);stroke:rgb(37, 99, 235);stroke-width:0.5px"/>
+  <text x="695" y="299" text-anchor="middle" dominant-baseline="central" style="fill:rgb(29, 78, 216);stroke:none;font-family:'Anthropic Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;font-weight:500;text-anchor:middle;dominant-baseline:central">75</text>
+  <rect x="720" y="280" width="48" height="38" rx="4" style="fill:rgb(219, 234, 254);stroke:rgb(37, 99, 235);stroke-width:0.5px"/>
+  <text x="744" y="299" text-anchor="middle" dominant-baseline="central" style="fill:rgb(29, 78, 216);stroke:none;font-family:'Anthropic Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;font-weight:500;text-anchor:middle;dominant-baseline:central">80</text>
+
+</svg>
