@@ -1,0 +1,12 @@
+[package]
+name = "runtime-tests-contract"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+borsh = { version = "1", default-features = false, features = ["derive"] }
+vastrum-contract-macros.workspace = true
+vastrum-runtime-lib.workspace = true

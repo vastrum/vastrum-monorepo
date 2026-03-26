@@ -1,0 +1,39 @@
+{
+  "name": "vastrum-web-client",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build:wasm-client": "cd wasm && CARGO_TARGET_DIR=../../../target-wasm wasm-pack build --no-pack --dev --target bundler",
+    "build:wasm-client:prod": "cd wasm && CARGO_TARGET_DIR=../../../target-wasm wasm-pack build --no-pack --target bundler",
+    "build:wasm-helios": "cd ../helios-worker && CARGO_TARGET_DIR=../../target-wasm wasm-pack build --no-pack --dev --target web --out-dir ../app/public/wasm-helios-js-worker-only",
+    "build:wasm-helios:prod": "cd ../helios-worker && CARGO_TARGET_DIR=../../target-wasm wasm-pack build --no-pack --target web --out-dir ../app/public/wasm-helios-js-worker-only",
+    "build:wasm": "npm run build:wasm-client && npm run build:wasm-helios",
+    "build:wasm:prod": "npm run build:wasm-client:prod && npm run build:wasm-helios:prod",
+    "build": "npm i && npm run build:wasm && vite build --emptyOutDir",
+    "build:prod": "npm i && npm run build:wasm:prod && tsc -b && vite build --emptyOutDir",
+    "lint": "eslint .",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@tailwindcss/vite": "^4.1.13",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "tailwindcss": "^4.1.13",
+    "vite-plugin-wasm": "^3.5.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.36.0",
+    "@types/react": "^19.1.13",
+    "@types/react-dom": "^19.1.9",
+    "@vitejs/plugin-react": "^5.0.3",
+    "eslint": "^9.36.0",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.20",
+    "globals": "^16.4.0",
+    "typescript": "~5.8.3",
+    "typescript-eslint": "^8.44.0",
+    "vite": "^7.2.2"
+  }
+}

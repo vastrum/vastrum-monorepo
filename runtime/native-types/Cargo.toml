@@ -1,0 +1,11 @@
+[package]
+name = "vastrum-native-types"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+borsh = { version = "1", default-features = false, features = ["derive"] }
+sha2 = "0.10"
+vastrum-shared-types.workspace = true
+vastrum-rpc-client.workspace = true
+futures = { version = "0.3", default-features = false, features = ["alloc"] }

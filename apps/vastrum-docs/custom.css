@@ -1,0 +1,52 @@
+@font-face {
+    font-family: "Inter";
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url("fonts/Inter-Regular.woff2") format("woff2");
+}
+
+@font-face {
+    font-family: "Inter";
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url("fonts/Inter-Bold.woff2") format("woff2");
+}
+
+@font-face {
+    font-family: "IBM Plex Mono";
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url("fonts/IBMPlexMono-Regular.woff2") format("woff2");
+}
+
+@font-face {
+    font-family: "IBM Plex Mono";
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url("fonts/IBMPlexMono-Bold.woff2") format("woff2");
+}
+
+
+
+body {
+    font-family: "Inter", sans-serif;
+}
+
+code,
+pre,
+pre>.hljs,
+.ace_editor {
+    font-family: "IBM Plex Mono", monospace !important;
+}
+
+a {
+    cursor: pointer;
+}
+
+pre {
+    overflow-x: auto;
+}

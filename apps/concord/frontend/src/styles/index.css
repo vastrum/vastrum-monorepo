@@ -1,0 +1,100 @@
+@import "tailwindcss";
+
+@theme {
+    --color-dc-bg-primary: #313338;
+    --color-dc-bg-secondary: #2b2d31;
+    --color-dc-bg-tertiary: #1e1f22;
+    --color-dc-bg-floating: #111214;
+    --color-dc-text: #dbdee1;
+    --color-dc-text-muted: #949ba4;
+    --color-dc-text-link: #00a8fc;
+    --color-dc-blurple: #5865f2;
+    --color-dc-blurple-hover: #4752c4;
+    --color-dc-green: #23a559;
+    --color-dc-red: #f23f43;
+    --color-dc-yellow: #f0b232;
+    --color-dc-channel-hover: #35373c;
+    --color-dc-channel-active: #404249;
+    --color-dc-input: #383a40;
+    --color-dc-border: #3f4147;
+    --font-sans: 'gg sans', 'Noto Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+
+    --color-app-bg-secondary: #161b22;
+    --color-app-border: #30363d;
+    --color-app-text-primary: #e6edf3;
+    --color-app-text-secondary: #8b949e;
+    --color-app-accent: #5865f2;
+}
+
+@layer base {
+    button,
+    [role="button"] {
+        cursor: pointer;
+    }
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #313338;
+    color: #dbdee1;
+    font-family: 'gg sans', 'Noto Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+::-webkit-scrollbar {
+    width: 8px;
+}
+::-webkit-scrollbar-track {
+    background: #2b2d31;
+}
+::-webkit-scrollbar-thumb {
+    background: #1e1f22;
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #18191c;
+}
+
+/* Markdown content styling */
+.markdown-content h1, .markdown-content h2, .markdown-content h3 {
+    color: #f2f3f5;
+    margin: 0.5em 0 0.25em;
+}
+.markdown-content p {
+    margin: 0.25em 0;
+}
+.markdown-content code {
+    background: #1e1f22;
+    padding: 0.15em 0.3em;
+    border-radius: 3px;
+    font-size: 0.875em;
+}
+.markdown-content pre {
+    background: #1e1f22;
+    padding: 0.75em;
+    border-radius: 4px;
+    overflow-x: auto;
+}
+.markdown-content pre code {
+    padding: 0;
+    background: none;
+}
+.markdown-content a {
+    color: #00a8fc;
+    text-decoration: none;
+}
+.markdown-content a:hover {
+    text-decoration: underline;
+}
+.markdown-content blockquote {
+    border-left: 4px solid #4e5058;
+    margin: 0.25em 0;
+    padding: 0.1em 0.75em;
+    color: #949ba4;
+}

@@ -1,0 +1,17 @@
+@import "tailwindcss";
+
+@theme {
+    --color-app-bg-secondary: #ffffff;
+    --color-app-border: #e5e7eb;
+    --color-app-text-primary: #374151;
+    --color-app-text-secondary: #6b7280;
+    --color-app-accent: #3b82f6;
+}
+
+@layer base {
+
+    button,
+    [role="button"] {
+        cursor: pointer;
+    }
+}

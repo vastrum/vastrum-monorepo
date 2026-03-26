@@ -1,0 +1,27 @@
+@import "tailwindcss";
+
+@theme {
+    --color-app-bg: #0a0a0f;
+    --color-app-surface: #12121a;
+    --color-app-surface-hover: #1a1a25;
+    --color-app-border: #1e1e2e;
+    --color-app-accent: #6366f1;
+    --color-app-accent-hover: #818cf8;
+    --color-app-text: #e2e8f0;
+    --color-app-text-secondary: #94a3b8;
+    --color-app-text-muted: #64748b;
+}
+
+@layer base {
+    button,
+    [role="button"] {
+        cursor: pointer;
+    }
+}
+
+body {
+    margin: 0;
+    background-color: #0a0a0f;
+    color: #e2e8f0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}

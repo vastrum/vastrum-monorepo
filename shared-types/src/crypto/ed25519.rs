@@ -1,6 +1,6 @@
 //Todo implement namespacing
 //Based upon https://github.com/commonwarexyz/monorepo/tree/main/cryptography/src/ed25519
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct PrivateKey {
     key: ed25519_consensus::SigningKey,
 }
@@ -10,16 +10,19 @@ impl PrivateKey {
         return Signature { signature };
     }
     pub fn sign_hash(&self, hash: Sha256Digest) -> Signature {
-        let signature = self.key.sign(&hash.to_vec());
+        let signature = self.key.sign(&hash.to_bytes());
         return Signature { signature };
     }
 
     pub fn public_key(&self) -> PublicKey {
-        PublicKey { key: self.key.verification_key() }
+        PublicKey { bytes: *self.key.verification_key().as_bytes() }
     }
     pub fn from_bytes(bytes: [u8; 32]) -> Self {
         let key = ed25519_consensus::SigningKey::from(bytes);
         return PrivateKey { key };
+    }
+    pub fn to_bytes(&self) -> &[u8; 32] {
+        return self.key.as_bytes();
     }
 
     pub fn from_seed(seed: u64) -> Self {
@@ -29,82 +32,132 @@ impl PrivateKey {
         let key = ed25519_consensus::SigningKey::from(bytes);
         return PrivateKey { key };
     }
+
+    pub fn from_rng() -> PrivateKey {
+        let mut bytes = [0u8; 32];
+        rand::fill(&mut bytes);
+        let key = ed25519_consensus::SigningKey::from(bytes);
+        return PrivateKey { key };
+    }
+
+    pub fn try_from_string(value: String) -> Option<PrivateKey> {
+        let bytes = hex::decode(value).ok()?;
+        let bytes: [u8; 32] = bytes.try_into().ok()?;
+        Some(PrivateKey::from_bytes(bytes))
+    }
+
 }
-#[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
+impl fmt::Display for PrivateKey {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", hex::encode(self.key.as_bytes()))
+    }
+}
+#[derive(
+    Clone, Copy, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default, Serialize, Deserialize,
+)]
 pub struct PublicKey {
-    key: VerificationKey,
+    bytes: [u8; 32],
 }
 impl PublicKey {
-    pub fn verify_signature(&self, data: &[u8], signature: &Signature) -> bool {
-        self.key.verify(&signature.signature, &data).is_ok()
+    pub fn verify_signature(&self, data: &[u8], signature: Signature) -> bool {
+        let Ok(vk) = ed25519_consensus::VerificationKey::try_from(self.bytes) else {
+            return false;
+        };
+        vk.verify(&signature.signature, data).is_ok()
     }
-    pub fn verify_signature_hash(&self, data: Sha256Digest, signature: &Signature) -> bool {
-        self.key.verify(&signature.signature, &data.encode()).is_ok()
+    pub fn verify_sig(&self, data: Sha256Digest, signature: Signature) -> bool {
+        self.verify_signature(&data.encode(), signature)
     }
     pub fn try_from_bytes(bytes: [u8; 32]) -> Option<PublicKey> {
-        let key = ed25519_consensus::VerificationKey::try_from(bytes);
-        if let Ok(key) = key {
-            return Some(PublicKey { key });
-        } else {
-            return None;
-        }
+        Some(PublicKey { bytes })
+    }
+    pub fn to_bytes(&self) -> [u8; 32] {
+        self.bytes
+    }
+    pub fn verifying_key(&self) -> ed25519_consensus::VerificationKeyBytes {
+        ed25519_consensus::VerificationKeyBytes::from(self.bytes)
     }
 }
 
-#[derive(Clone, Copy, Eq, PartialEq, Debug)]
+impl fmt::Display for PublicKey {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", hex::encode(self.bytes))
+    }
+}
+
+impl From<PublicKey> for vastrum_runtime_shared::Ed25519PublicKey {
+    fn from(pk: PublicKey) -> Self {
+        Self { bytes: pk.bytes }
+    }
+}
+
+impl From<vastrum_runtime_shared::Ed25519PublicKey> for PublicKey {
+    fn from(pk: vastrum_runtime_shared::Ed25519PublicKey) -> Self {
+        PublicKey { bytes: pk.bytes }
+    }
+}
+
+impl From<Signature> for vastrum_runtime_shared::Ed25519Signature {
+    fn from(sig: Signature) -> Self {
+        Self { bytes: sig.inner().to_bytes() }
+    }
+}
+
+impl From<vastrum_runtime_shared::Ed25519Signature> for Signature {
+    fn from(sig: vastrum_runtime_shared::Ed25519Signature) -> Self {
+        Signature::from_bytes(sig.bytes)
+    }
+}
+
+#[derive(Clone, Copy, Eq, PartialEq, Debug, Serialize, Deserialize)]
 pub struct Signature {
     signature: ed25519_consensus::Signature,
 }
+
 impl Signature {
     pub fn from_bytes(bytes: [u8; 64]) -> Signature {
         let signature = ed25519_consensus::Signature::from(bytes);
-        return Signature { signature: signature };
+        return Signature { signature };
+    }
+
+    pub fn inner(&self) -> ed25519_consensus::Signature {
+        self.signature
     }
 }
 
 impl BorshSerialize for PrivateKey {
-    fn serialize<W: std::io::Write>(&self, writer: &mut W) -> std::io::Result<()> {
+    fn serialize<W: Write>(&self, writer: &mut W) -> io::Result<()> {
         let bytes = self.key.to_bytes();
         BorshSerialize::serialize(&bytes, writer)
     }
 }
 impl BorshDeserialize for PrivateKey {
-    fn deserialize_reader<R: std::io::Read>(reader: &mut R) -> std::io::Result<Self> {
+    fn deserialize_reader<R: Read>(reader: &mut R) -> io::Result<Self> {
         let bytes: [u8; 32] = BorshDeserialize::deserialize_reader(reader)?;
         Ok(PrivateKey::from_bytes(bytes))
     }
 }
 
 impl BorshSerialize for PublicKey {
-    fn serialize<W: std::io::Write>(&self, writer: &mut W) -> std::io::Result<()> {
-        let bytes = self.key.to_bytes();
-        BorshSerialize::serialize(&bytes, writer)
+    fn serialize<W: Write>(&self, writer: &mut W) -> io::Result<()> {
+        BorshSerialize::serialize(&self.bytes, writer)
     }
 }
 impl BorshDeserialize for PublicKey {
-    fn deserialize_reader<R: std::io::Read>(reader: &mut R) -> std::io::Result<Self> {
+    fn deserialize_reader<R: Read>(reader: &mut R) -> io::Result<Self> {
         let bytes: [u8; 32] = BorshDeserialize::deserialize_reader(reader)?;
-
-        let result = PublicKey::try_from_bytes(bytes);
-        if let Some(key) = result {
-            return Ok(key);
-        } else {
-            return Err(std::io::Error::new(
-                std::io::ErrorKind::InvalidData,
-                format!("Invalid verification key: {:#?}", bytes),
-            ));
-        }
+        Ok(PublicKey { bytes })
     }
 }
 
 impl BorshSerialize for Signature {
-    fn serialize<W: std::io::Write>(&self, writer: &mut W) -> std::io::Result<()> {
+    fn serialize<W: Write>(&self, writer: &mut W) -> io::Result<()> {
         let bytes = self.signature.to_bytes();
         BorshSerialize::serialize(&bytes, writer)
     }
 }
 impl BorshDeserialize for Signature {
-    fn deserialize_reader<R: std::io::Read>(reader: &mut R) -> std::io::Result<Self> {
+    fn deserialize_reader<R: Read>(reader: &mut R) -> io::Result<Self> {
         let bytes: [u8; 64] = BorshDeserialize::deserialize_reader(reader)?;
         Ok(Signature::from_bytes(bytes))
     }
@@ -115,4 +168,7 @@ use crate::borsh::*;
 use crate::crypto::sha256::Sha256Digest;
 use borsh::BorshDeserialize;
 use borsh::BorshSerialize;
-use ed25519_consensus::VerificationKey;
+use serde::Deserialize;
+use serde::Serialize;
+use std::fmt;
+use std::io::{self, Read, Write};

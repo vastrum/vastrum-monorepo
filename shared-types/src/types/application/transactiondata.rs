@@ -1,9 +1,9 @@
 #[derive(BorshSerialize, BorshDeserialize, Debug, Clone, PartialEq)]
 pub enum TransactionType {
     Call,
-    DeployNewComponent,
-    AddComponent,
-    DeployStoredComponent,
+    DeployNewModule,
+    AddModule,
+    DeployStoredModule,
     RegisterDomain,
 }
 
@@ -20,8 +20,8 @@ impl fmt::Debug for TransactionData {
 
 impl TransactionData {
     pub fn calculate_hash(&self) -> Sha256Digest {
-        let bytes = borsh::to_vec(self).unwrap();
-        return sha256::hash(&bytes);
+        let bytes = self.encode();
+        return sha256::sha256_hash(&bytes);
     }
 }
 #[allow(unused_imports)]

@@ -1,0 +1,11 @@
+[package]
+name = "{{name}}-deploy"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+vastrum-abi = { git = "{{git_repo}}" }
+{{name}}-abi = { path = "../abi" }
+vastrum-native-lib = { git = "{{git_repo}}" }
+vastrum-shared-types = { git = "{{git_repo}}" }
+tokio = { version = "1.49.0", features = ["full", "tracing"] }

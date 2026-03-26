@@ -1,0 +1,226 @@
+@import "tailwindcss";
+
+@theme {
+    --color-app-bg-secondary: #ffffff;
+    --color-app-border: #e5e7eb;
+    --color-app-text-primary: #374151;
+    --color-app-text-secondary: #6b7280;
+    --color-app-accent: #1a73e8;
+}
+
+@layer base {
+    button,
+    [role="button"] {
+        cursor: pointer;
+    }
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
+    background-color: #fff;
+    color: #333;
+}
+
+/* Document list */
+.doc-row:hover {
+    background-color: #f9fafb;
+}
+
+.delete-btn:hover {
+    color: #ef4444 !important;
+    background-color: #fef2f2 !important;
+}
+
+.header-btn:hover {
+    opacity: 0.9;
+}
+
+.toolbar-btn:hover:not(:disabled) {
+    background-color: #e5e7eb;
+}
+
+/* TipTap editor */
+.editor-container {
+    max-width: 800px;
+    margin: 24px auto;
+    padding: 96px 96px;
+    background-color: #fff;
+    box-shadow:
+        inset 1px 0 0 rgba(0, 0, 0, 0.12),
+        inset -1px 0 0 rgba(0, 0, 0, 0.12),
+        inset 0 1px 0 rgba(0, 0, 0, 0.12),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.12);
+    min-height: 1131px;
+}
+
+.tiptap {
+    outline: none;
+    min-height: 939px;
+    font-size: 15px;
+    line-height: 1.7;
+    color: #1f2937;
+}
+
+.tiptap > *:first-child {
+    margin-top: 0;
+}
+
+.tiptap p.is-editor-empty:first-child::before {
+    content: attr(data-placeholder);
+    float: left;
+    color: #d1d5db;
+    pointer-events: none;
+    height: 0;
+}
+
+/* Headings */
+.tiptap h1 {
+    font-size: 1.75em;
+    font-weight: 700;
+    margin: 1.5em 0 0.5em;
+    color: #111;
+    line-height: 1.3;
+}
+
+.tiptap h2 {
+    font-size: 1.4em;
+    font-weight: 600;
+    margin: 1.25em 0 0.4em;
+    color: #111;
+    line-height: 1.3;
+}
+
+.tiptap h3 {
+    font-size: 1.15em;
+    font-weight: 600;
+    margin: 1em 0 0.3em;
+    color: #111;
+    line-height: 1.3;
+}
+
+/* Paragraphs */
+.tiptap p {
+    margin: 0.5em 0;
+}
+
+/* Links */
+.tiptap a {
+    color: #2563eb;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+/* Bold */
+.tiptap strong {
+    font-weight: 600;
+}
+
+/* Inline code */
+.tiptap code {
+    background-color: #f3f4f6;
+    padding: 0.15em 0.35em;
+    border-radius: 4px;
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 0.9em;
+}
+
+/* Code blocks */
+.tiptap pre {
+    background-color: #1e1e1e;
+    border-radius: 8px;
+    padding: 16px 20px;
+    overflow-x: auto;
+    margin: 1em 0;
+}
+
+.tiptap pre code {
+    background: none;
+    padding: 0;
+    color: #d4d4d4;
+    font-size: 0.85em;
+    line-height: 1.6;
+}
+
+/* Lists */
+.tiptap ul,
+.tiptap ol {
+    margin: 0.5em 0;
+    padding-left: 1.5em;
+}
+
+.tiptap li {
+    margin: 0.2em 0;
+}
+
+/* Blockquotes */
+.tiptap blockquote {
+    margin: 1em 0;
+    padding: 8px 16px;
+    border-left: 3px solid #e5e7eb;
+    color: #6b7280;
+    background-color: #f9fafb;
+    border-radius: 0 6px 6px 0;
+}
+
+/* Horizontal rule */
+.tiptap hr {
+    border: none;
+    border-top: 1px solid #e5e7eb;
+    margin: 1.5em 0;
+}
+
+/* Images */
+.tiptap img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 6px;
+    margin: 0.5em 0;
+}
+
+/* Highlight */
+.tiptap mark {
+    background-color: #fef08a;
+    border-radius: 2px;
+    padding: 0 2px;
+}
+
+/* Tables */
+.tiptap table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1em 0;
+}
+
+.tiptap th,
+.tiptap td {
+    border: 1px solid #e5e7eb;
+    padding: 8px 12px;
+    text-align: left;
+}
+
+.tiptap th {
+    background-color: #f9fafb;
+    font-weight: 600;
+}
+
+/* Strikethrough */
+.tiptap s {
+    text-decoration: line-through;
+    color: #9ca3af;
+}
+
+/* Page break indicators */
+.page-break-indicator {
+    margin-left: -96px;
+    margin-right: -96px;
+    height: 10px;
+    background-color: #f3f4f6;
+    pointer-events: none;
+    user-select: none;
+}

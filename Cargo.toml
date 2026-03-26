@@ -1,7 +1,127 @@
 [workspace]
 members = [
+    "vastrum-node",
     "shared-types",
-    "node",
-    "web-client/wasm", "native-client",
+
+    "webrtc-direct/protocol",
+    "webrtc-direct/server",
+    "webrtc-direct/client",
+    "webrtc-direct/integration-tests",
+    "webrtc-direct/integration-tests/frontend/wasm",
+
+    "runtime/vastrum-bindings/guest",
+    "runtime/vastrum-bindings/host",
+    "runtime/runtime-shared",
+    "runtime/runtime-lib",
+    "runtime/native-types",
+    "runtime/contract-macros",
+    "runtime/abi-codegen",
+    "runtime/vastrum-abi",
+
+    "tooling/rpc-client",
+    "tooling/native-lib",
+    "tooling/vastrum-lib-rust-frontend",
+    "tooling/react-vastrum-lib/wasm",
+    "tooling/cli",
+    "tooling/genesis-tool",
+
+    "web-client/app/wasm",
+    "web-client/helios-worker",
+
+    "apps/gitter/contract",
+    "apps/gitter/abi",
+    "apps/gitter/deploy",
+    "apps/gitter/vastrum-git-lib",
+    "apps/gitter/frontend/wasm",
+
+    "apps/chatter/contract",
+    "apps/chatter/abi",
+    "apps/chatter/deploy",
+    "apps/chatter/frontend",
+
+    "apps/concord/contract",
+    "apps/concord/abi",
+    "apps/concord/deploy",
+    "apps/concord/frontend/wasm",
+
+    "apps/concourse/contract",
+    "apps/concourse/abi",
+    "apps/concourse/deploy",
+    "apps/concourse/frontend/wasm",
+
+    "apps/blocker/contract",
+    "apps/blocker/abi",
+    "apps/blocker/deploy",
+    "apps/blocker/frontend/wasm",
+
+    "apps/swapper/contract",
+    "apps/swapper/abi",
+    "apps/swapper/deploy",
+
+    "apps/letterer/contract",
+    "apps/letterer/abi",
+    "apps/letterer/deploy",
+    "apps/letterer/frontend/wasm",
+
+    "apps/mapper/contract",
+    "apps/mapper/abi",
+    "apps/mapper/deploy",
+    "apps/mapper/tile-uploader",
+    "apps/mapper/frontend/wasm",
+
+    "apps/vastrum-docs/contract",
+    "apps/vastrum-docs/abi",
+    "apps/vastrum-docs/deploy",
+
+    "runtime/runtime-tests/contract",
+    "runtime/runtime-tests/abi",
+    "runtime/runtime-tests/tests",
+    
+    "runtime/runtime-benchmark",
+    "runtime/runtime-benchmark/contract",
+    "runtime/runtime-benchmark/abi",
+
+    "web-client/integration-tests/contract",
+    "web-client/integration-tests/abi",
+    "web-client/integration-tests/vastrum-frontend/wasm",
+    "web-client/integration-tests/tests",
+
+    #"vendored-helios/helios-tests", # to run helios tests
 ]
+exclude = ["vendored-helios", "vendored-jmt-main", "tooling/cli/scaffolds"]
 resolver = "2"
+
+[workspace.dependencies]
+vastrum-runtime-shared = { version = "0.1.0", path = "runtime/runtime-shared" }
+vastrum-contract-macros = { version = "0.1.0", path = "runtime/contract-macros" }
+vastrum-abi-codegen = { version = "0.1.0", path = "runtime/abi-codegen" }
+vastrum-runtime-lib = { version = "0.1.0", path = "runtime/runtime-lib" }
+vastrum-shared-types = { version = "0.1.0", path = "shared-types" }
+vastrum-rpc-client = { version = "0.1.0", path = "tooling/rpc-client" }
+vastrum-native-types = { version = "0.1.0", path = "runtime/native-types" }
+vastrum-native-lib = { version = "0.1.0", path = "tooling/native-lib" }
+vastrum-webrtc-direct-protocol = { version = "0.1.0", path = "webrtc-direct/protocol" }
+vastrum-webrtc-direct-server = { version = "0.1.0", path = "webrtc-direct/server" }
+vastrum-bindings-guest = { version = "0.1.0", path = "runtime/vastrum-bindings/guest" }
+vastrum-bindings-host = { version = "0.1.0", path = "runtime/vastrum-bindings/host" }
+vastrum-frontend-lib = { version = "0.1.0", path = "tooling/vastrum-lib-rust-frontend" }
+vastrum-abi = { version = "0.1.0", path = "runtime/vastrum-abi" }
+vastrum-node = { version = "1.0.0", path = "vastrum-node" }
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+overflow-checks = true
+
+
+                            
+#to optimize build speed
+[profile.dev]
+debug = "line-tables-only"
+split-debuginfo = "unpacked"
+
+#optimize dependencies in dev mode, does not increase incremental build times
+[profile.dev.package."*"]
+opt-level = 2
+debug = false

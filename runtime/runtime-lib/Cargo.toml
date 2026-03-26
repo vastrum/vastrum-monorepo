@@ -1,0 +1,11 @@
+[package]
+name = "vastrum-runtime-lib"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+borsh = { version = "1", default-features = false, features = ["derive"] }
+sha2 = "0.10"
+ed25519-compact = { version = "2.2.0", default-features = false, features = ["opt_size"] }
+vastrum-bindings-guest.workspace = true
+vastrum-runtime-shared.workspace = true

@@ -1,0 +1,20 @@
+{
+  "name": "chatter",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:css": "mkdir -p generated && npx @tailwindcss/cli -i src/tailwind.css -o generated/tailwind.css",
+    "build:wasm": "CARGO_TARGET_DIR=../../../target-wasm wasm-pack build --dev --target bundler",
+    "build:wasm:prod": "CARGO_TARGET_DIR=../../../target-wasm wasm-pack build --target bundler",
+    "build": "npm i && npm run build:css && npm run build:wasm && vite build",
+    "build:prod": "npm i && npm run build:css && npm run build:wasm:prod && vite build"
+  },
+  "dependencies": {
+    "@tailwindcss/cli": "^4.1.17",
+    "vite-plugin-wasm": "^3.5.0"
+  },
+  "devDependencies": {
+    "vite": "^7.2.2",
+    "vite-plugin-singlefile": "^2.3.0"
+  }
+}

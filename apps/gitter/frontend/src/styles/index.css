@@ -1,0 +1,388 @@
+/* IBM Plex Sans Font */
+@font-face {
+    font-family: 'IBM Plex Sans';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('../fonts/IBMPlexSans-Regular.woff2') format('woff2');
+}
+@font-face {
+    font-family: 'IBM Plex Sans';
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+    src: url('../fonts/IBMPlexSans-Medium.woff2') format('woff2');
+}
+@font-face {
+    font-family: 'IBM Plex Sans';
+    font-style: normal;
+    font-weight: 600;
+    font-display: swap;
+    src: url('../fonts/IBMPlexSans-SemiBold.woff2') format('woff2');
+}
+@font-face {
+    font-family: 'IBM Plex Sans';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url('../fonts/IBMPlexSans-Bold.woff2') format('woff2');
+}
+
+/* JetBrains Mono Font */
+@font-face {
+    font-family: 'JetBrains Mono';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('../fonts/JetBrainsMono-Regular.woff2') format('woff2');
+}
+@font-face {
+    font-family: 'JetBrains Mono';
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+    src: url('../fonts/JetBrainsMono-Medium.woff2') format('woff2');
+}
+@font-face {
+    font-family: 'JetBrains Mono';
+    font-style: normal;
+    font-weight: 600;
+    font-display: swap;
+    src: url('../fonts/JetBrainsMono-SemiBold.woff2') format('woff2');
+}
+@font-face {
+    font-family: 'JetBrains Mono';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url('../fonts/JetBrainsMono-Bold.woff2') format('woff2');
+}
+
+@import "tailwindcss";
+
+@theme {
+    --color-app-bg-primary: #0d1117;
+    --color-app-bg-secondary: #161b22;
+    --color-app-bg-tertiary: #21262d;
+    --color-app-border: #30363d;
+    --color-app-text-primary: #e6edf3;
+    --color-app-text-secondary: #8b949e;
+    --color-app-accent-green: #238636;
+    --color-app-accent-blue: #1f6feb;
+    --color-app-accent-purple: #8957e5;
+    --color-app-accent-red: #da3633;
+    --color-app-accent-orange: #d29922;
+    --color-app-hover: #30363d40;
+    --font-sans: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+    --animate-scale-in: scaleIn 0.1s ease-out;
+}
+
+@keyframes scaleIn {
+    0% { transform: scale(0.98); }
+    100% { transform: scale(1); }
+}
+
+@layer base {
+    html, body {
+        @apply bg-app-bg-primary text-app-text-primary font-sans;
+        overflow-x: hidden;
+        max-width: 100vw;
+    }
+
+    #root {
+        overflow-x: hidden;
+        max-width: 100vw;
+    }
+
+    button,
+    [role="button"] {
+        cursor: pointer;
+    }
+}
+
+@layer components {
+    .btn-primary {
+        @apply bg-app-accent-green text-white px-4 py-2 rounded-md font-medium hover:bg-[#2ea043] transition-colors;
+    }
+
+    .btn-secondary {
+        @apply bg-app-bg-tertiary text-app-text-primary border border-app-border px-4 py-2 rounded-md font-medium hover:bg-app-hover transition-colors;
+    }
+
+    .input-field {
+        @apply w-full bg-app-bg-primary border border-app-border text-app-text-primary px-4 py-2 rounded-md text-sm transition-all focus:outline-none focus:border-app-accent-blue focus:ring-2 focus:ring-app-accent-blue/10;
+    }
+
+    .badge {
+        @apply bg-app-bg-tertiary border border-app-border px-3 py-1 rounded-full text-xs font-medium text-app-text-secondary;
+    }
+
+    .badge-open {
+        @apply text-app-accent-green border-app-accent-green;
+    }
+
+    .tab-item {
+        @apply px-3 py-2.5 md:px-4 md:py-3 text-xs md:text-sm font-medium text-app-text-secondary hover:text-app-text-primary transition-colors cursor-pointer relative;
+    }
+
+    .tab-item.active {
+        @apply text-app-text-primary;
+    }
+
+    .tab-item.active::after {
+        content: '';
+        @apply absolute bottom-0 left-0 right-0 h-0.5 bg-app-accent-orange;
+    }
+
+    .comment-box {
+        @apply bg-app-bg-secondary border border-app-border rounded-lg overflow-hidden;
+    }
+
+    .file-item {
+        @apply flex items-center gap-3 px-4 py-3 border-b border-app-border hover:bg-app-hover transition-colors cursor-pointer;
+    }
+
+    .stat-item {
+        @apply flex items-center gap-2 text-app-text-secondary text-sm;
+    }
+
+    /* Syntax highlighting */
+    .syntax-keyword {
+        @apply text-[#ff7b72] font-medium;
+    }
+
+    .syntax-string {
+        @apply text-[#a5d6ff];
+    }
+
+    .syntax-comment {
+        @apply text-[#8b949e] italic;
+    }
+
+    .syntax-function {
+        @apply text-[#d2a8ff];
+    }
+
+    .syntax-number {
+        @apply text-[#79c0ff];
+    }
+
+    .syntax-plain {
+        @apply text-app-text-primary;
+    }
+}
+
+@layer utilities {
+    .scrollbar-thin::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    .scrollbar-thin::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .scrollbar-thin::-webkit-scrollbar-thumb {
+        background: #30363d;
+        border-radius: 4px;
+    }
+
+    .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+        background: #484f58;
+    }
+}
+
+/* Markdown content styles (dark theme) */
+.markdown-content {
+    color: #e6edf3;
+    font-size: 15px;
+    line-height: 1.6;
+}
+
+.markdown-content > *:first-child {
+    margin-top: 0;
+}
+
+.markdown-content > *:last-child {
+    margin-bottom: 0;
+}
+
+/* Headings */
+.markdown-content h1,
+.markdown-content h2,
+.markdown-content h3,
+.markdown-content h4,
+.markdown-content h5,
+.markdown-content h6 {
+    margin: 1.5em 0 0.5em;
+    font-weight: 600;
+    line-height: 1.3;
+    color: #e6edf3;
+}
+
+.markdown-content h1 { font-size: 1.5em; }
+.markdown-content h2 { font-size: 1.3em; }
+.markdown-content h3 { font-size: 1.15em; }
+.markdown-content h4 { font-size: 1em; }
+.markdown-content h5 { font-size: 0.9em; }
+.markdown-content h6 { font-size: 0.85em; color: #8b949e; }
+
+/* Paragraphs */
+.markdown-content p {
+    margin: 0.75em 0;
+}
+
+/* Links */
+.markdown-content a {
+    color: #1f6feb;
+    text-decoration: none;
+}
+
+.markdown-content a:hover {
+    text-decoration: underline;
+}
+
+/* Bold and italic */
+.markdown-content strong {
+    font-weight: 600;
+}
+
+.markdown-content em {
+    font-style: italic;
+}
+
+/* Strikethrough */
+.markdown-content del,
+.markdown-content s {
+    text-decoration: line-through;
+    color: #8b949e;
+}
+
+/* Inline code */
+.markdown-content code {
+    background-color: #21262d;
+    padding: 0.2em 0.4em;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.9em;
+    color: #e6edf3;
+}
+
+/* Code blocks */
+.markdown-content pre {
+    background-color: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    padding: 16px;
+    overflow-x: auto;
+    margin: 1em 0;
+}
+
+.markdown-content pre code {
+    background: none;
+    padding: 0;
+    color: #e6edf3;
+    font-size: 0.85em;
+    line-height: 1.5;
+}
+
+/* Highlight.js theme (GitHub Dark style) */
+.markdown-content .hljs-keyword { color: #ff7b72; }
+.markdown-content .hljs-string { color: #a5d6ff; }
+.markdown-content .hljs-number { color: #79c0ff; }
+.markdown-content .hljs-comment { color: #8b949e; }
+.markdown-content .hljs-function { color: #d2a8ff; }
+.markdown-content .hljs-class { color: #7ee787; }
+.markdown-content .hljs-variable { color: #ffa657; }
+.markdown-content .hljs-operator { color: #e6edf3; }
+.markdown-content .hljs-punctuation { color: #e6edf3; }
+.markdown-content .hljs-property { color: #79c0ff; }
+.markdown-content .hljs-attr { color: #79c0ff; }
+.markdown-content .hljs-built_in { color: #ffa657; }
+.markdown-content .hljs-title { color: #d2a8ff; }
+.markdown-content .hljs-params { color: #e6edf3; }
+.markdown-content .hljs-literal { color: #79c0ff; }
+.markdown-content .hljs-type { color: #7ee787; }
+.markdown-content .hljs-meta { color: #8957e5; }
+.markdown-content .hljs-regexp { color: #7ee787; }
+.markdown-content .hljs-symbol { color: #79c0ff; }
+.markdown-content .hljs-tag { color: #7ee787; }
+.markdown-content .hljs-name { color: #7ee787; }
+.markdown-content .hljs-selector-tag { color: #7ee787; }
+.markdown-content .hljs-selector-id { color: #ffa657; }
+.markdown-content .hljs-selector-class { color: #ffa657; }
+
+/* Lists */
+.markdown-content ul,
+.markdown-content ol {
+    margin: 0.75em 0;
+    padding-left: 1.5em;
+}
+
+.markdown-content li {
+    margin: 0.25em 0;
+}
+
+.markdown-content li > ul,
+.markdown-content li > ol {
+    margin: 0.25em 0;
+}
+
+/* Blockquotes */
+.markdown-content blockquote {
+    margin: 1em 0;
+    padding: 0.5em 1em;
+    border-left: 4px solid #30363d;
+    background-color: #161b22;
+    color: #8b949e;
+}
+
+.markdown-content blockquote > *:first-child {
+    margin-top: 0;
+}
+
+.markdown-content blockquote > *:last-child {
+    margin-bottom: 0;
+}
+
+/* Tables */
+.markdown-content table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1em 0;
+}
+
+.markdown-content th,
+.markdown-content td {
+    border: 1px solid #30363d;
+    padding: 8px 12px;
+    text-align: left;
+}
+
+.markdown-content th {
+    background-color: #21262d;
+    font-weight: 600;
+}
+
+.markdown-content tr:nth-child(even) {
+    background-color: #161b22;
+}
+
+.markdown-content tr:hover {
+    background-color: #21262d;
+}
+
+/* Horizontal rule */
+.markdown-content hr {
+    border: none;
+    border-top: 1px solid #30363d;
+    margin: 1.5em 0;
+}
+
+/* Images */
+.markdown-content img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 6px;
+}

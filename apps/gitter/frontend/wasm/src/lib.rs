@@ -1,0 +1,389 @@
+#[wasm_bindgen]
+pub async fn create_issue(title: String, description: String, repo_name: String) -> String {
+    let gitter = new_client();
+    let sent_tx = gitter.create_issue(title, description, repo_name).await;
+    sent_tx.tx_hash().to_string()
+}
+
+#[wasm_bindgen]
+pub async fn reply_to_issue(content: String, repo_name: String, issue_id: u64) -> String {
+    let gitter = new_client();
+    let sent_tx = gitter.reply_to_issue(content, repo_name, issue_id).await;
+    sent_tx.tx_hash().to_string()
+}
+
+#[wasm_bindgen]
+pub async fn create_discussion(title: String, description: String, repo_name: String) -> String {
+    let gitter = new_client();
+    let sent_tx = gitter.create_discussion(title, description, repo_name).await;
+    sent_tx.tx_hash().to_string()
+}
+
+#[wasm_bindgen]
+pub async fn reply_to_discussion(content: String, repo_name: String, discussion_id: u64) -> String {
+    let gitter = new_client();
+    let sent_tx = gitter.reply_to_discussion(content, repo_name, discussion_id).await;
+    sent_tx.tx_hash().to_string()
+}
+
+#[wasm_bindgen]
+pub async fn create_repo(name: String, description: String) -> String {
+    let gitter = new_client();
+    let sent_tx = gitter.create_repository(name, description).await;
+    sent_tx.tx_hash().to_string()
+}
+
+#[wasm_bindgen]
+pub async fn fork_repo(new_repo_name: String, repo_to_fork_name: String) -> String {
+    let gitter = new_client();
+    let sent_tx = gitter.fork_repository(new_repo_name, repo_to_fork_name).await;
+    sent_tx.tx_hash().to_string()
+}
+
+#[wasm_bindgen]
+pub async fn get_forks_by_me_of_this_repo(repo_name: String) -> Vec<String> {
+    let gitter = new_client();
+    let pub_key = get_pub_key().await;
+
+    let state = gitter.state().await;
+    let forks_key = vastrum_git_lib::ForksKey { repo_name, from: pub_key };
+    let all_forks_by_me = state.forks_store.get(&forks_key).await;
+    all_forks_by_me.unwrap_or_default()
+}
+
+#[wasm_bindgen]
+pub async fn get_default_fork_name(repo_name: String) -> String {
+    let gitter = new_client();
+    let pub_key = get_pub_key().await;
+    let key_prefix = &pub_key.to_string()[..8];
+
+    let state = gitter.state().await;
+    let forks_key = vastrum_git_lib::ForksKey { repo_name: repo_name.clone(), from: pub_key };
+    let existing_forks = state.forks_store.get(&forks_key).await.unwrap_or_default();
+    let n = existing_forks.len() + 1;
+
+    return format!("{}-fork-{}-{}", repo_name, key_prefix, n);
+}
+
+#[wasm_bindgen]
+pub async fn create_pull_request(
+    to_repo: String,
+    merging_repo: String,
+    title: String,
+    description: String,
+) -> String {
+    let gitter = new_client();
+    let sent_tx = gitter.create_pull_request(to_repo, merging_repo, title, description).await;
+    sent_tx.tx_hash().to_string()
+}
+
+#[wasm_bindgen]
+pub async fn reply_to_pull_request(
+    content: String,
+    repo_name: String,
+    pull_request_id: u64,
+) -> String {
+    let gitter = new_client();
+    let sent_tx = gitter.reply_to_pull_request(content, repo_name, pull_request_id).await;
+    sent_tx.tx_hash().to_string()
+}
+
+#[wasm_bindgen]
+pub async fn close_pull_request(repo_name: String, pull_request_id: u64) -> String {
+    let gitter = new_client();
+    let sent_tx = gitter.close_pull_request(repo_name, pull_request_id).await;
+    sent_tx.tx_hash().to_string()
+}
+
+#[wasm_bindgen]
+pub async fn merge_pull_request(
+    repo_name: String,
+    feature_repo: String,
+    pull_request_id: u64,
+) -> String {
+    let gitter = new_client();
+    merge_repos(repo_name.clone(), feature_repo, &gitter, MergeMode::Live).await.unwrap();
+    let sent_tx = gitter.mark_pull_request_merged(repo_name, pull_request_id).await;
+    sent_tx.tx_hash().to_string()
+}
+
+#[wasm_bindgen]
+pub async fn get_all_repos() -> Vec<GitRepository> {
+    let gitter = new_client();
+    let state = gitter.state().await;
+    let repos = state.all_repos.get_descending_entries(50, 0).await;
+    repos.iter().map(convert_git_repository).collect()
+}
+
+#[wasm_bindgen]
+pub async fn get_repo_issues(repo_name: String, limit: usize, offset: usize) -> Vec<Issue> {
+    let gitter = new_client();
+    let state = gitter.state().await;
+    let repo = state.repo_store.get(&repo_name).await.unwrap();
+    let issues = repo.issues.get_descending_entries(limit, offset).await;
+    issues.iter().map(convert_issue).collect()
+}
+
+#[wasm_bindgen]
+pub async fn get_repo_pull_requests(
+    repo_name: String,
+    limit: usize,
+    offset: usize,
+) -> Vec<PullRequest> {
+    let gitter = new_client();
+    let state = gitter.state().await;
+    let repo = state.repo_store.get(&repo_name).await.unwrap();
+    let prs = repo.pull_requests.get_descending_entries(limit, offset).await;
+    prs.iter().map(convert_pull_request).collect()
+}
+
+#[wasm_bindgen]
+pub async fn get_repo_discussions(
+    repo_name: String,
+    limit: usize,
+    offset: usize,
+) -> Vec<Discussion> {
+    let gitter = new_client();
+    let state = gitter.state().await;
+    let repo = state.repo_store.get(&repo_name).await.unwrap();
+    let discussions = repo.discussions.get_descending_entries(limit, offset).await;
+    discussions.iter().map(convert_discussion).collect()
+}
+
+#[wasm_bindgen]
+pub async fn get_discussion(repo_name: String, id: u64) -> Option<Discussion> {
+    let gitter = new_client();
+    let state = gitter.state().await;
+    let repo = state.repo_store.get(&repo_name).await.unwrap();
+    repo.discussions.get(id).await.map(|d| convert_discussion(&d))
+}
+
+#[wasm_bindgen]
+pub async fn get_issue(repo_name: String, id: u64) -> Option<Issue> {
+    let gitter = new_client();
+    let state = gitter.state().await;
+    let repo = state.repo_store.get(&repo_name).await.unwrap();
+    repo.issues.get(id).await.map(|i| convert_issue(&i))
+}
+
+#[wasm_bindgen]
+pub async fn get_pull_request(repo_name: String, id: u64) -> Option<PullRequest> {
+    let gitter = new_client();
+    let state = gitter.state().await;
+    let repo = state.repo_store.get(&repo_name).await.unwrap();
+    repo.pull_requests.get(id).await.map(|p| convert_pull_request(&p))
+}
+
+#[wasm_bindgen]
+pub async fn get_issue_replies(
+    repo_name: String,
+    issue_id: u64,
+    limit: usize,
+    offset: usize,
+) -> Vec<IssueReply> {
+    let gitter = new_client();
+    let state = gitter.state().await;
+    let repo = state.repo_store.get(&repo_name).await.unwrap();
+    let issue = repo.issues.get(issue_id).await.unwrap();
+    let replies = issue.replies.get_ascending_entries(limit, offset).await;
+    replies.iter().map(convert_issue_reply).collect()
+}
+
+#[wasm_bindgen]
+pub async fn get_pull_request_replies(
+    repo_name: String,
+    pr_id: u64,
+    limit: usize,
+    offset: usize,
+) -> Vec<PullRequestReply> {
+    let gitter = new_client();
+    let state = gitter.state().await;
+    let repo = state.repo_store.get(&repo_name).await.unwrap();
+    let pr = repo.pull_requests.get(pr_id).await.unwrap();
+    let replies = pr.replies.get_ascending_entries(limit, offset).await;
+    replies.iter().map(convert_pr_reply).collect()
+}
+
+#[wasm_bindgen]
+pub async fn get_discussion_replies(
+    repo_name: String,
+    discussion_id: u64,
+    limit: usize,
+    offset: usize,
+) -> Vec<DiscussionReply> {
+    let gitter = new_client();
+    let state = gitter.state().await;
+    let repo = state.repo_store.get(&repo_name).await.unwrap();
+    let discussion = repo.discussions.get(discussion_id).await.unwrap();
+    let replies = discussion.replies.get_ascending_entries(limit, offset).await;
+    replies.iter().map(convert_discussion_reply).collect()
+}
+
+#[wasm_bindgen]
+pub async fn get_repo_counts(repo_name: String) -> RepoCounts {
+    let gitter = new_client();
+    let state = gitter.state().await;
+    let repo = state.repo_store.get(&repo_name).await.unwrap();
+    let issue_count = repo.issues.length().await;
+    let pr_count = repo.pull_requests.length().await;
+    let discussion_count = repo.discussions.length().await;
+    RepoCounts { issue_count, pr_count, discussion_count }
+}
+
+#[wasm_bindgen]
+pub async fn get_repo_page_data(repo_name: String) -> GetRepoDetail {
+    let gitter = new_client();
+    let state = gitter.state().await;
+    let repo = state.repo_store.get(&repo_name).await.unwrap();
+
+    let has_commits = repo.head_commit_hash.is_some();
+
+    let (
+        head_commit_author_name,
+        head_commit_message,
+        head_commit_hash,
+        top_level_files,
+        readme_text,
+    ) = if has_commits {
+        let head_commit_id = vastrum_get_head_commit(&repo_name, &gitter).await.unwrap();
+        let head_commit = vastrum_commit_read(head_commit_id, &gitter).await.unwrap();
+
+        let top_files = get_top_level_files(&repo_name, &gitter).await.unwrap();
+        let mut readme = String::new();
+        if let Some(readme_entry) = top_files.iter().find(|e| e.name == "README.md") {
+            let oid = ObjectId::from_str(&readme_entry.oid).unwrap();
+            let data = get_file_data(oid, &gitter).await.unwrap();
+            readme = String::from_utf8(data).unwrap_or_default();
+        }
+        (
+            head_commit.author.name.to_string(),
+            head_commit.message.to_string(),
+            head_commit_id.to_string(),
+            top_files,
+            readme,
+        )
+    } else {
+        (String::new(), String::new(), String::new(), Vec::new(), String::new())
+    };
+
+    let issue_count = repo.issues.length().await;
+    let pr_count = repo.pull_requests.length().await;
+    let discussion_count = repo.discussions.length().await;
+
+    let converted_repo = convert_git_repository(&repo);
+    GetRepoDetail {
+        git_repo: converted_repo,
+        head_commit_author_name,
+        head_commit_message,
+        head_commit_hash,
+        readme_contents: readme_text,
+        top_level_files,
+        issue_count,
+        pr_count,
+        discussion_count,
+    }
+}
+
+#[wasm_bindgen]
+pub async fn get_file(git_hash: String) -> String {
+    let gitter = new_client();
+    let oid = ObjectId::from_hex(git_hash.as_bytes()).unwrap();
+    let data = get_file_data(oid, &gitter).await.unwrap();
+    let file_is_binary = data.iter().take(8000).any(|&b| b == 0);
+    if file_is_binary {
+        return String::new();
+    }
+    String::from_utf8(data).unwrap_or_default()
+}
+
+#[wasm_bindgen]
+pub async fn is_file_binary(git_hash: String) -> bool {
+    let gitter = new_client();
+    let oid = ObjectId::from_hex(git_hash.as_bytes()).unwrap();
+    let data = get_file_data(oid, &gitter).await.unwrap();
+    let file_is_binary = data.iter().take(8000).any(|&b| b == 0);
+    return file_is_binary;
+}
+
+#[wasm_bindgen]
+pub async fn get_directory_contents(tree_oid: String) -> Result<Vec<ExplorerEntry>, String> {
+    if tree_oid.is_empty() {
+        return Err("Invalid tree OID: empty string".to_string());
+    }
+    let gitter = new_client();
+    let oid =
+        ObjectId::from_hex(tree_oid.as_bytes()).map_err(|e| format!("Invalid tree OID: {}", e))?;
+    Ok(get_files_for_tree(oid, &gitter).await.unwrap())
+}
+
+#[wasm_bindgen]
+pub async fn get_pull_request_detail(repo_name: String, id: u64) -> GetPullRequestDetail {
+    let gitter = new_client();
+    let state = gitter.state().await;
+
+    let base_repo = state.repo_store.get(&repo_name).await.unwrap();
+    let pull_request = base_repo.pull_requests.get(id).await.unwrap();
+
+    let merging_repo_name = pull_request.merging_repo.clone();
+
+    let frontend_status = if pull_request.is_merged {
+        FrontendMergability::AlreadyMerged
+    } else {
+        let mergability =
+            merge_repos(&repo_name, &merging_repo_name, &gitter, MergeMode::Preview).await.unwrap();
+        match mergability {
+            MergeResult::FastForward(_) | MergeResult::Merged(_) => FrontendMergability::CanMerge,
+            MergeResult::Conflict(_) | MergeResult::NoCommonAncestor => {
+                FrontendMergability::CannotMergeConflict
+            }
+            MergeResult::AlreadyUpToDate => FrontendMergability::AlreadyUpToDate,
+        }
+    };
+
+    let file_diffs = diff_repos(&repo_name, &merging_repo_name, &gitter).await.unwrap();
+
+    let feature_branch_commits =
+        get_feature_repo_commits(&repo_name, &merging_repo_name, &gitter).await.unwrap();
+
+    let mut frontend_commits = vec![];
+    for commit in feature_branch_commits {
+        let frontend_commit = FrontendCommit {
+            author_name: commit.author.name.to_string(),
+            author_timestamp: commit.author.time.seconds as u64,
+            message: commit.message.to_string(),
+        };
+        frontend_commits.push(frontend_commit);
+    }
+
+    let converted_pr = convert_pull_request(&pull_request);
+
+    let pub_key = get_pub_key().await;
+    let is_owner = pub_key == base_repo.owner;
+
+    GetPullRequestDetail {
+        pull_request: converted_pr,
+        commits_to_merge: frontend_commits,
+        file_changes: file_diffs.files,
+        frontend_mergability: frontend_status,
+        is_owner,
+    }
+}
+
+mod converters;
+mod helpers;
+mod types;
+
+use converters::*;
+use gix_hash::ObjectId;
+use helpers::new_client;
+use vastrum_rpc_client::SentTxBehavior;
+use std::str::FromStr;
+pub use types::*;
+use vastrum_frontend_lib::get_pub_key;
+use vastrum_git_lib::universal::{
+    differ::diff_repos,
+    directory_explorer::{ExplorerEntry, get_file_data, get_files_for_tree, get_top_level_files},
+    merger::{MergeMode, MergeResult, merge_repos},
+    utils::{get_feature_repo_commits, vastrum_commit_read, vastrum_get_head_commit},
+};
+use wasm_bindgen::prelude::*;

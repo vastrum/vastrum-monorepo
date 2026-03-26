@@ -1,0 +1,22 @@
+{
+  "validators": [
+    {
+      "validator_index": 0,
+      "validator_pub_key": "4cb5abf6ad79fbf5abbccafcc269d85cd2651ed4b885b5869f241aedf0a5ba29",
+      "p2p_pub_key": "7422b9887598068e32c4448a949adb290d0f4e35b9e01b0ee5f1a1e600fe2674",
+      "stake": 100
+    }
+  ],
+  "bootstrap_peers": [
+    {
+      "p2p_pub_key": "7422b9887598068e32c4448a949adb290d0f4e35b9e01b0ee5f1a1e600fe2674",
+      "host": "127.0.0.1"
+    }
+  ],
+  "rpc_nodes": [
+    {
+      "host": "127.0.0.1",
+      "fingerprint": "58c4fe031eb828fb267315796fc534d361b4863b4ccf899b994924631d1274fd"
+    }
+  ]
+}

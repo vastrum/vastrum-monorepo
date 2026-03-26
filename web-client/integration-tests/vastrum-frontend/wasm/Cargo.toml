@@ -1,0 +1,22 @@
+[package]
+name = "web-client-integration-tests-wasm"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.4"
+hex = "0.4"
+vastrum-shared-types.workspace = true
+vastrum-frontend-lib.workspace = true
+vastrum-abi.workspace = true
+web-client-integration-tests-abi = { path = "../../abi" }
+getrandom = { version = "0.4", features = ["wasm_js"] }
+getrandom_02 = { package = "getrandom", version = "0.2", features = ["js"] }
+
+[dependencies.web-sys]
+version = "0.3"
+features = ["console"]
