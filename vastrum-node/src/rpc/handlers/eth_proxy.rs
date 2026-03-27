@@ -1,10 +1,17 @@
-const EXECUTION_URLS: &[&str] = &["https://eth.drpc.org", "https://ethereum-rpc.publicnode.com"];
+//please dont dos 🙏
+const EXECUTION_URLS: &[&str] = &[
+    "https://wild-floral-model.quiknode.pro/fa5c46935beb34252e1246c4fdf2799152b14df4",
+    "https://eth.drpc.org",
+    "https://ethereum-rpc.publicnode.com",
+];
 
-pub const CONSENSUS_URLS: &[&str] =
-    &["https://ethereum-beacon-api.publicnode.com", "https://lodestar-mainnet.chainsafe.io"];
+pub const CONSENSUS_URLS: &[&str] = &[
+    "https://wild-floral-model.quiknode.pro/fa5c46935beb34252e1246c4fdf2799152b14df4",
+    "https://ethereum-beacon-api.publicnode.com",
+    "https://lodestar-mainnet.chainsafe.io",
+];
 //https://drpc.org/chainlist
 //https://ethereum.publicnode.com/
-
 
 const REQUEST_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(5);
 
@@ -38,7 +45,8 @@ async fn raw_proxy_with_fallback(
         status: 502,
         body: serde_json::to_vec(&serde_json::json!({
             "error": format!("all providers failed, last: {last_error}")
-        })).unwrap(),
+        }))
+        .unwrap(),
         content_type: "application/json".into(),
     }
 }
