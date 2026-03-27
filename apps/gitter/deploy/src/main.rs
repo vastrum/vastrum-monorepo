@@ -18,11 +18,17 @@ async fn main() {
     register_domain(site_id, "index").await.await_confirmation().await;
 
     deploy_example_repos(site_id).await;
-    deploy_monorepo(site_id).await;
+
+    let monorepo_key = ed25519::PrivateKey::from_rng();
+    deploy_monorepo(site_id, &monorepo_key).await;
+
+    println!();
+    println!("=== Deploy complete ===");
+    println!("monorepo_key: {monorepo_key}");
 }
 
-async fn deploy_monorepo(site_id: Sha256Digest) {
-    let client = ContractAbiClient::new(site_id).with_account_key(ed25519::PrivateKey::from_rng());
+async fn deploy_monorepo(site_id: Sha256Digest, monorepo_key: &ed25519::PrivateKey) {
+    let client = ContractAbiClient::new(site_id).with_account_key(monorepo_key.clone());
 
     client
         .create_repository("vastrum", "Vastrum is a protocol for hosting decentralized websites.")

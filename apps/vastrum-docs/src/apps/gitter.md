@@ -1,6 +1,6 @@
 # Gitter
 
-[gitter.vastrum.net](https://gitter.vastrum.net)
+[example-repo on gitter.vastrum.net](https://gitter.vastrum.net/repo/example-repo)
 
 Gitter is a prototype for a decentralized Github.
 
