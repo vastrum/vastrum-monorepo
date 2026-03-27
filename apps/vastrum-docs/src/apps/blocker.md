@@ -4,9 +4,9 @@
 
 Blocker is mostly just a fun prototype (Seemed cool to have a onchain chain explorer, a kind of ouroboros like challenge), final version of Vastrum will probably not support blocker.
 
-Indexing currently decreases tps from 50k to roughly 10k for counter, this is partly because it is unoptimized but also for each transactions it adds 6 RocksDB writes + associated jmt state tree proofs updates.
+Blocker is largely vibecoded.
 
-Blocker is basically fully one shot vibecoded so it is kept separated from the rest of the code as much as possible so it is very easy to remove it.
+Indexing currently decreases tps from 50k to roughly 10k for counter, this is partly because it is unoptimized but also for each transactions it adds 6 RocksDB writes + associated jmt state tree proofs updates.
 
 The blockchain indexer on vastrum-node lives in [vastrum-node/src/block_indexer/indexer.rs (gitter preview)](https://gitter.vastrum.net/repo/vastrum/tree/vastrum-node/src/block_indexer/indexer.rs). Everytime a block is executed the indexer is called which writes metadata for every transaction executed in the block.
 

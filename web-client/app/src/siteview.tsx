@@ -15,6 +15,10 @@ function getSubdomain() {
     return parts.length > 1 ? parts[0] : null;
   }
 
+  if (parts[0] === 'www') {
+    parts.shift();
+  }
+
   if (parts.length <= 2) {
     return null;
   }
@@ -31,7 +35,8 @@ export function SiteView({ page_route }: { page_route: string }) {
       const subdomain = getSubdomain();
       //if not a valid subdomain, redirect to docs
       if (subdomain === null) {
-        window.location.href = `${window.location.protocol}//docs.${window.location.host}${window.location.pathname}`;
+        const baseHost = window.location.host.replace(/^www\./, '');
+        window.location.href = `${window.location.protocol}//docs.${baseHost}${window.location.pathname}`;
         return;
       }
       const response = await get_page(page_route, subdomain);
