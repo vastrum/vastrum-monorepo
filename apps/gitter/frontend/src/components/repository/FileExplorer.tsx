@@ -39,6 +39,9 @@ function FileExplorer({ repoData, initialPath }: FileExplorerProps): React.JSX.E
 
     const handleEntrySelect = useCallback((entry: ExplorerEntry, parentPath: string[]) => {
         setSelectedEntry(entry);
+        if (!entry.is_directory) {
+            setIsSidebarOpen(false);
+        }
         const newPath = [...parentPath, entry.name].join('/');
         navigate(`/repo/${git_repo.name}/tree/${newPath}`);
     }, [git_repo.name, navigate]);
