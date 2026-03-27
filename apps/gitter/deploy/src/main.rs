@@ -10,7 +10,8 @@ async fn main() {
     build_contract("../contract", "../contract/out");
     build_frontend();
     let html = std::fs::read_to_string("../frontend/dist/index.html").unwrap();
-    let brotli_html_content = vastrum_shared_types::compression::brotli::brotli_compress_html(&html);
+    let brotli_html_content =
+        vastrum_shared_types::compression::brotli::brotli_compress_html(&html);
     let client =
         ContractAbiClient::deploy("../contract/out/contract.wasm", brotli_html_content).await;
     let site_id = client.site_id();
@@ -81,8 +82,8 @@ async fn deploy_example_repos(site_id: Sha256Digest) {
 
     // Build base repo and push
     let repo = TestRepoBuilder::new()
-        .file("README.md", b"# Example Repo\nAn example repository.")
-        .file("src/main.rs", b"fn main() {\n    println!(\"Hello, world!\");\n}\n")
+        .file("README.md", b"# Example Repo")
+        .file("src/main.rs", b"fn main() {\n    println!(\"Hello world\");\n}\n")
         .file(
             "Cargo.toml",
             b"[package]\nname = \"example\"\nversion = \"0.1.0\"\nedition = \"2024\"\n",
@@ -93,33 +94,21 @@ async fn deploy_example_repos(site_id: Sha256Digest) {
 
     // Create issue with replies
     client
-        .create_issue(
-            "This is an example issue",
-            "Issues could be used to coordinate problems, currently this data is also used for the discussion tab.",
-            "example-repo",
-        )
+        .create_issue("Project needs better name", "The name is bad", "example-repo")
         .await
         .await_confirmation()
         .await;
 
-    client
-        .reply_to_issue("This is an example reply to the issue", "example-repo", 0)
-        .await
-        .await_confirmation()
-        .await;
+    client.reply_to_issue("I disagree", "example-repo", 0).await.await_confirmation().await;
 
-    client
-        .reply_to_issue("This is another reply", "example-repo", 0)
-        .await
-        .await_confirmation()
-        .await;
+    client.reply_to_issue("I agree", "example-repo", 0).await.await_confirmation().await;
 
     // Fork and add a commit on top (shared ancestry with base)
     client.fork_repository("example-repo-fork", "example-repo").await.await_confirmation().await;
 
     repo.add_commit(&[
-        ("README.md", b"# Example Repo\nAn example repository.\n\nForked with changes."),
-        ("src/main.rs", b"fn main() {\n    println!(\"Hello from fork!\");\n    greet();\n}\n\nfn greet() {\n    println!(\"Greetings!\");\n}\n"),
+        ("README.md", b"# Improved Example Repo"),
+        ("src/main.rs", b"fn main() {\n    println!(\"Goodbye world\");\n}\n"),
         ("Cargo.toml", b"[package]\nname = \"example\"\nversion = \"0.1.0\"\nedition = \"2024\"\n"),
         (".gitignore", b"/target\n"),
     ]);
@@ -127,38 +116,33 @@ async fn deploy_example_repos(site_id: Sha256Digest) {
 
     // Create PR with replies
     client
-        .create_pull_request(
-            "example-repo",
-            "example-repo-fork",
-            "Pull request example",
-            "This pull request adds a greeting function.",
-        )
+        .create_pull_request("example-repo", "example-repo-fork", "pull requester", "Goodbye world")
         .await
         .await_confirmation()
         .await;
 
     client
-        .reply_to_pull_request("Good pull request.", "example-repo", 0)
+        .reply_to_pull_request("Good pull request", "example-repo", 0)
         .await
         .await_confirmation()
         .await;
 
     client
-        .reply_to_pull_request("Bad pull request.", "example-repo", 0)
+        .reply_to_pull_request("Bad pull request", "example-repo", 0)
         .await
         .await_confirmation()
         .await;
 }
 
-use vastrum_native_lib::deployers::{
-    build::{build_contract, run},
-    deploy::register_domain,
-};
-use vastrum_rpc_client::SentTxBehavior;
-use vastrum_shared_types::crypto::{ed25519, sha256::Sha256Digest};
 use vastrum_git_lib::{
     ContractAbiClient,
     config::GITTER_DOMAIN,
     native::upload::push_to_repo,
     testing::test_helpers::{TestRepo, TestRepoBuilder},
 };
+use vastrum_native_lib::deployers::{
+    build::{build_contract, run},
+    deploy::register_domain,
+};
+use vastrum_rpc_client::SentTxBehavior;
+use vastrum_shared_types::crypto::{ed25519, sha256::Sha256Digest};

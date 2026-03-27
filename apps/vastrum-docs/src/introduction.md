@@ -100,3 +100,4 @@ You do not have to install a wallet, the private key is stored by the vastrum.ne
 -   The genesis validator set is also embedded in web-client and is used by the web-client to verify state proofs (currently static validator set)
 -   Swapper never has any internet connection or access to anything outside sandboxed iframe, web-client handles all network communication
 
+[github.com/vastrum/vastrum-monorepo](https://github.com/vastrum/vastrum-monorepo)
