@@ -55,7 +55,7 @@ const reserves = await viemClient.readContract({
 
 ```
 
-So developing the frontend is very similar to developing a regular web2 DeFi frontend. 
+Developing the frontend is very similar to developing a regular web2 DeFi frontend. 
 
 
 ## The embedded Helios light client
@@ -90,6 +90,9 @@ Currently the Vastrum RPC node handles RPC requests by proxying them to an exter
 
 
 ## Technical implementation
+
+Most of the RPC logic is inside Helios, Vastrum only implements a web-worker for Helios to execute inside and the WebRTC layer for communicating with the Vastrum RPC node.
+
 - Vendored fork of Helios
     -   [vendored-helios (gitter preview)](https://gitter.vastrum.net/repo/vastrum/tree/vendored-helios)
 - The webworker host for Helios inside web-client (to prevent freezing main thread)
