@@ -47,7 +47,7 @@ const routes = [
     {
         element: <Layout />,
         children: [
-            { path: '/', element: <Navigate to="/dms" replace /> },
+            { path: '/', element: <DmList /> },
             { path: '/server/:serverId', element: <ServerView /> },
             { path: '/server/:serverId/:channelId', element: <ServerView /> },
             { path: '/join/:serverId/:serverKey', element: <JoinServer /> },

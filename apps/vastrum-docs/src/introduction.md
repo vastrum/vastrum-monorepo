@@ -2,8 +2,6 @@
 
 Vastrum is an experimental L1 for hosting decentralized websites and services.
 
-The goal is that any website can be built in a credibly full stack decentralized manner with a similar experience to using any Web2 website.
-
 Current prototype apps built and hosted on Vastrum
 
 -   [Gitter](https://gitter.vastrum.net)      -   Decentralized Git forge - [vastrum-monorepo hosted on Gitter](https://gitter.vastrum.net/repo/vastrum)
