@@ -29,12 +29,12 @@ What are some plausible numbers of value that a user could burn?
 
 These numbers are heavily estimated and probably less in reality considering CPU usage restrictions of web browser environment and other unknowns, however gives a hint of potential feasibility.
 
-    Assume phone can burn 5w 
-        5wh / h
-        0.05 USD / kwh 
+    Assume phone can burn 5 W
+        5 Wh / h
+        0.05 USD / kWh
         0,00025 USD / hour
 
-    Assume laptop/desktop can burn 50w
+    Assume laptop/desktop can burn 50 W
         0,0025 USD / hour
 
     For margin of safety 
@@ -44,8 +44,8 @@ These numbers are heavily estimated and probably less in reality considering CPU
 
 | Device | Power | Mined Value |
 |--------|-------|---------------|
-| Phone | 5w | 0.0001 USD / h |
-| Laptop/desktop | 50w | 0.001 USD / h |
+| Phone | 5 W | 0.0001 USD / h |
+| Laptop/desktop | 50 W | 0.001 USD / h |
 
 
 ## Simple model of a DOS
