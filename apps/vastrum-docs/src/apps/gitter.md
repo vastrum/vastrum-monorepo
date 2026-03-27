@@ -276,6 +276,21 @@ Currently only fastforward merges and 3 way merges are supported in the frontend
 All of these use KvVecBTrees similar to how concourse implemented posts.
 
 
+### How to use Gitter
+
+**Install vastrum-cli**
+    
+    curl -sSf https://raw.githubusercontent.com/vastrum/vastrum-monorepo/HEAD/tooling/cli/install.sh | sh
+
+**Go to gitter.vastrum.net**
+
+-   Click "New Repository" button
+-   Select name for repository
+-   To push to repo
+
+        vastrum-cli vastrum-git-push <REPO_NAME> <PRIVATE_KEY>
+
+-   You can get the private_key from the wallet modal, the video at the top of the page shows how to get your private key.
 
 
 
