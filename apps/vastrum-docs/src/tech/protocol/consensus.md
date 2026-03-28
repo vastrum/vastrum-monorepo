@@ -2,7 +2,8 @@
 
 
 Vastrum uses a variant of the consensus protocol described [here](https://decentralizedthoughts.github.io/2025-06-18-simplex/)
-  
+
+Current testnet deployment is 8 validators (US,AUS,JAP,EU).
 
 Initially the plan was to use minimmit however i did not like the large state space caused by pipelining. 
 
