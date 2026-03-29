@@ -1,6 +1,5 @@
 # Vastrum
 
-<!-- docs -->
 Vastrum is an experimental protocol for hosting decentralized websites. See [documentation](https://xpkeuoccopibhnakya3luhrsphalhnqo2ifmxe65murdjft54n3q.vastrum.net) for more info.
 
 ## Setup

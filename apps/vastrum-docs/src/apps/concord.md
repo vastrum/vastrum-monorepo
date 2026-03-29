@@ -1,6 +1,6 @@
 # Concord
 
-<!-- concord -->[x647757zpbejyzxcw7ruqcju32otdmi7vphrg36vhhzglkjccaqq.vastrum.net](https://x647757zpbejyzxcw7ruqcju32otdmi7vphrg36vhhzglkjccaqq.vastrum.net)
+[Concord on vastrum.net](https://x647757zpbejyzxcw7ruqcju32otdmi7vphrg36vhhzglkjccaqq.vastrum.net)
 
 Concord is a heavily vibecoded attempt at creating a credible decentralized alternative to Discord.
 
@@ -126,4 +126,4 @@ Concord follows standard app pattern
 - Frontend > react + Rust WASM frontend
 
 
-<!-- gitter -->[Concord on Gitter](https://yts27rvo7ppzq5rrjyavmfwecrbyc5ksldmitiggycetgh6zguoa.vastrum.net/repo/vastrum/tree/apps/concord)
+[Concord on Gitter](https://yts27rvo7ppzq5rrjyavmfwecrbyc5ksldmitiggycetgh6zguoa.vastrum.net/repo/vastrum/tree/apps/concord)

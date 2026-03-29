@@ -1,7 +1,7 @@
 # Execution Benchmarks
 
 
-These execution benchmarks were created using <!-- gitter -->[runtime/runtime-benchmark (gitter preview)](https://yts27rvo7ppzq5rrjyavmfwecrbyc5ksldmitiggycetgh6zguoa.vastrum.net/repo/vastrum/tree/runtime/runtime-benchmark/src/main.rs)
+These execution benchmarks were created using [runtime/runtime-benchmark (gitter preview)](https://yts27rvo7ppzq5rrjyavmfwecrbyc5ksldmitiggycetgh6zguoa.vastrum.net/repo/vastrum/tree/runtime/runtime-benchmark/src/main.rs)
 
 
 These benchmarks are based on 100% block execution, in a production deployment perhaps 10-30% of the block time could be spent executing the block.

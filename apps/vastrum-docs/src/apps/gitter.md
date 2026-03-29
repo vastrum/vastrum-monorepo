@@ -1,6 +1,6 @@
 # Gitter
 
-<!-- gitter -->[example-repo on yts27rvo7ppzq5rrjyavmfwecrbyc5ksldmitiggycetgh6zguoa.vastrum.net](https://yts27rvo7ppzq5rrjyavmfwecrbyc5ksldmitiggycetgh6zguoa.vastrum.net/repo/example-repo)
+[Gitter example-repo](https://yts27rvo7ppzq5rrjyavmfwecrbyc5ksldmitiggycetgh6zguoa.vastrum.net/repo/example-repo)
 
 Gitter is a prototype for a decentralized Github.
 
@@ -208,9 +208,9 @@ pub fn create_pull_request(
 
 To see the full contract code + frontend you can check the Gitter repo on Gitter
 
-<!-- gitter -->[Gitter on Gitter](https://yts27rvo7ppzq5rrjyavmfwecrbyc5ksldmitiggycetgh6zguoa.vastrum.net/repo/vastrum/tree/apps/gitter)
+[Gitter on Gitter](https://yts27rvo7ppzq5rrjyavmfwecrbyc5ksldmitiggycetgh6zguoa.vastrum.net/repo/vastrum/tree/apps/gitter)
 
-<!-- gitter -->[vastrum-monorepo on Gitter](https://yts27rvo7ppzq5rrjyavmfwecrbyc5ksldmitiggycetgh6zguoa.vastrum.net/repo/vastrum)
+[vastrum-monorepo on Gitter](https://yts27rvo7ppzq5rrjyavmfwecrbyc5ksldmitiggycetgh6zguoa.vastrum.net/repo/vastrum)
 
 
 ## Frontend
@@ -304,4 +304,4 @@ All of these use KvVecBTrees similar to how concourse implemented posts.
 -   Encrypted private repos, maybe without leaking metadata also?
 -   SHA-1 is not secure, basically fine for now though
 
-<!-- gitter -->[Gitter on Gitter](https://yts27rvo7ppzq5rrjyavmfwecrbyc5ksldmitiggycetgh6zguoa.vastrum.net/repo/vastrum/tree/apps/gitter) | <!-- gitter -->[vastrum-monorepo on Gitter](https://yts27rvo7ppzq5rrjyavmfwecrbyc5ksldmitiggycetgh6zguoa.vastrum.net/repo/vastrum)
+[Gitter on Gitter](https://yts27rvo7ppzq5rrjyavmfwecrbyc5ksldmitiggycetgh6zguoa.vastrum.net/repo/vastrum/tree/apps/gitter) | [vastrum-monorepo on Gitter](https://yts27rvo7ppzq5rrjyavmfwecrbyc5ksldmitiggycetgh6zguoa.vastrum.net/repo/vastrum)

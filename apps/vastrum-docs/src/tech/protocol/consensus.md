@@ -7,7 +7,7 @@ Current testnet deployment is 8 validators (US,AUS,JAP,EU).
 
 
 
-Consensus is implemented in <!-- gitter -->[vastrum-node/src/consensus/validator_state_machine.rs (gitter preview)](https://yts27rvo7ppzq5rrjyavmfwecrbyc5ksldmitiggycetgh6zguoa.vastrum.net/repo/vastrum/tree/vastrum-node/src/consensus/validator_state_machine.rs).
+Consensus is implemented in [vastrum-node/src/consensus/validator_state_machine.rs (gitter preview)](https://yts27rvo7ppzq5rrjyavmfwecrbyc5ksldmitiggycetgh6zguoa.vastrum.net/repo/vastrum/tree/vastrum-node/src/consensus/validator_state_machine.rs).
 
 
 
@@ -84,7 +84,7 @@ Link to madsim Github
 
 Madsim testing code inside vastrum-node
 
-<!-- gitter -->[vastrum-node/tests/sim_consensus.rs](https://yts27rvo7ppzq5rrjyavmfwecrbyc5ksldmitiggycetgh6zguoa.vastrum.net/repo/vastrum/tree/vastrum-node/tests/sim_consensus.rs)
+[vastrum-node/tests/sim_consensus.rs](https://yts27rvo7ppzq5rrjyavmfwecrbyc5ksldmitiggycetgh6zguoa.vastrum.net/repo/vastrum/tree/vastrum-node/tests/sim_consensus.rs)
 
 
 ---

@@ -27,11 +27,9 @@ function WelcomeModal({ isOpen, onClose }: WelcomeModalProps): React.JSX.Element
                 </div>
 
                 <div className="flex flex-col gap-1 text-sm">
-                    {/* docs */}
                     <a href="https://xpkeuoccopibhnakya3luhrsphalhnqo2ifmxe65murdjft54n3q.vastrum.net/apps/mapper" target="_blank" rel="noopener noreferrer" className="text-app-accent hover:underline">
                         Mapper docs
                     </a>
-                    {/* docs */}
                     <a href="https://xpkeuoccopibhnakya3luhrsphalhnqo2ifmxe65murdjft54n3q.vastrum.net/" target="_blank" rel="noopener noreferrer" className="text-app-accent hover:underline">
                         Vastrum docs
                     </a>
