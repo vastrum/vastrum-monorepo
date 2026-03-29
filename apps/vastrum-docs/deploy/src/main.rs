@@ -36,7 +36,7 @@ async fn main() {
         "xpkeuoccopibhnakya3luhrsphalhnqo2ifmxe65murdjft54n3q",
     )
     .unwrap();
-    register_domain(static_site_id, static_site_id.to_string()).await.await_confirmation().await;
+    register_domain(site_id, static_site_id.to_string()).await.await_confirmation().await;
 
     println!();
     println!("Deploy complete");

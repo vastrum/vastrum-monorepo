@@ -39,7 +39,7 @@ async fn main() {
     // causing site to have different site_id and causing dead links
     let static_site_id =
         Sha256Digest::from_string("xv6edwxtsjtlujz2z7hgbkkshwx2im6bbvx3nxzyczumsnhwddrq").unwrap();
-    register_domain(static_site_id, static_site_id.to_string()).await.await_confirmation().await;
+    register_domain(client.site_id(), static_site_id.to_string()).await.await_confirmation().await;
 
     client.create_category("General discussions", "").await.await_confirmation().await;
     client.create_category("Site development on vastrum", "").await.await_confirmation().await;

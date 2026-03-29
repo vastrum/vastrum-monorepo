@@ -33,7 +33,7 @@ async fn main() {
         "lzdtxcpp6ivwje55o74dugj7f4vie6qzrsp6kybqyi7ofo3yt75q",
     )
     .unwrap();
-    register_domain(static_site_id, static_site_id.to_string()).await.await_confirmation().await;
+    register_domain(site_id, static_site_id.to_string()).await.await_confirmation().await;
 
     // Always upload monaco tiles
     let mbtiles_path = "../tiles/output.mbtiles";

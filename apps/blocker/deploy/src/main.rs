@@ -33,5 +33,5 @@ async fn main() {
     // causing site to have different site_id and causing dead links
     let static_site_id =
         Sha256Digest::from_string("d66m4cniuqbgkeuetyvcbkfqfutt3qd3hdxdby2tlqifbt3otctq").unwrap();
-    register_domain(static_site_id, static_site_id.to_string()).await.await_confirmation().await;
+    register_domain(client.site_id(), static_site_id.to_string()).await.await_confirmation().await;
 }
