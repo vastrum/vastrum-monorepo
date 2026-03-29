@@ -38,7 +38,7 @@ pub fn welcome_modal(props: &WelcomeModalProps) -> Html {
                     <div class="p-6 space-y-6">
                         <div>
                             <p class="text-app-text-secondary">
-                                {"Chatter is an experimental prototype for a no-metadata private messaging application."}
+                                {"Chatter is an experimental prototype for a no-metadata anonymous messaging application."}
                             </p>
 
                             <br />
