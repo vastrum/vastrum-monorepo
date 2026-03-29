@@ -111,7 +111,7 @@ Alternatives to solve this
     -   Many people run TOR nodes
 
 -   Native client runs a RPC node to answer queries for other clients in background, ie regular decentralized internet P2P solution
-    -   Privacy issues
+    -   Exposes home IP of users
     -   Bandwidth use issues
     -   Latency issues
     -   No hard limits that data you are interested in is actually available
