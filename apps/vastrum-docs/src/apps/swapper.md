@@ -11,7 +11,7 @@ This prototype attempts to fix some of these issues.
 - The frontend is stored onchain. The web-client fetchs the frontend from the blockchain and verifies it against the Vastrum state hash merkle tree
 - All Ethereum RPC queries are executed using a webbrowser embedded Ethereum Helios light client that verifies the result of all RPC queries. You do not need to trust the RPC provider.
 
-[Swapper on vastrm.net gateway](https://uy25lxmolovvfrw6dckfnh3qi4pm2ah5lutj6k2ljqburlbjegta.vastrum.net)
+[Swapper](https://uy25lxmolovvfrw6dckfnh3qi4pm2ah5lutj6k2ljqburlbjegta.vastrum.net)
 
 Swapper is a decentralized Uniswap V2 frontend. 
 It allows you to.

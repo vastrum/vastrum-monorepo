@@ -1,6 +1,6 @@
 # Concourse
 
-[Concourse on vastrum.net](https://xv6edwxtsjtlujz2z7hgbkkshwx2im6bbvx3nxzyczumsnhwddrq.vastrum.net)
+[Concourse](https://xv6edwxtsjtlujz2z7hgbkkshwx2im6bbvx3nxzyczumsnhwddrq.vastrum.net)
 
 Concourse is an experimental decentralized alternative to Discourse.
 

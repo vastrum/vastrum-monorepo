@@ -1,6 +1,6 @@
 # Mapper
 
-[Mapper on vastrum.net gateway](https://lzdtxcpp6ivwje55o74dugj7f4vie6qzrsp6kybqyi7ofo3yt75q.vastrum.net)
+[Mapper](https://lzdtxcpp6ivwje55o74dugj7f4vie6qzrsp6kybqyi7ofo3yt75q.vastrum.net)
 
 Mapper is a heavily vibecoded prototype of a decentralized Google Maps. 
 

@@ -1,6 +1,6 @@
 # Blocker
 
-[Blocker on vastrum.net](https://d66m4cniuqbgkeuetyvcbkfqfutt3qd3hdxdby2tlqifbt3otctq.vastrum.net)
+[Blocker](https://d66m4cniuqbgkeuetyvcbkfqfutt3qd3hdxdby2tlqifbt3otctq.vastrum.net)
 
 Blocker is mostly just a fun prototype (Seemed cool to have a onchain chain explorer, a kind of ouroboros like challenge), final version of Vastrum will probably not support blocker.
 

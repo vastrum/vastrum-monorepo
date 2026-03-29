@@ -1,6 +1,6 @@
 # Chatter
 
-[Chatter on vastrum.net](https://vaaxjx64bdwibfoc6nwxkelica3lfppxwilmws4s4bskfknkr7ra.vastrum.net)
+[Chatter](https://vaaxjx64bdwibfoc6nwxkelica3lfppxwilmws4s4bskfknkr7ra.vastrum.net)
 
 The key component to chatter is the "anonymous inbox"
 

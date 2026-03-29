@@ -1,6 +1,6 @@
 # Letterer
 
-[Letterer on vastrum.net gateway](https://yozq5azfm26qi3vceclwz57fg2727yhqi6ccha5khhnp2uepqj7a.vastrum.net)
+[Letterer](https://yozq5azfm26qi3vceclwz57fg2727yhqi6ccha5khhnp2uepqj7a.vastrum.net)
 
 Letterer is a heavily vibecoded prototype of a decentralized Google Docs.
 

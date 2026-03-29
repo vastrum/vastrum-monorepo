@@ -1,6 +1,6 @@
 # Concord
 
-[Concord on vastrum.net](https://x647757zpbejyzxcw7ruqcju32otdmi7vphrg36vhhzglkjccaqq.vastrum.net)
+[Concord](https://x647757zpbejyzxcw7ruqcju32otdmi7vphrg36vhhzglkjccaqq.vastrum.net)
 
 Concord is a heavily vibecoded attempt at creating a credible decentralized alternative to Discord.
 
