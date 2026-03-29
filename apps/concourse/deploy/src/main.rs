@@ -3,7 +3,7 @@ use vastrum_native_lib::deployers::{
     build::{build_contract, run},
     deploy::register_domain,
 };
-use vastrum_shared_types::crypto::ed25519;
+use vastrum_shared_types::crypto::{ed25519, sha256::Sha256Digest};
 
 //debug_assertions is false if built with cargo --release
 fn build_frontend() {
@@ -31,6 +31,15 @@ async fn main() {
 
     register_domain(client.site_id(), "concourse").await.await_confirmation().await;
     register_domain(client.site_id(), "index").await.await_confirmation().await;
+    register_domain(client.site_id(), client.site_id().to_string())
+        .await
+        .await_confirmation()
+        .await;
+    // static testnet site_id registration in case of network redeployment
+    // causing site to have different site_id and causing dead links
+    let static_site_id =
+        Sha256Digest::from_string("xv6edwxtsjtlujz2z7hgbkkshwx2im6bbvx3nxzyczumsnhwddrq").unwrap();
+    register_domain(static_site_id, static_site_id.to_string()).await.await_confirmation().await;
 
     client.create_category("General discussions", "").await.await_confirmation().await;
     client.create_category("Site development on vastrum", "").await.await_confirmation().await;

@@ -17,6 +17,12 @@ async fn main() {
     let site_id = client.site_id();
     register_domain(site_id, GITTER_DOMAIN).await.await_confirmation().await;
     register_domain(site_id, "index").await.await_confirmation().await;
+    register_domain(site_id, site_id.to_string()).await.await_confirmation().await;
+    // static testnet site_id registration in case of network redeployment
+    // causing site to have different site_id and causing dead links
+    let static_site_id =
+        Sha256Digest::from_string("yts27rvo7ppzq5rrjyavmfwecrbyc5ksldmitiggycetgh6zguoa").unwrap();
+    register_domain(static_site_id, static_site_id.to_string()).await.await_confirmation().await;
 
     deploy_example_repos(site_id).await;
 

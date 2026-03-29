@@ -11,7 +11,7 @@ This prototype attempts to fix some of these issues.
 - The frontend is stored onchain. The web-client fetchs the frontend from the blockchain and verifies it against the Vastrum state hash merkle tree
 - All Ethereum RPC queries are executed using a webbrowser embedded Ethereum Helios light client that verifies the result of all RPC queries. You do not need to trust the RPC provider.
 
-[swapper.vastrum.net](https://swapper.vastrum.net)
+<!-- swapper -->[uy25lxmolovvfrw6dckfnh3qi4pm2ah5lutj6k2ljqburlbjegta.vastrum.net](https://uy25lxmolovvfrw6dckfnh3qi4pm2ah5lutj6k2ljqburlbjegta.vastrum.net)
 
 Swapper is a decentralized Uniswap V2 frontend. 
 It allows you to.
@@ -94,13 +94,13 @@ Currently the Vastrum RPC node handles RPC requests by proxying them to an exter
 Most of the RPC logic is inside Helios, Vastrum only implements a web-worker for Helios to execute inside and the WebRTC layer for communicating with the Vastrum RPC node.
 
 - Vendored fork of Helios
-    -   [vendored-helios (gitter preview)](https://gitter.vastrum.net/repo/vastrum/tree/vendored-helios)
+    -   <!-- gitter -->[vendored-helios (gitter preview)](https://yts27rvo7ppzq5rrjyavmfwecrbyc5ksldmitiggycetgh6zguoa.vastrum.net/repo/vastrum/tree/vendored-helios)
 - The webworker host for Helios inside web-client (to prevent freezing main thread)
-    - [web-client/helios-worker (gitter preview)](https://gitter.vastrum.net/repo/vastrum/tree/web-client/helios-worker)
+    - <!-- gitter -->[web-client/helios-worker (gitter preview)](https://yts27rvo7ppzq5rrjyavmfwecrbyc5ksldmitiggycetgh6zguoa.vastrum.net/repo/vastrum/tree/web-client/helios-worker)
 - Initialization of the webworker by the web-client
-    -   [web-client/app/wasm/src/helios/worker.rs (gitter preview)](https://gitter.vastrum.net/repo/vastrum/tree/web-client/app/wasm/src/helios/worker.rs)
+    -   <!-- gitter -->[web-client/app/wasm/src/helios/worker.rs (gitter preview)](https://yts27rvo7ppzq5rrjyavmfwecrbyc5ksldmitiggycetgh6zguoa.vastrum.net/repo/vastrum/tree/web-client/app/wasm/src/helios/worker.rs)
 - ETH RPC proxy from vastrum-node RPC
-    -   [vastrum-node/src/rpc/handlers/eth_proxy.rs (gitter preview)](https://gitter.vastrum.net/repo/vastrum/tree/vastrum-node/src/rpc/handlers/eth_proxy.rs)
+    -   <!-- gitter -->[vastrum-node/src/rpc/handlers/eth_proxy.rs (gitter preview)](https://yts27rvo7ppzq5rrjyavmfwecrbyc5ksldmitiggycetgh6zguoa.vastrum.net/repo/vastrum/tree/vastrum-node/src/rpc/handlers/eth_proxy.rs)
 
 
 
@@ -127,6 +127,6 @@ The hope is by developing a credible full stack alternative to hosting DeFi fron
 -   Smart contracts are currently very hard to censor, it is however very easy to censor frontends. By having the blockchain host the frontend also you achieve full stack censorship resistance.
 -   True DAO ownership, DAO ownership has never been credible because the centralized labs always controlled the frontend even if they did not control the smart contract, by having a fully decentralized stack the hope is that you could make a fully functioning credible DAO with actual ownership and control of the protocol
 
-[Swapper on Gitter](https://gitter.vastrum.net/repo/vastrum/tree/apps/swapper)
+<!-- gitter -->[Swapper on Gitter](https://yts27rvo7ppzq5rrjyavmfwecrbyc5ksldmitiggycetgh6zguoa.vastrum.net/repo/vastrum/tree/apps/swapper)
 
 

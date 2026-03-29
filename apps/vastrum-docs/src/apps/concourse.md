@@ -1,6 +1,6 @@
 # Concourse
 
-[concourse.vastrum.net](https://concourse.vastrum.net)
+<!-- concourse -->[xv6edwxtsjtlujz2z7hgbkkshwx2im6bbvx3nxzyczumsnhwddrq.vastrum.net](https://xv6edwxtsjtlujz2z7hgbkkshwx2im6bbvx3nxzyczumsnhwddrq.vastrum.net)
 
 Concourse is an experimental decentralized alternative to Discourse.
 
@@ -144,4 +144,4 @@ pub async fn get_category_posts(category_name: String, limit: usize, offset: usi
 }
 ```
 
-[Concourse on Gitter](https://gitter.vastrum.net/repo/vastrum/tree/apps/concourse)
+<!-- gitter -->[Concourse on Gitter](https://yts27rvo7ppzq5rrjyavmfwecrbyc5ksldmitiggycetgh6zguoa.vastrum.net/repo/vastrum/tree/apps/concourse)

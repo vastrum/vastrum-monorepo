@@ -12,7 +12,8 @@ async fn main() {
     build_frontend();
     let html =
         std::fs::read_to_string("../frontend/dist/index.html").expect("Failed to read HTML file");
-    let brotli_html_content = vastrum_shared_types::compression::brotli::brotli_compress_html(&html);
+    let brotli_html_content =
+        vastrum_shared_types::compression::brotli::brotli_compress_html(&html);
 
     let admin_key = vastrum_shared_types::crypto::ed25519::PrivateKey::from_rng();
     let admin_pub = admin_key.public_key();
@@ -25,6 +26,14 @@ async fn main() {
     let site_id = client.site_id();
     register_domain(site_id, MAPPER_DOMAIN).await.await_confirmation().await;
     register_domain(site_id, "index").await.await_confirmation().await;
+    register_domain(site_id, site_id.to_string()).await.await_confirmation().await;
+    // static testnet site_id registration in case of network redeployment
+    // causing site to have different site_id and causing dead links
+    let static_site_id = vastrum_shared_types::crypto::sha256::Sha256Digest::from_string(
+        "lzdtxcpp6ivwje55o74dugj7f4vie6qzrsp6kybqyi7ofo3yt75q",
+    )
+    .unwrap();
+    register_domain(static_site_id, static_site_id.to_string()).await.await_confirmation().await;
 
     // Always upload monaco tiles
     let mbtiles_path = "../tiles/output.mbtiles";

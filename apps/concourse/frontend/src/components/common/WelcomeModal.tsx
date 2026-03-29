@@ -28,10 +28,12 @@ function WelcomeModal({ isOpen, onClose }: WelcomeModalProps): React.JSX.Element
                 </div>
 
                 <div className="flex flex-col gap-1 text-sm">
-                    <a href="https://docs.vastrum.net/apps/concourse" target="_blank" rel="noopener noreferrer" className="text-app-accent hover:underline">
+                    {/* docs */}
+                    <a href="https://xpkeuoccopibhnakya3luhrsphalhnqo2ifmxe65murdjft54n3q.vastrum.net/apps/concourse" target="_blank" rel="noopener noreferrer" className="text-app-accent hover:underline">
                         Concourse docs
                     </a>
-                    <a href="https://docs.vastrum.net/" target="_blank" rel="noopener noreferrer" className="text-app-accent hover:underline">
+                    {/* docs */}
+                    <a href="https://xpkeuoccopibhnakya3luhrsphalhnqo2ifmxe65murdjft54n3q.vastrum.net/" target="_blank" rel="noopener noreferrer" className="text-app-accent hover:underline">
                         Vastrum docs
                     </a>
                 </div>

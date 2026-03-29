@@ -1,6 +1,6 @@
 # Letterer
 
-[letterer.vastrum.net](https://letterer.vastrum.net)
+<!-- letterer -->[yozq5azfm26qi3vceclwz57fg2727yhqi6ccha5khhnp2uepqj7a.vastrum.net](https://yozq5azfm26qi3vceclwz57fg2727yhqi6ccha5khhnp2uepqj7a.vastrum.net)
 
 Letterer is a heavily vibecoded prototype of a decentralized Google Docs.
 
@@ -77,4 +77,4 @@ Interesting things to potentially add
 - Google Sheets analogue
 - Google Slides analogue
 
-[Letterer on Gitter](https://gitter.vastrum.net/repo/vastrum/tree/apps/letterer)
+<!-- gitter -->[Letterer on Gitter](https://yts27rvo7ppzq5rrjyavmfwecrbyc5ksldmitiggycetgh6zguoa.vastrum.net/repo/vastrum/tree/apps/letterer)

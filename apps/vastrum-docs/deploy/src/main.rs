@@ -29,6 +29,14 @@ async fn main() {
 
     let site_id = client.site_id();
     register_domain(site_id, "docs").await.await_confirmation().await;
+    register_domain(site_id, site_id.to_string()).await.await_confirmation().await;
+    // static testnet site_id registration in case of network redeployment
+    // causing site to have different site_id and causing dead links
+    let static_site_id = vastrum_shared_types::crypto::sha256::Sha256Digest::from_string(
+        "xpkeuoccopibhnakya3luhrsphalhnqo2ifmxe65murdjft54n3q",
+    )
+    .unwrap();
+    register_domain(static_site_id, static_site_id.to_string()).await.await_confirmation().await;
 
     println!();
     println!("Deploy complete");

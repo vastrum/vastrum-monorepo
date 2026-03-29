@@ -66,10 +66,11 @@ impl Execution {
             return;
         };
         // Reject domain names that look like a site_id
-        if Sha256Digest::from_string(&domain_data.domain_name).is_some() {
-            tracing::warn!("domain name rejected: looks like a site_id");
-            return;
-        }
+        //TODO: enable this to prevent registering site_ids as domains
+        // if Sha256Digest::from_string(&domain_data.domain_name).is_some() {
+        //     tracing::warn!("domain name rejected: looks like a site_id");
+        //     return;
+        // }
         println!("deploying domain {domain_data:#?}");
         let current_domain = self.db.read_domain(&domain_data.domain_name);
         println!("current domain {current_domain:#?}");
@@ -166,6 +167,7 @@ use super::{
     execution::Execution,
     types::{compiled_module::CompiledModule, sitedata::SiteData},
 };
+use std::{collections::HashMap, path::PathBuf};
 use vastrum_shared_types::{
     borsh::BorshExt,
     crypto::sha256::{Sha256Digest, sha256_hash},
@@ -175,5 +177,4 @@ use vastrum_shared_types::{
         domaindata::DomainData, sitecall::SiteCall,
     },
 };
-use std::{collections::HashMap, path::PathBuf};
 use wasmtime::Module;

@@ -4,14 +4,14 @@ Vastrum is an experimental L1 for hosting decentralized websites and services.
 
 Current prototype apps built and hosted on Vastrum
 
--   [Gitter](https://gitter.vastrum.net)      -   Decentralized Git forge - [vastrum-monorepo hosted on Gitter](https://gitter.vastrum.net/repo/vastrum)
--   [Swapper](https://swapper.vastrum.net)     -   Decentralized Uniswap V2 frontend using Helios light client for RPC reads
--   [Chatter](https://chatter.vastrum.net)     -   No-metadata private messaging
--   [Concord](https://concord.vastrum.net)     -   Decentralized Discord
--   [Concourse](https://concourse.vastrum.net)   -   Decentralized Discourse       
--   [Letterer](https://letterer.vastrum.net)    -   Decentralized Google Docs 
--   [Mapper](https://mapper.vastrum.net)      -   Decentralized Google Maps
--   [Blocker](https://blocker.vastrum.net)     -   Blockchain explorer for Vastrum, hosted on Vastrum
+-   <!-- gitter -->[Gitter](https://yts27rvo7ppzq5rrjyavmfwecrbyc5ksldmitiggycetgh6zguoa.vastrum.net)      -   Decentralized Git forge - [vastrum-monorepo hosted on Gitter](https://yts27rvo7ppzq5rrjyavmfwecrbyc5ksldmitiggycetgh6zguoa.vastrum.net/repo/vastrum)
+-   <!-- swapper -->[Swapper](https://uy25lxmolovvfrw6dckfnh3qi4pm2ah5lutj6k2ljqburlbjegta.vastrum.net)     -   Decentralized Uniswap V2 frontend using Helios light client for RPC reads
+-   <!-- chatter -->[Chatter](https://vaaxjx64bdwibfoc6nwxkelica3lfppxwilmws4s4bskfknkr7ra.vastrum.net)     -   No-metadata private messaging
+-   <!-- concord -->[Concord](https://x647757zpbejyzxcw7ruqcju32otdmi7vphrg36vhhzglkjccaqq.vastrum.net)     -   Decentralized Discord
+-   <!-- concourse -->[Concourse](https://xv6edwxtsjtlujz2z7hgbkkshwx2im6bbvx3nxzyczumsnhwddrq.vastrum.net)   -   Decentralized Discourse
+-   <!-- letterer -->[Letterer](https://yozq5azfm26qi3vceclwz57fg2727yhqi6ccha5khhnp2uepqj7a.vastrum.net)    -   Decentralized Google Docs
+-   <!-- mapper -->[Mapper](https://lzdtxcpp6ivwje55o74dugj7f4vie6qzrsp6kybqyi7ofo3yt75q.vastrum.net)      -   Decentralized Google Maps
+-   <!-- blocker -->[Blocker](https://d66m4cniuqbgkeuetyvcbkfqfutt3qd3hdxdby2tlqifbt3otctq.vastrum.net)     -   Blockchain explorer for Vastrum, hosted on Vastrum
 -   Docs - the current website you are on
 
 All Vastrum websites are available through the vastrum.net web-client gateway using any web browser.

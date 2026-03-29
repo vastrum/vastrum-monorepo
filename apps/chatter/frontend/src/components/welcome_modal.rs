@@ -72,10 +72,12 @@ pub fn welcome_modal(props: &WelcomeModalProps) -> Html {
                         </div>
 
                         <div class="flex flex-col gap-1 text-sm">
-                            <a href="https://docs.vastrum.net/apps/chatter" target="_blank" rel="noopener noreferrer" class="text-app-accent hover:underline">
+                            // docs
+                            <a href="https://xpkeuoccopibhnakya3luhrsphalhnqo2ifmxe65murdjft54n3q.vastrum.net/apps/chatter" target="_blank" rel="noopener noreferrer" class="text-app-accent hover:underline">
                                 {"Chatter docs"}
                             </a>
-                            <a href="https://docs.vastrum.net/" target="_blank" rel="noopener noreferrer" class="text-app-accent hover:underline">
+                            // docs
+                            <a href="https://xpkeuoccopibhnakya3luhrsphalhnqo2ifmxe65murdjft54n3q.vastrum.net/" target="_blank" rel="noopener noreferrer" class="text-app-accent hover:underline">
                                 {"Vastrum docs"}
                             </a>
                         </div>

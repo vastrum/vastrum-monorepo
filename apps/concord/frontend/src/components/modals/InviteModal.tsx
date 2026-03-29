@@ -19,9 +19,10 @@ function InviteModal({ isOpen, onClose, serverId, serverName }: InviteModalProps
         }
     }, [isOpen, serverId]);
 
+    // concord
     const inviteLink = serverKeyHex
-        ? `https://concord.vastrum.net/join/${serverId}/${serverKeyHex}`
-        : `https://concord.vastrum.net/join/${serverId}`;
+        ? `https://x647757zpbejyzxcw7ruqcju32otdmi7vphrg36vhhzglkjccaqq.vastrum.net/join/${serverId}/${serverKeyHex}`
+        : `https://x647757zpbejyzxcw7ruqcju32otdmi7vphrg36vhhzglkjccaqq.vastrum.net/join/${serverId}`;
 
     const handleCopy = () => {
         navigator.clipboard.writeText(inviteLink);

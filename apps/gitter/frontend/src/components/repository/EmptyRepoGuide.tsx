@@ -13,7 +13,8 @@ const EmptyRepoGuide = ({ repositoryName }: EmptyRepoGuideProps): React.JSX.Elem
             </p>
             <p className="text-sm text-app-text-secondary">
                 If you are the owner you will need to pass your private key, you can get it from the wallet modal opened by the button at the center of the top of the page. There is also a video tutorial at{' '}
-                <a href="https://docs.vastrum.net/apps/gitter" target="_blank" rel="noopener noreferrer" className="text-app-accent-blue hover:underline">docs.vastrum.net/apps/gitter</a>
+                {/* docs */}
+                <a href="https://xpkeuoccopibhnakya3luhrsphalhnqo2ifmxe65murdjft54n3q.vastrum.net/apps/gitter" target="_blank" rel="noopener noreferrer" className="text-app-accent-blue hover:underline">xpkeuoccopibhnakya3luhrsphalhnqo2ifmxe65murdjft54n3q.vastrum.net/apps/gitter</a>
             </p>
 
             {/* Step 1: Install CLI */}

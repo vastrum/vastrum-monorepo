@@ -1,6 +1,6 @@
 # Mapper
 
-[mapper.vastrum.net](https://mapper.vastrum.net)
+<!-- mapper -->[lzdtxcpp6ivwje55o74dugj7f4vie6qzrsp6kybqyi7ofo3yt75q.vastrum.net](https://lzdtxcpp6ivwje55o74dugj7f4vie6qzrsp6kybqyi7ofo3yt75q.vastrum.net)
 
 Mapper is a heavily vibecoded prototype of a decentralized Google Maps. 
 
@@ -110,4 +110,4 @@ All of these features could probably be done but huge engineering work and maybe
 ## Other cool ideas
 - Some kind of half baked 2017 ico scam idea such as crowd sourced map data but for real
 
-[Mapper on Gitter](https://gitter.vastrum.net/repo/vastrum/tree/apps/mapper)
+<!-- gitter -->[Mapper on Gitter](https://yts27rvo7ppzq5rrjyavmfwecrbyc5ksldmitiggycetgh6zguoa.vastrum.net/repo/vastrum/tree/apps/mapper)

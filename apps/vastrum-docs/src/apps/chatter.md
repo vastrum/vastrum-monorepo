@@ -1,6 +1,6 @@
 # Chatter
 
-[chatter.vastrum.net](https://chatter.vastrum.net)
+<!-- chatter -->[vaaxjx64bdwibfoc6nwxkelica3lfppxwilmws4s4bskfknkr7ra.vastrum.net](https://vaaxjx64bdwibfoc6nwxkelica3lfppxwilmws4s4bskfknkr7ra.vastrum.net)
 
 The key component to chatter is the "anonymous inbox"
 
@@ -70,7 +70,7 @@ After a conversation request, each participant in the conversation have their an
 
 ### Usernames
 
-There is also usernames implemented, check [chatter_state.rs (gitter preview)](https://gitter.vastrum.net/repo/vastrum/tree/apps/chatter/frontend/src/chatter/chatter_state.rs) for how it is implemented.
+There is also usernames implemented, check <!-- gitter -->[chatter_state.rs (gitter preview)](https://yts27rvo7ppzq5rrjyavmfwecrbyc5ksldmitiggycetgh6zguoa.vastrum.net/repo/vastrum/tree/apps/chatter/frontend/src/chatter/chatter_state.rs) for how it is implemented.
 
 
 ### Syncing local user data between devices
@@ -109,11 +109,11 @@ impl Contract {
 
 To see specific implementation details, check the Chatter Gitter repo, specifically these two files
 
-[anonymous_inbox.rs (Gitter preview)](https://gitter.vastrum.net/repo/vastrum/tree/apps/chatter/frontend/src/chatter/anonymous_inbox.rs) 
+<!-- gitter -->[anonymous_inbox.rs (Gitter preview)](https://yts27rvo7ppzq5rrjyavmfwecrbyc5ksldmitiggycetgh6zguoa.vastrum.net/repo/vastrum/tree/apps/chatter/frontend/src/chatter/anonymous_inbox.rs)
 
-and 
+and
 
-[chatter_state.rs (Gitter preview)](https://gitter.vastrum.net/repo/vastrum/tree/apps/chatter/frontend/src/chatter/chatter_state.rs)
+<!-- gitter -->[chatter_state.rs (Gitter preview)](https://yts27rvo7ppzq5rrjyavmfwecrbyc5ksldmitiggycetgh6zguoa.vastrum.net/repo/vastrum/tree/apps/chatter/frontend/src/chatter/chatter_state.rs)
 
 The rest of the chatter frontend is largely vibecoded and not very interesting.
 
@@ -139,4 +139,4 @@ There is an issue for this on the Gitter repo for Vastrum if you want to try to 
 Letterer had similar problem, this was solved by each document key being a public key. You can look at the letterer contract for inspiration.
 
 
-[Chatter on Gitter](https://gitter.vastrum.net/repo/vastrum/tree/apps/chatter)
+<!-- gitter -->[Chatter on Gitter](https://yts27rvo7ppzq5rrjyavmfwecrbyc5ksldmitiggycetgh6zguoa.vastrum.net/repo/vastrum/tree/apps/chatter)
