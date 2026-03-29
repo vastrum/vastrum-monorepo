@@ -5,15 +5,6 @@ Vastrum uses a variant of the consensus protocol described [here](https://decent
 
 Current testnet deployment is 8 validators (US,AUS,JAP,EU).
 
-Initially the plan was to use minimmit however i did not like the large state space caused by pipelining. 
-
-For example
--   1000s of blocks could be executed by one finalization if you have a long unfinalized chain of views
--   No guarantees about the state hash, how do you ensure blocks have execution state hash proofs?
--   Could speculatively execute unfinalized blocks and vote on state hash but then need to support execution reversion and complex multitimeline chain management
-
-
-All of these problems can be solved, and doing pipelining is overall a better solution. However given the stage of the project i did not like the complexity.
 
 
 Consensus is implemented in [vastrum-node/src/consensus/validator_state_machine.rs (gitter preview)](https://gitter.vastrum.net/repo/vastrum/tree/vastrum-node/src/consensus/validator_state_machine.rs).

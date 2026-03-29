@@ -1,6 +1,6 @@
 # Onchain Maximalism
 
-Doing everything onchain goes against all common sense instinct of how to construct a decentralized P2P website hosting system, however it is the only way to achieve web2 UX, latency and availability. 
+Doing everything onchain goes against all common sense instinct of how to construct a decentralized P2P website hosting system, however it is the only way to achieve Web2 usability, latency and availability. 
 
 The major problem with doing P2P swarm like systems
 -   Latency, have to search deep within network to find desired data
@@ -14,7 +14,11 @@ By doing everything onchain with execution shards
 
 
 By doing it onchain you can also delegate some of the effort of maintaining the system to node operators, 
-the self hosted path would be optimal (ie all businesses hosting their own website on own server instead of Facebook) however most users are not willing to operate their own servers.
+the selfhosted path would be optimal where all business host their own website on their own server instead of Facebook. However most users are not willing to operate their own servers.
+
+The internet is by default decentralized, everybody could run their own Git servers or HTTP servers. But the effort required to run your own server is fairly high. This means in practice most users choose to use centralized platforms like Github because of their reliability and ease of use.
+
+ To achieve the same level of accessibility in a decentralized system, you have to somehow construct a system where no regular user is required to self host. A "decentralized Github" instead of a "decentralized set of Git servers".
 
 
 

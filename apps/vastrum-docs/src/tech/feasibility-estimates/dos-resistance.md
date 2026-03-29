@@ -81,7 +81,12 @@ If DOSer spends 10 USD per hour, then to access half of blockspace genuine users
     Laptop/desktop users mine 900 KB per hour
     0,36 seconds to mine 100b transaction
 
-### if DOSer spends 100 USD per hour > 
+
+| DOS spend | Phone mining time (100 byte tx) | Desktop mining time (100 byte tx) |
+|-----------|----------------------------|-------------------------------|
+| 10 USD/h  | 3.6s                       | 0.36s                         |
+
+### if DOSer spends 100 USD per hour >
 
     1 USD of burnt POW buys 90 MB
 
@@ -92,6 +97,11 @@ If DOSer spends 10 USD per hour, then to access half of blockspace genuine users
     0,001 * 90 MB = 90 KB
     Laptop/desktop users mine 90 KB per hour
     3,6 seconds to mine 100 byte transaction
+
+
+| DOS spend | Phone mining time (100 byte tx) | Desktop mining time (100 byte tx) |
+|-----------|----------------------------|-------------------------------|
+| 100 USD/h | 36s                        | 3.6s                          |
 
 
 ### if DOSer spends 1k USD per hour > 

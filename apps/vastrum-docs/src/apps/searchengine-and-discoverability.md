@@ -16,4 +16,4 @@ To find the closest scraped website, the client then does some kind of a binary 
 Very handwavy, but interesting if it could be done. 
 
 Alternatives is to have some kind of curation model and not support free text search. 
-ie top 50 sites in defi frontends, top 50 sites in forum categories.
+For example top 50 sites in defi frontends, top 50 sites in forum categories.
