@@ -1,4 +1,4 @@
-use starknet_docs_abi::*;
+use starknet_defi_frontend_abi::*;
 
 use vastrum_native_lib::deployers::{
     build::{build_contract, run},

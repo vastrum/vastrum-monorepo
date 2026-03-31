@@ -9037,7 +9037,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "starknet-docs-abi"
+name = "starknet-defi-frontend-abi"
 version = "0.1.0"
 dependencies = [
  "vastrum-abi",
@@ -9045,7 +9045,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "starknet-docs-contract"
+name = "starknet-defi-frontend-contract"
 version = "0.1.0"
 dependencies = [
  "borsh",
@@ -9054,10 +9054,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "starknet-docs-deploy"
+name = "starknet-defi-frontend-deploy"
 version = "0.1.0"
 dependencies = [
- "starknet-docs-abi",
+ "starknet-defi-frontend-abi",
  "tokio",
  "vastrum-abi",
  "vastrum-native-lib",
@@ -9065,7 +9065,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "starknet-docs-wasm"
+name = "starknet-defi-frontend-wasm"
 version = "1.0.0"
 dependencies = [
  "ekubo_sdk",

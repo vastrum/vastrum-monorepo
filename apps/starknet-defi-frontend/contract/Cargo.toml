@@ -1,5 +1,5 @@
 [package]
-name = "starknet-docs-contract"
+name = "starknet-defi-frontend-contract"
 version = "0.1.0"
 edition = "2024"
 
