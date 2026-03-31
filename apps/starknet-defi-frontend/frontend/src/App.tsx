@@ -1,7 +1,6 @@
 import './styles/index.css';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { starknetRpc } from '@vastrum/react-lib';
-import { compute_quote } from '../wasm/pkg';
 
 import logoETH from './assets/ETH.png';
 import logoUSDC from './assets/USDC.png';
@@ -29,13 +28,15 @@ const SEL_POOL_LIQUIDITY = '0xa99e1b0ff9d47a610510a60e7494dd5174b28b600c30eee35d
 
 const FEE = '0x20c49ba5e353f80000000000000000';
 const TICK_SP = '0x3e8';
-const TICK_SP_NUM = 1000;
 const FEE_PCT = 0.0005;
+const TWO_128 = 2n ** 128n;
 
 const FALLBACK_COLORS: Record<string, string> = {
     ETH: '#627eea', USDC: '#2775ca', STRK: '#ff6b35', WBTC: '#f09242',
     tBTC: '#1a1a2e', SolvBTC: '#f59e0b', LBTC: '#e11d48', EKUBO: '#7c3aed',
 };
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function feltToU256(low: string, high: string): bigint {
     return BigInt(low) + (BigInt(high) << 128n);
@@ -55,6 +56,43 @@ function sortPair(a: Token, b: Token): [Token, Token] {
 
 function toSignedTick(mag: string, sign: string): number {
     return Number(BigInt(mag)) * (Number(BigInt(sign)) === 1 ? -1 : 1);
+}
+
+// Concentrated liquidity single-step quote using x*y=k on virtual reserves.
+// virtual_x = liquidity / sqrt_ratio  (token0 reserve)
+// virtual_y = liquidity * sqrt_ratio  (token1 reserve)
+// For selling token0: output_y = virtual_y * input / (virtual_x + input)
+// For selling token1: output_x = virtual_x * input / (virtual_y + input)
+function computeQuote(
+    sqrtRatio: bigint, liquidity: bigint, inputRaw: bigint, sellingToken0: boolean,
+): { output: bigint; fees: bigint } {
+    if (liquidity === 0n || inputRaw <= 0n) return { output: 0n, fees: 0n };
+
+    // Apply fee: effective_input = input * (1 - fee)
+    // fee = input * FEE_NUMERATOR / 2^128
+    const feeNumerator = BigInt(FEE.replace('0x', ''));
+    const fees = (inputRaw * feeNumerator + TWO_128 - 1n) / TWO_128; // ceil
+    const input = inputRaw - fees;
+    if (input <= 0n) return { output: 0n, fees };
+
+    // Virtual reserves (keeping full precision in bigint)
+    // virtual_x = L * 2^128 / sqrt_ratio  (token0, scaled by 2^128)
+    // virtual_y = L * sqrt_ratio / 2^128  (token1, scaled down)
+    // But for x*y=k we just need the ratio. Use floats for simplicity:
+    const L = Number(liquidity);
+    const sr = Number(sqrtRatio) / Number(TWO_128);
+    const vx = L / sr;   // virtual token0 reserve (in raw units)
+    const vy = L * sr;   // virtual token1 reserve (in raw units)
+    const inp = Number(input);
+
+    let output: number;
+    if (sellingToken0) {
+        output = (vy * inp) / (vx + inp);
+    } else {
+        output = (vx * inp) / (vy + inp);
+    }
+
+    return { output: BigInt(Math.floor(Math.max(0, output))), fees };
 }
 
 // ─── UI Components ────────────────────────────────────────────────────────────
@@ -138,11 +176,10 @@ function Row({ label, value, white, valueColor }: { label: string; value: string
 // ─── App ──────────────────────────────────────────────────────────────────────
 
 interface PoolState {
-    sqrtRatioLow: string;
-    sqrtRatioHigh: string;
+    sqrtRatio: bigint;
+    liquidity: bigint;
     tick: number;
-    liquidity: string;
-    price: number;
+    price: number; // t1 per t0, decimal-adjusted
 }
 
 function App() {
@@ -157,8 +194,6 @@ function App() {
     const [t0, t1] = sortPair(fromToken, toToken);
     const fromIsT0 = fromToken.symbol === t0.symbol;
 
-    // ─── Fetch pool price + liquidity (4 parallel RPC calls) ─────────────────
-
     const fetchPool = useCallback(async () => {
         setLoading(true);
         setError('');
@@ -169,13 +204,13 @@ function App() {
                 starknetRpc('starknet_call', [{ contract_address: EKUBO_CORE, entry_point_selector: SEL_POOL_LIQUIDITY, calldata: pkc }, 'latest']),
             ]);
 
-            const sr = Number(feltToU256(priceRes[0], priceRes[1])) / Number(2n ** 128n);
+            const sqrtRatio = feltToU256(priceRes[0], priceRes[1]);
+            const sr = Number(sqrtRatio) / Number(TWO_128);
 
             setPool({
-                sqrtRatioLow: priceRes[0],
-                sqrtRatioHigh: priceRes[1],
+                sqrtRatio,
+                liquidity: BigInt(liqRes[0]),
                 tick: toSignedTick(priceRes[2], priceRes[3]),
-                liquidity: liqRes[0],
                 price: sr * sr * 10 ** (t0.decimals - t1.decimals),
             });
         } catch (e: any) {
@@ -188,41 +223,25 @@ function App() {
 
     useEffect(() => { fetchPool(); }, [fetchPool]);
 
-    // ─── Quote via WASM single-step (no tick walking) ─────────────────────────
+    // ─── Quote (pure TypeScript math, instant) ────────────────────────────────
 
     const displayPrice = pool ? (fromIsT0 ? pool.price : 1 / pool.price) : null;
 
     const quote = useMemo(() => {
-        if (!pool || !inputAmt || Number(inputAmt) <= 0) return null;
+        if (!pool || !inputAmt || Number(inputAmt) <= 0 || !displayPrice) return null;
 
-        const amountRaw = BigInt(Math.floor(Number(inputAmt) * 10 ** fromToken.decimals));
-        if (amountRaw <= 0n) return null;
+        const inputRaw = BigInt(Math.floor(Number(inputAmt) * 10 ** fromToken.decimals));
+        if (inputRaw <= 0n) return null;
 
-        // No ticks — from_partial_data creates synthetic boundary ticks spanning the full range.
-        // Use Starknet's chain-wide min/max tick so the single liquidity segment covers all prices.
-        const MIN_TICK = -88722883;
-        const MAX_TICK = 88722883;
-        try {
-            const result = JSON.parse(compute_quote(
-                pool.sqrtRatioLow, pool.sqrtRatioHigh, pool.liquidity, pool.tick,
-                FEE, TICK_SP_NUM,
-                '[]',
-                amountRaw.toString(),
-                !fromIsT0,
-                MIN_TICK, MAX_TICK,
-            ));
-            if (result.error) return { output: 0, fees: 0, error: result.error as string };
-            const output = Number(BigInt(result.output)) / 10 ** toToken.decimals;
-            const fees = Number(BigInt(result.fees)) / 10 ** fromToken.decimals;
-            const spotOutput = displayPrice ? Number(inputAmt) * displayPrice : 0;
-            const slippage = spotOutput > 0 ? Math.abs((spotOutput - output) / spotOutput) * 100 : 0;
-            return { output, fees, slippage, error: null };
-        } catch {
-            // Fallback to spot price
-            if (!displayPrice) return null;
-            return { output: Number(inputAmt) * displayPrice * (1 - FEE_PCT), fees: Number(inputAmt) * FEE_PCT, slippage: 0, error: null };
-        }
-    }, [pool, inputAmt, fromToken, toToken, fromIsT0]);
+        const { output, fees } = computeQuote(pool.sqrtRatio, pool.liquidity, inputRaw, fromIsT0);
+
+        const outputNum = Number(output) / 10 ** toToken.decimals;
+        const feesNum = Number(fees) / 10 ** fromToken.decimals;
+        const spotOutput = Number(inputAmt) * displayPrice;
+        const slippage = spotOutput > 0 ? Math.abs((spotOutput - outputNum) / spotOutput) * 100 : 0;
+
+        return { output: outputNum, fees: feesNum, slippage };
+    }, [pool, inputAmt, fromToken, toToken, fromIsT0, displayPrice]);
 
     // ─── Token selection ──────────────────────────────────────────────────────
 
@@ -247,11 +266,8 @@ function App() {
             </div>
 
             <div className="w-full max-w-[420px] rounded-2xl bg-[#212429] border border-[#2c2f36] p-3">
-                {/* From */}
                 <div className="rounded-2xl bg-[#191b1f] p-4 mb-1">
-                    <div className="mb-2">
-                        <span className="text-xs text-[#8f96ac]">From</span>
-                    </div>
+                    <div className="mb-2"><span className="text-xs text-[#8f96ac]">From</span></div>
                     <div className="flex items-center gap-3">
                         <input type="text" inputMode="decimal" placeholder="0" value={inputAmt}
                             onChange={e => { if (e.target.value === '' || /^\d*\.?\d*$/.test(e.target.value)) setInputAmt(e.target.value); }}
@@ -269,32 +285,25 @@ function App() {
                     </button>
                 </div>
 
-                {/* To */}
                 <div className="rounded-2xl bg-[#191b1f] p-4 mt-1">
-                    <div className="mb-2">
-                        <span className="text-xs text-[#8f96ac]">To (estimated)</span>
-                    </div>
+                    <div className="mb-2"><span className="text-xs text-[#8f96ac]">To (estimated)</span></div>
                     <div className="flex items-center gap-3">
-                        <div className="flex-1 text-3xl font-medium min-w-0" style={{ color: quote?.output ? '#fff' : '#5d6785' }}>
-                            {quote && !quote.error && quote.output > 0 ? fmt(quote.output, 4) : '0'}
+                        <div className="flex-1 text-3xl font-medium min-w-0" style={{ color: quote && quote.output > 0 ? '#fff' : '#5d6785' }}>
+                            {quote && quote.output > 0 ? fmt(quote.output, 4) : '0'}
                         </div>
                         <TokenButton token={toToken} onClick={() => setModal('to')} />
                     </div>
                 </div>
 
-                {/* Info */}
                 {pool && displayPrice !== null && (
                     <div className="mt-3 rounded-xl bg-[#191b1f] px-4 py-3 space-y-2 text-sm">
                         <Row label="Price" value={`1 ${fromToken.symbol} = ${fmt(displayPrice, 4)} ${toToken.symbol}`} />
-                        {quote && !quote.error && quote.slippage !== undefined && quote.slippage > 0.01 && (
+                        {quote && quote.slippage > 0.01 && (
                             <Row label="Price impact" value={quote.slippage.toFixed(2) + '%'}
                                 valueColor={quote.slippage > 5 ? '#ef4444' : quote.slippage > 1 ? '#f59e0b' : undefined} />
                         )}
-                        {quote && !quote.error && quote.fees > 0 && (
+                        {quote && quote.fees > 0 && (
                             <Row label="Fee" value={`${fmt(quote.fees, 6)} ${fromToken.symbol}`} />
-                        )}
-                        {quote?.error && (
-                            <Row label="Error" value={quote.error} valueColor="#ef4444" />
                         )}
                         <Row label="Tick" value={pool.tick.toLocaleString()} white />
                     </div>

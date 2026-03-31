@@ -6,10 +6,8 @@
   "scripts": {
     "build:lib": "(cd ../../../tooling/react-vastrum-lib && npm run build) && npm i",
     "build:lib:prod": "(cd ../../../tooling/react-vastrum-lib && npm run build:prod) && npm i",
-    "build:wasm": "cd wasm && CARGO_TARGET_DIR=../../../../target-wasm wasm-pack build --dev --target bundler",
-    "build:wasm:prod": "cd wasm && CARGO_TARGET_DIR=../../../../target-wasm wasm-pack build --target bundler",
-    "build": "npm run build:lib && npm run build:wasm && vite build",
-    "build:prod": "npm run build:lib:prod && npm run build:wasm:prod && tsc && vite build",
+    "build": "npm run build:lib && vite build",
+    "build:prod": "npm run build:lib:prod && tsc && vite build",
     "lint": "eslint .",
     "type-check": "tsc --noEmit"
   },

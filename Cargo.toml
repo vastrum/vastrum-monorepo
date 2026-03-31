@@ -76,7 +76,6 @@ members = [
     "apps/starknet-defi-frontend/contract",
     "apps/starknet-defi-frontend/abi",
     "apps/starknet-defi-frontend/deploy",
-    "apps/starknet-defi-frontend/frontend/wasm",
 
     "runtime/runtime-tests/contract",
     "runtime/runtime-tests/abi",
