@@ -285,24 +285,16 @@ function App() {
                     </div>
                 </div>
 
-                {pool && displayPrice !== null && (() => {
-                    const sr = Number(pool.sqrtRatio) / Number(TWO_128);
-                    const L = Number(pool.liquidity);
-                    const vx = L / sr / 10 ** t0.decimals;
-                    const vy = L * sr / 10 ** t1.decimals;
-                    return (
-                        <div className="mt-3 rounded-xl bg-[#191b1f] px-4 py-3 space-y-2 text-sm">
-                            <Row label="Price" value={`1 ${fromToken.symbol} = ${fmt(displayPrice, 4)} ${toToken.symbol}`} />
-                            {quote && quote.priceImpact > 0.01 && (
-                                <Row label="Price impact" value={quote.priceImpact.toFixed(2) + '%'}
-                                    valueColor={quote.priceImpact > 5 ? '#ef4444' : quote.priceImpact > 1 ? '#f59e0b' : undefined} />
-                            )}
-                            <Row label={`${t0.symbol} in pool`} value={fmt(vx)} white />
-                            <Row label={`${t1.symbol} in pool`} value={fmt(vy)} white />
-                            <Row label="Route" value={`${fromToken.symbol} to ${toToken.symbol} via Ekubo`} />
-                        </div>
-                    );
-                })()}
+                {pool && displayPrice !== null && (
+                    <div className="mt-3 rounded-xl bg-[#191b1f] px-4 py-3 space-y-2 text-sm">
+                        <Row label="Price" value={`1 ${fromToken.symbol} = ${fmt(displayPrice, 4)} ${toToken.symbol}`} />
+                        {quote && quote.priceImpact > 0.01 && (
+                            <Row label="Price impact" value={quote.priceImpact.toFixed(2) + '%'}
+                                valueColor={quote.priceImpact > 5 ? '#ef4444' : quote.priceImpact > 1 ? '#f59e0b' : undefined} />
+                        )}
+                        <Row label="Route" value={`${fromToken.symbol} → ${toToken.symbol} via Ekubo`} />
+                    </div>
+                )}
 
                 <div className="mt-3">
                     {error && <div className="text-red-400 text-xs mb-2 break-all">{error}</div>}
