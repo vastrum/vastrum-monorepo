@@ -73,6 +73,10 @@ members = [
     "apps/vastrum-docs/abi",
     "apps/vastrum-docs/deploy",
 
+    "apps/starknet-docs/contract",
+    "apps/starknet-docs/abi",
+    "apps/starknet-docs/deploy",
+
     "runtime/runtime-tests/contract",
     "runtime/runtime-tests/abi",
     "runtime/runtime-tests/tests",

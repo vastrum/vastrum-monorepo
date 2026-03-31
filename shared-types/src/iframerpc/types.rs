@@ -13,6 +13,7 @@ pub enum RpcMethod {
     GetCurrentPath,
     UpdateCurrentPath,
     EthRpcRequest,
+    StarknetRpcRequest,
     GetKeyValueBySiteId,
     OpenExternalUrl,
     GetLatestBlockHeight,
@@ -199,4 +200,25 @@ pub struct GetEthRPCRequest {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct GetEthRPCResponse {
     pub eth_rpc_response: EthRPCResponse,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct StarknetRPCRequest {
+    pub rpc_url: String,
+    pub method: String,
+    #[serde(default)]
+    pub params: Value,
+}
+#[derive(Debug, Serialize, Deserialize)]
+pub struct StarknetRPCResponse {
+    pub value_json: Value,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct GetStarknetRPCRequest {
+    pub request: StarknetRPCRequest,
+}
+#[derive(Serialize, Deserialize, Debug)]
+pub struct GetStarknetRPCResponse {
+    pub starknet_rpc_response: StarknetRPCResponse,
 }

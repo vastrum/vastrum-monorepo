@@ -1,0 +1,11 @@
+[package]
+name = "starknet-docs-deploy"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+vastrum-abi = { version = "0.1.0", path = "../../../runtime/vastrum-abi" }
+starknet-docs-abi = { path = "../abi" }
+vastrum-native-lib = { version = "0.1.0", path = "../../../tooling/native-lib" }
+vastrum-shared-types = { version = "0.1.0", path = "../../../shared-types" }
+tokio = { version = "1.49.0", features = ["full", "tracing"] }

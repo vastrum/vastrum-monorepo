@@ -5,4 +5,6 @@ vastrum-frontend/wasm/pkg
 vastrum-frontend/wasm/target
 helios-frontend/dist
 helios-frontend/node_modules
+starknet-frontend/dist
+starknet-frontend/node_modules
 out

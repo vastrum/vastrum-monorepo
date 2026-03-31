@@ -246,4 +246,16 @@ mod tests {
             total.elapsed().as_secs_f64()
         );
     }
+
+    #[tokio::test]
+    #[serial]
+    async fn test_starknet_rpc() {
+        let total = Instant::now();
+        let url = deploy_site("../starknet-frontend").await;
+        run_browser_test(&url, 60).await;
+        eprintln!(
+            "\n[bench] === test_starknet_rpc TOTAL: {:.1}s ===\n",
+            total.elapsed().as_secs_f64()
+        );
+    }
 }

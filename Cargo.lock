@@ -8946,6 +8946,34 @@ dependencies = [
 ]
 
 [[package]]
+name = "starknet-docs-abi"
+version = "0.1.0"
+dependencies = [
+ "vastrum-abi",
+ "vastrum-abi-codegen",
+]
+
+[[package]]
+name = "starknet-docs-contract"
+version = "0.1.0"
+dependencies = [
+ "borsh",
+ "vastrum-contract-macros",
+ "vastrum-runtime-lib",
+]
+
+[[package]]
+name = "starknet-docs-deploy"
+version = "0.1.0"
+dependencies = [
+ "starknet-docs-abi",
+ "tokio",
+ "vastrum-abi",
+ "vastrum-native-lib",
+ "vastrum-shared-types",
+]
+
+[[package]]
 name = "static_assertions"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -10329,6 +10357,7 @@ dependencies = [
  "gloo-timers 0.3.0",
  "hex",
  "js-sys",
+ "reqwest 0.13.2",
  "serde",
  "serde-wasm-bindgen",
  "serde_json",

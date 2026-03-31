@@ -23,6 +23,7 @@ pub mod crypto;
 pub mod helios;
 pub mod iframe_rpc;
 pub mod networking;
+pub mod starknet;
 pub mod utils;
 
 use crate::{
