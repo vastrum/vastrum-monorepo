@@ -69,10 +69,10 @@ export function SiteView({ page_route }: { page_route: string }) {
     <div className="flex-1 flex flex-col">
       <ExternalLinkModal />
       {isLoading ? (
-        <div className="z-1 w-full flex-1 flex flex-col items-center justify-center text-gray-600">
+        <div className="z-1 w-full flex-1 flex flex-col items-center justify-center text-gray-600 px-6 text-center">
           <div className="w-8 h-8 border-4 border-gray-300 border-t-gray-600 rounded-full animate-spin mb-4"></div>
-          <div>Site not yet deployed / Connecting to RPC, polling.. (This might take 5-20 seconds)</div>
-          <div>WebRTC is required to connect to the RPC node, if it is disabled the RPC node connection will fail</div>
+          <div className="text-sm sm:text-base mb-2">Connecting to RPC, polling.. (This might take 5-20 seconds)</div>
+          <div className="text-xs sm:text-sm text-gray-400">WebRTC is required to connect to the RPC node, if it is disabled the RPC node connection will fail</div>
         </div>
       ) : (
         <iframe
