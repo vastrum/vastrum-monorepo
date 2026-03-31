@@ -28,7 +28,6 @@ const SEL_POOL_LIQUIDITY = '0xa99e1b0ff9d47a610510a60e7494dd5174b28b600c30eee35d
 
 const FEE = '0x20c49ba5e353f80000000000000000';
 const TICK_SP = '0x3e8';
-const FEE_PCT = 0.0005;
 const TWO_128 = 2n ** 128n;
 
 const FALLBACK_COLORS: Record<string, string> = {
@@ -202,11 +201,10 @@ function App() {
             const sqrtRatio = feltToU256(priceRes[0], priceRes[1]);
             const sr = Number(sqrtRatio) / Number(TWO_128);
 
-            setPool({
-                sqrtRatio,
-                liquidity: BigInt(liqRes[0]),
-                price: sr * sr * 10 ** (t0.decimals - t1.decimals),
-            });
+            const liquidity = BigInt(liqRes[0]);
+            const price = sr > 0 ? sr * sr * 10 ** (t0.decimals - t1.decimals) : 0;
+
+            setPool({ sqrtRatio, liquidity, price });
         } catch (e: any) {
             setError(e?.message || String(e));
             setPool(null);
@@ -227,17 +225,13 @@ function App() {
         const inputRaw = BigInt(Math.floor(Number(inputAmt) * 10 ** fromToken.decimals));
         if (inputRaw <= 0n) return null;
 
-        const { output, fees } = computeQuote(pool.sqrtRatio, pool.liquidity, inputRaw, fromIsT0);
+        const { output } = computeQuote(pool.sqrtRatio, pool.liquidity, inputRaw, fromIsT0);
 
         const outputNum = Number(output) / 10 ** toToken.decimals;
         const spotOutput = Number(inputAmt) * displayPrice;
         const priceImpact = spotOutput > 0 ? Math.abs((spotOutput - outputNum) / spotOutput) * 100 : 0;
-        return {
-            output: outputNum,
-            fees: Number(fees) / 10 ** fromToken.decimals,
-            priceImpact,
-        };
-    }, [pool, inputAmt, fromToken, toToken, fromIsT0, displayPrice]);
+        return { output: outputNum, priceImpact };
+    }, [pool, inputAmt, fromToken, toToken, fromIsT0]);
 
     // ─── Token selection ──────────────────────────────────────────────────────
 
