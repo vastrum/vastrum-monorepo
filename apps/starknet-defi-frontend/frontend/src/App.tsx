@@ -1,5 +1,5 @@
 import './styles/index.css';
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { starknetRpc } from '@vastrum/react-lib';
 
 import logoETH from './assets/ETH.png';
@@ -42,6 +42,8 @@ function feltToU256(low: string, high: string): bigint {
 }
 
 function fmt(n: number, d = 2): string {
+    if (!isFinite(n) || isNaN(n)) return '—';
+    if (n === 0) return '0';
     if (n >= 1e6) return (n / 1e6).toFixed(d) + 'M';
     if (n >= 1e3) return (n / 1e3).toFixed(d) + 'K';
     if (n >= 1) return n.toFixed(d);
@@ -53,41 +55,26 @@ function sortPair(a: Token, b: Token): [Token, Token] {
     return BigInt(a.address) < BigInt(b.address) ? [a, b] : [b, a];
 }
 
-// Concentrated liquidity single-step quote using x*y=k on virtual reserves.
-// virtual_x = liquidity / sqrt_ratio  (token0 reserve)
-// virtual_y = liquidity * sqrt_ratio  (token1 reserve)
-// For selling token0: output_y = virtual_y * input / (virtual_x + input)
-// For selling token1: output_x = virtual_x * input / (virtual_y + input)
+// Concentrated liquidity single-step swap quote using x*y=k on virtual reserves.
+// virtual_x = L / sqrt_ratio (token0), virtual_y = L * sqrt_ratio (token1)
 function computeQuote(
     sqrtRatio: bigint, liquidity: bigint, inputRaw: bigint, sellingToken0: boolean,
-): { output: bigint; fees: bigint } {
-    if (liquidity === 0n || inputRaw <= 0n) return { output: 0n, fees: 0n };
+): bigint {
+    if (liquidity === 0n || inputRaw <= 0n) return 0n;
 
-    // Apply fee: effective_input = input * (1 - fee)
-    // fee = input * FEE_NUMERATOR / 2^128
     const feeNumerator = BigInt(FEE);
-    const fees = (inputRaw * feeNumerator + TWO_128 - 1n) / TWO_128; // ceil
+    const fees = (inputRaw * feeNumerator + TWO_128 - 1n) / TWO_128;
     const input = inputRaw - fees;
-    if (input <= 0n) return { output: 0n, fees };
+    if (input <= 0n) return 0n;
 
-    // Virtual reserves (keeping full precision in bigint)
-    // virtual_x = L * 2^128 / sqrt_ratio  (token0, scaled by 2^128)
-    // virtual_y = L * sqrt_ratio / 2^128  (token1, scaled down)
-    // But for x*y=k we just need the ratio. Use floats for simplicity:
     const L = Number(liquidity);
     const sr = Number(sqrtRatio) / Number(TWO_128);
-    const vx = L / sr;   // virtual token0 reserve (in raw units)
-    const vy = L * sr;   // virtual token1 reserve (in raw units)
+    const vx = L / sr;
+    const vy = L * sr;
     const inp = Number(input);
 
-    let output: number;
-    if (sellingToken0) {
-        output = (vy * inp) / (vx + inp);
-    } else {
-        output = (vx * inp) / (vy + inp);
-    }
-
-    return { output: BigInt(Math.floor(Math.max(0, output))), fees };
+    const output = sellingToken0 ? (vy * inp) / (vx + inp) : (vx * inp) / (vy + inp);
+    return BigInt(Math.floor(Math.max(0, output)));
 }
 
 // ─── UI Components ────────────────────────────────────────────────────────────
@@ -184,54 +171,57 @@ function App() {
     const [pool, setPool] = useState<PoolState | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [refreshKey, setRefreshKey] = useState(0);
 
     const [t0, t1] = sortPair(fromToken, toToken);
     const fromIsT0 = fromToken.symbol === t0.symbol;
 
-    const fetchPool = useCallback(async () => {
-        setLoading(true);
-        setError('');
-        try {
-            const pkc = [t0.address, t1.address, FEE, TICK_SP, '0x0'];
-            const [priceRes, liqRes] = await Promise.all([
-                starknetRpc('starknet_call', [{ contract_address: EKUBO_CORE, entry_point_selector: SEL_POOL_PRICE, calldata: pkc }, 'latest']),
-                starknetRpc('starknet_call', [{ contract_address: EKUBO_CORE, entry_point_selector: SEL_POOL_LIQUIDITY, calldata: pkc }, 'latest']),
-            ]);
+    useEffect(() => {
+        let cancelled = false;
+        async function fetchPool() {
+            setLoading(true);
+            setError('');
+            try {
+                const pkc = [t0.address, t1.address, FEE, TICK_SP, '0x0'];
+                const [priceRes, liqRes] = await Promise.all([
+                    starknetRpc('starknet_call', [{ contract_address: EKUBO_CORE, entry_point_selector: SEL_POOL_PRICE, calldata: pkc }, 'latest']),
+                    starknetRpc('starknet_call', [{ contract_address: EKUBO_CORE, entry_point_selector: SEL_POOL_LIQUIDITY, calldata: pkc }, 'latest']),
+                ]);
+                if (cancelled) return;
 
-            const sqrtRatio = feltToU256(priceRes[0], priceRes[1]);
-            const sr = Number(sqrtRatio) / Number(TWO_128);
+                const sqrtRatio = feltToU256(priceRes[0], priceRes[1]);
+                const sr = Number(sqrtRatio) / Number(TWO_128);
+                const liquidity = BigInt(liqRes[0]);
+                const price = sr > 0 ? sr * sr * 10 ** (t0.decimals - t1.decimals) : 0;
 
-            const liquidity = BigInt(liqRes[0]);
-            const price = sr > 0 ? sr * sr * 10 ** (t0.decimals - t1.decimals) : 0;
-
-            setPool({ sqrtRatio, liquidity, price });
-        } catch (e: any) {
-            setError(e?.message || String(e));
-            setPool(null);
-        } finally {
-            setLoading(false);
+                setPool({ sqrtRatio, liquidity, price });
+            } catch (e: any) {
+                if (!cancelled) { setError(e?.message || String(e)); setPool(null); }
+            } finally {
+                if (!cancelled) setLoading(false);
+            }
         }
-    }, [t0, t1]);
-
-    useEffect(() => { fetchPool(); }, [fetchPool]);
+        fetchPool();
+        return () => { cancelled = true; };
+    }, [t0, t1, refreshKey]);
 
     // ─── Quote (pure TypeScript math, instant) ────────────────────────────────
 
     const displayPrice = pool ? (fromIsT0 ? pool.price : 1 / pool.price) : null;
 
     const quote = useMemo(() => {
-        if (!pool || !inputAmt || Number(inputAmt) <= 0 || !displayPrice) return null;
+        const n = Number(inputAmt);
+        if (!pool || loading || !inputAmt || isNaN(n) || n <= 0 || !displayPrice) return null;
 
-        const inputRaw = BigInt(Math.floor(Number(inputAmt) * 10 ** fromToken.decimals));
+        const inputRaw = BigInt(Math.floor(n * 10 ** fromToken.decimals));
         if (inputRaw <= 0n) return null;
 
-        const { output } = computeQuote(pool.sqrtRatio, pool.liquidity, inputRaw, fromIsT0);
-
+        const output = computeQuote(pool.sqrtRatio, pool.liquidity, inputRaw, fromIsT0);
         const outputNum = Number(output) / 10 ** toToken.decimals;
         const spotOutput = Number(inputAmt) * displayPrice;
         const priceImpact = spotOutput > 0 ? Math.abs((spotOutput - outputNum) / spotOutput) * 100 : 0;
         return { output: outputNum, priceImpact };
-    }, [pool, inputAmt, fromToken, toToken, fromIsT0]);
+    }, [pool, inputAmt, fromToken, toToken, fromIsT0, loading]);
 
     // ─── Token selection ──────────────────────────────────────────────────────
 
@@ -259,7 +249,7 @@ function App() {
                 <div className="rounded-2xl bg-[#191b1f] p-4 mb-1">
                     <div className="mb-2"><span className="text-xs text-[#8f96ac]">From</span></div>
                     <div className="flex items-center gap-3">
-                        <input type="text" inputMode="decimal" placeholder="0" value={inputAmt}
+                        <input type="text" inputMode="decimal" pattern="[0-9]*" placeholder="0" value={inputAmt}
                             onChange={e => { if (e.target.value === '' || /^\d*\.?\d*$/.test(e.target.value)) setInputAmt(e.target.value); }}
                             className="flex-1 text-3xl font-medium bg-transparent text-white outline-none min-w-0" />
                         <TokenButton token={fromToken} onClick={() => setModal('from')} />
@@ -298,7 +288,7 @@ function App() {
 
                 <div className="mt-3">
                     {error && <div className="text-red-400 text-xs mb-2 break-all">{error}</div>}
-                    <button onClick={fetchPool} disabled={loading}
+                    <button onClick={() => setRefreshKey(k => k + 1)} disabled={loading}
                         className="cursor-pointer w-full py-3.5 rounded-2xl text-base font-semibold transition-colors"
                         style={{ background: loading ? '#2c2f36' : '#e8590c', color: '#fff' }}>
                         {loading ? 'Loading...' : 'Refresh Price'}
