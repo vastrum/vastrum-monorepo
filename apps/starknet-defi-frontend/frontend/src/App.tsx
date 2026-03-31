@@ -303,12 +303,8 @@ function App() {
                                 <Row label="Price impact" value={quote.priceImpact.toFixed(2) + '%'}
                                     valueColor={quote.priceImpact > 5 ? '#ef4444' : quote.priceImpact > 1 ? '#f59e0b' : undefined} />
                             )}
-                            {quote && quote.fees > 0 && (
-                                <Row label="Fee" value={`${fmt(quote.fees, 6)} ${fromToken.symbol}`} />
-                            )}
                             <Row label={`${t0.symbol} in pool`} value={fmt(vx)} white />
                             <Row label={`${t1.symbol} in pool`} value={fmt(vy)} white />
-                            <Row label="Fee tier" value="0.05%" />
                             <Row label="Route" value={`${fromToken.symbol} → ${toToken.symbol} via Ekubo`} />
                         </div>
                     );
