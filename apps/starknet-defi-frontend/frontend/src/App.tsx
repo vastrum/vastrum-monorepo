@@ -54,10 +54,6 @@ function sortPair(a: Token, b: Token): [Token, Token] {
     return BigInt(a.address) < BigInt(b.address) ? [a, b] : [b, a];
 }
 
-function toSignedTick(mag: string, sign: string): number {
-    return Number(BigInt(mag)) * (Number(BigInt(sign)) === 1 ? -1 : 1);
-}
-
 // Concentrated liquidity single-step quote using x*y=k on virtual reserves.
 // virtual_x = liquidity / sqrt_ratio  (token0 reserve)
 // virtual_y = liquidity * sqrt_ratio  (token1 reserve)
@@ -178,7 +174,6 @@ function Row({ label, value, white, valueColor }: { label: string; value: string
 interface PoolState {
     sqrtRatio: bigint;
     liquidity: bigint;
-    tick: number;
     price: number; // t1 per t0, decimal-adjusted
 }
 
@@ -210,7 +205,6 @@ function App() {
             setPool({
                 sqrtRatio,
                 liquidity: BigInt(liqRes[0]),
-                tick: toSignedTick(priceRes[2], priceRes[3]),
                 price: sr * sr * 10 ** (t0.decimals - t1.decimals),
             });
         } catch (e: any) {
@@ -236,11 +230,13 @@ function App() {
         const { output, fees } = computeQuote(pool.sqrtRatio, pool.liquidity, inputRaw, fromIsT0);
 
         const outputNum = Number(output) / 10 ** toToken.decimals;
-        const feesNum = Number(fees) / 10 ** fromToken.decimals;
         const spotOutput = Number(inputAmt) * displayPrice;
-        const slippage = spotOutput > 0 ? Math.abs((spotOutput - outputNum) / spotOutput) * 100 : 0;
-
-        return { output: outputNum, fees: feesNum, slippage };
+        const priceImpact = spotOutput > 0 ? Math.abs((spotOutput - outputNum) / spotOutput) * 100 : 0;
+        return {
+            output: outputNum,
+            fees: Number(fees) / 10 ** fromToken.decimals,
+            priceImpact,
+        };
     }, [pool, inputAmt, fromToken, toToken, fromIsT0, displayPrice]);
 
     // ─── Token selection ──────────────────────────────────────────────────────
@@ -295,19 +291,28 @@ function App() {
                     </div>
                 </div>
 
-                {pool && displayPrice !== null && (
-                    <div className="mt-3 rounded-xl bg-[#191b1f] px-4 py-3 space-y-2 text-sm">
-                        <Row label="Price" value={`1 ${fromToken.symbol} = ${fmt(displayPrice, 4)} ${toToken.symbol}`} />
-                        {quote && quote.slippage > 0.01 && (
-                            <Row label="Price impact" value={quote.slippage.toFixed(2) + '%'}
-                                valueColor={quote.slippage > 5 ? '#ef4444' : quote.slippage > 1 ? '#f59e0b' : undefined} />
-                        )}
-                        {quote && quote.fees > 0 && (
-                            <Row label="Fee" value={`${fmt(quote.fees, 6)} ${fromToken.symbol}`} />
-                        )}
-                        <Row label="Tick" value={pool.tick.toLocaleString()} white />
-                    </div>
-                )}
+                {pool && displayPrice !== null && (() => {
+                    const sr = Number(pool.sqrtRatio) / Number(TWO_128);
+                    const L = Number(pool.liquidity);
+                    const vx = L / sr / 10 ** t0.decimals;
+                    const vy = L * sr / 10 ** t1.decimals;
+                    return (
+                        <div className="mt-3 rounded-xl bg-[#191b1f] px-4 py-3 space-y-2 text-sm">
+                            <Row label="Price" value={`1 ${fromToken.symbol} = ${fmt(displayPrice, 4)} ${toToken.symbol}`} />
+                            {quote && quote.priceImpact > 0.01 && (
+                                <Row label="Price impact" value={quote.priceImpact.toFixed(2) + '%'}
+                                    valueColor={quote.priceImpact > 5 ? '#ef4444' : quote.priceImpact > 1 ? '#f59e0b' : undefined} />
+                            )}
+                            {quote && quote.fees > 0 && (
+                                <Row label="Fee" value={`${fmt(quote.fees, 6)} ${fromToken.symbol}`} />
+                            )}
+                            <Row label={`${t0.symbol} in pool`} value={fmt(vx)} white />
+                            <Row label={`${t1.symbol} in pool`} value={fmt(vy)} white />
+                            <Row label="Fee tier" value="0.05%" />
+                            <Row label="Route" value={`${fromToken.symbol} → ${toToken.symbol} via Ekubo`} />
+                        </div>
+                    );
+                })()}
 
                 <div className="mt-3">
                     {error && <div className="text-red-400 text-xs mb-2 break-all">{error}</div>}
