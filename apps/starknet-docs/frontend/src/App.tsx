@@ -25,25 +25,20 @@ const TOKEN_LIST: Token[] = [
 ];
 
 const SEL = {
-    balance_of:                    '0x35a73cd311a05d46deda634c5ee045db92f811b4e74bca4437fcb5302b7af33',
-    get_pool_price:                '0x63ecb4395e589622a41a66715a0eac930abc9f0b92c0b1dcda630adfb2bf2d',
-    get_pool_liquidity:            '0xa99e1b0ff9d47a610510a60e7494dd5174b28b600c30eee35d157e8688e9a6',
-    next_initialized_tick:         '0x22e41cb0c558b90e9e0f97e635b647ea27dba0a52bfa036591f47fce50d9bdc',
-    prev_initialized_tick:         '0x1f212135402a17a986f43b71377d5a2bdbe8da74607e7904e71ebcefe98bd35',
-    get_pool_tick_liquidity_delta: '0x406dc3ee2f419a91801d2f1cda7c267ee34b26055b30b8de07f32620cb8e4e',
+    balance_of:         '0x35a73cd311a05d46deda634c5ee045db92f811b4e74bca4437fcb5302b7af33',
+    get_pool_price:     '0x63ecb4395e589622a41a66715a0eac930abc9f0b92c0b1dcda630adfb2bf2d',
+    get_pool_liquidity: '0xa99e1b0ff9d47a610510a60e7494dd5174b28b600c30eee35d157e8688e9a6',
 };
 
 const FEE = '0x20c49ba5e353f80000000000000000';
 const TICK_SP = '0x3e8';
 const TICK_SP_NUM = 1000;
-const NUM_TICKS_TO_WALK = 10;
+const FEE_PCT = 0.0005;
 
 const FALLBACK_COLORS: Record<string, string> = {
     ETH: '#627eea', USDC: '#2775ca', STRK: '#ff6b35', WBTC: '#f09242',
     tBTC: '#1a1a2e', SolvBTC: '#f59e0b', LBTC: '#e11d48', EKUBO: '#7c3aed',
 };
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function feltToU256(low: string, high: string): bigint {
     return BigInt(low) + (BigInt(high) << 128n);
@@ -63,36 +58,6 @@ function sortPair(a: Token, b: Token): [Token, Token] {
 
 function toSignedTick(mag: string, sign: string): number {
     return Number(BigInt(mag)) * (Number(BigInt(sign)) === 1 ? -1 : 1);
-}
-
-function tickToCalldata(tick: number): [string, string] {
-    const mag = '0x' + Math.abs(tick).toString(16);
-    const sign = tick < 0 ? '0x1' : '0x0';
-    return [mag, sign];
-}
-
-const poolKeyCalldata = (t0addr: string, t1addr: string) => [t0addr, t1addr, FEE, TICK_SP, '0x0'];
-
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-interface PoolState {
-    sqrtRatioLow: string;
-    sqrtRatioHigh: string;
-    tick: number;
-    liquidity: string;
-    price: number;
-    bal0: number;
-    bal1: number;
-    ticks: { index: number; liquidity_delta: string }[];
-    minTickSearched: number;
-    maxTickSearched: number;
-}
-
-interface QuoteOutput {
-    output: string;
-    fees: string;
-    ticks_crossed: number;
-    error: string | null;
 }
 
 // ─── UI Components ────────────────────────────────────────────────────────────
@@ -175,6 +140,16 @@ function Row({ label, value, white, valueColor }: { label: string; value: string
 
 // ─── App ──────────────────────────────────────────────────────────────────────
 
+interface PoolState {
+    sqrtRatioLow: string;
+    sqrtRatioHigh: string;
+    tick: number;
+    liquidity: string;
+    price: number;
+    bal0: number;
+    bal1: number;
+}
+
 function App() {
     const [fromToken, setFromToken] = useState(TOKEN_LIST[0]);
     const [toToken, setToToken] = useState(TOKEN_LIST[1]);
@@ -186,122 +161,31 @@ function App() {
 
     const [t0, t1] = sortPair(fromToken, toToken);
     const fromIsT0 = fromToken.symbol === t0.symbol;
+    const pkc = [t0.address, t1.address, FEE, TICK_SP, '0x0'];
 
-    // ─── Fetch pool + tick data ───────────────────────────────────────────────
+    // ─── Fetch pool price + liquidity (2 RPC calls) ──────────────────────────
 
     const fetchPool = useCallback(async () => {
         setLoading(true);
         setError('');
         try {
-            const pkc = poolKeyCalldata(t0.address, t1.address);
-
-            // 1. Get pool price + liquidity in parallel
             const [priceRes, liqRes, b0, b1] = await Promise.all([
-                starknetRpc('starknet_call', [{
-                    contract_address: EKUBO_CORE,
-                    entry_point_selector: SEL.get_pool_price,
-                    calldata: pkc,
-                }, 'latest']),
-                starknetRpc('starknet_call', [{
-                    contract_address: EKUBO_CORE,
-                    entry_point_selector: SEL.get_pool_liquidity,
-                    calldata: pkc,
-                }, 'latest']),
-                starknetRpc('starknet_call', [{
-                    contract_address: t0.address,
-                    entry_point_selector: SEL.balance_of,
-                    calldata: [EKUBO_CORE],
-                }, 'latest']),
-                starknetRpc('starknet_call', [{
-                    contract_address: t1.address,
-                    entry_point_selector: SEL.balance_of,
-                    calldata: [EKUBO_CORE],
-                }, 'latest']),
+                starknetRpc('starknet_call', [{ contract_address: EKUBO_CORE, entry_point_selector: SEL.get_pool_price, calldata: pkc }, 'latest']),
+                starknetRpc('starknet_call', [{ contract_address: EKUBO_CORE, entry_point_selector: SEL.get_pool_liquidity, calldata: pkc }, 'latest']),
+                starknetRpc('starknet_call', [{ contract_address: t0.address, entry_point_selector: SEL.balance_of, calldata: [EKUBO_CORE] }, 'latest']),
+                starknetRpc('starknet_call', [{ contract_address: t1.address, entry_point_selector: SEL.balance_of, calldata: [EKUBO_CORE] }, 'latest']),
             ]);
 
-            const sqrtRatioLow = priceRes[0] as string;
-            const sqrtRatioHigh = priceRes[1] as string;
-            const currentTick = toSignedTick(priceRes[2], priceRes[3]);
-            const liquidity = liqRes[0] as string;
-
-            // Compute display price
-            const sr = Number(feltToU256(sqrtRatioLow, sqrtRatioHigh)) / Number(2n ** 128n);
-            const price = sr * sr * 10 ** (t0.decimals - t1.decimals);
-
-            const bal0 = Number(feltToU256(b0[0], b0[1])) / 10 ** t0.decimals;
-            const bal1 = Number(feltToU256(b1[0], b1[1])) / 10 ** t1.decimals;
-
-            // 2. Walk initialized ticks forward and backward
-            const ticks: { index: number; liquidity_delta: string }[] = [];
-            let minTickSearched = currentTick;
-            let maxTickSearched = currentTick;
-
-            // Walk forward
-            let walkTick = currentTick;
-            for (let i = 0; i < NUM_TICKS_TO_WALK; i++) {
-                const [mag, sign] = tickToCalldata(walkTick);
-                const res = await starknetRpc('starknet_call', [{
-                    contract_address: EKUBO_CORE,
-                    entry_point_selector: SEL.next_initialized_tick,
-                    calldata: [...pkc, mag, sign, '0x0'],
-                }, 'latest']);
-                const nextTick = toSignedTick(res[0], res[1]);
-                const initialized = Number(BigInt(res[2]));
-                if (!initialized) break;
-                maxTickSearched = nextTick;
-
-                // Get liquidity delta
-                const [dmag, dsign] = tickToCalldata(nextTick);
-                const deltaRes = await starknetRpc('starknet_call', [{
-                    contract_address: EKUBO_CORE,
-                    entry_point_selector: SEL.get_pool_tick_liquidity_delta,
-                    calldata: [...pkc, dmag, dsign],
-                }, 'latest']);
-                const deltaMag = BigInt(deltaRes[0]);
-                const deltaSign = Number(BigInt(deltaRes[1]));
-                const delta = deltaSign === 1 ? `-${deltaMag.toString()}` : deltaMag.toString();
-                ticks.push({ index: nextTick, liquidity_delta: delta });
-                walkTick = nextTick;
-            }
-
-            // Walk backward
-            walkTick = currentTick;
-            for (let i = 0; i < NUM_TICKS_TO_WALK; i++) {
-                const [mag, sign] = tickToCalldata(walkTick);
-                const res = await starknetRpc('starknet_call', [{
-                    contract_address: EKUBO_CORE,
-                    entry_point_selector: SEL.prev_initialized_tick,
-                    calldata: [...pkc, mag, sign, '0x0'],
-                }, 'latest']);
-                const prevTick = toSignedTick(res[0], res[1]);
-                const initialized = Number(BigInt(res[2]));
-                if (!initialized) break;
-                minTickSearched = prevTick;
-
-                const [dmag, dsign] = tickToCalldata(prevTick);
-                const deltaRes = await starknetRpc('starknet_call', [{
-                    contract_address: EKUBO_CORE,
-                    entry_point_selector: SEL.get_pool_tick_liquidity_delta,
-                    calldata: [...pkc, dmag, dsign],
-                }, 'latest']);
-                const deltaMag = BigInt(deltaRes[0]);
-                const deltaSign = Number(BigInt(deltaRes[1]));
-                const delta = deltaSign === 1 ? `-${deltaMag.toString()}` : deltaMag.toString();
-                ticks.push({ index: prevTick, liquidity_delta: delta });
-                walkTick = prevTick;
-            }
+            const sr = Number(feltToU256(priceRes[0], priceRes[1])) / Number(2n ** 128n);
 
             setPool({
-                sqrtRatioLow,
-                sqrtRatioHigh,
-                tick: currentTick,
-                liquidity,
-                price,
-                bal0,
-                bal1,
-                ticks,
-                minTickSearched,
-                maxTickSearched,
+                sqrtRatioLow: priceRes[0],
+                sqrtRatioHigh: priceRes[1],
+                tick: toSignedTick(priceRes[2], priceRes[3]),
+                liquidity: liqRes[0],
+                price: sr * sr * 10 ** (t0.decimals - t1.decimals),
+                bal0: Number(feltToU256(b0[0], b0[1])) / 10 ** t0.decimals,
+                bal1: Number(feltToU256(b1[0], b1[1])) / 10 ** t1.decimals,
             });
         } catch (e: any) {
             setError(e?.message || String(e));
@@ -313,47 +197,39 @@ function App() {
 
     useEffect(() => { fetchPool(); }, [fetchPool]);
 
-    // ─── Compute quote via WASM ───────────────────────────────────────────────
+    // ─── Quote via WASM single-step (no tick walking) ─────────────────────────
 
     const displayPrice = pool ? (fromIsT0 ? pool.price : 1 / pool.price) : null;
 
-    const quote = useMemo((): QuoteOutput | null => {
+    const quote = useMemo(() => {
         if (!pool || !inputAmt || Number(inputAmt) <= 0) return null;
 
-        const fromDecimals = fromToken.decimals;
-        const amountRaw = BigInt(Math.floor(Number(inputAmt) * 10 ** fromDecimals));
+        const amountRaw = BigInt(Math.floor(Number(inputAmt) * 10 ** fromToken.decimals));
         if (amountRaw <= 0n) return null;
 
-        // is_token1: are we selling token1 (the larger-address token)?
-        const isToken1 = !fromIsT0;
-
+        // No ticks — from_partial_data gets empty ticks + min/max = current tick
+        // This gives a single liquidity segment at the current sqrt_ratio
         try {
-            const resultJson = compute_quote(
-                pool.sqrtRatioLow,
-                pool.sqrtRatioHigh,
-                pool.liquidity,
-                pool.tick,
-                FEE,
-                TICK_SP_NUM,
-                JSON.stringify(pool.ticks),
+            const result = JSON.parse(compute_quote(
+                pool.sqrtRatioLow, pool.sqrtRatioHigh, pool.liquidity, pool.tick,
+                FEE, TICK_SP_NUM,
+                '[]',
                 amountRaw.toString(),
-                isToken1,
-                pool.minTickSearched,
-                pool.maxTickSearched,
-            );
-            return JSON.parse(resultJson) as QuoteOutput;
+                !fromIsT0,
+                pool.tick, pool.tick,
+            ));
+            if (result.error) return { output: 0, fees: 0, error: result.error as string };
+            const output = Number(BigInt(result.output)) / 10 ** toToken.decimals;
+            const fees = Number(BigInt(result.fees)) / 10 ** fromToken.decimals;
+            const spotOutput = displayPrice ? Number(inputAmt) * displayPrice : 0;
+            const slippage = spotOutput > 0 ? Math.abs((spotOutput - output) / spotOutput) * 100 : 0;
+            return { output, fees, slippage, error: null };
         } catch {
-            return null;
+            // Fallback to spot price
+            if (!displayPrice) return null;
+            return { output: Number(inputAmt) * displayPrice * (1 - FEE_PCT), fees: Number(inputAmt) * FEE_PCT, slippage: 0, error: null };
         }
-    }, [pool, inputAmt, fromToken, fromIsT0]);
-
-    const outputAmt = quote && !quote.error
-        ? Number(BigInt(quote.output)) / 10 ** toToken.decimals
-        : null;
-
-    const feesAmt = quote && !quote.error
-        ? Number(BigInt(quote.fees)) / 10 ** fromToken.decimals
-        : null;
+    }, [pool, inputAmt, fromToken, toToken, fromIsT0, displayPrice]);
 
     // ─── Token selection ──────────────────────────────────────────────────────
 
@@ -373,8 +249,6 @@ function App() {
 
     const fromBal = pool ? (fromIsT0 ? pool.bal0 : pool.bal1) : null;
     const toBal = pool ? (fromIsT0 ? pool.bal1 : pool.bal0) : null;
-
-    // ─── Render ───────────────────────────────────────────────────────────────
 
     return (
         <div className="min-h-screen bg-[#191b1f] flex flex-col items-center pt-12 px-4">
@@ -397,7 +271,6 @@ function App() {
                     </div>
                 </div>
 
-                {/* Swap */}
                 <div className="flex justify-center -my-3 relative z-10">
                     <button onClick={flip}
                         className="cursor-pointer w-10 h-10 rounded-xl bg-[#212429] border-4 border-[#191b1f] flex items-center justify-center text-[#8f96ac] hover:text-white transition-colors">
@@ -414,8 +287,8 @@ function App() {
                         {toBal !== null && <span className="text-xs text-[#8f96ac]">Pool: {fmt(toBal)} {toToken.symbol}</span>}
                     </div>
                     <div className="flex items-center gap-3">
-                        <div className="flex-1 text-3xl font-medium min-w-0" style={{ color: outputAmt ? '#fff' : '#5d6785' }}>
-                            {outputAmt !== null ? fmt(outputAmt, 4) : '0'}
+                        <div className="flex-1 text-3xl font-medium min-w-0" style={{ color: quote?.output ? '#fff' : '#5d6785' }}>
+                            {quote && !quote.error && quote.output > 0 ? fmt(quote.output, 4) : '0'}
                         </div>
                         <TokenButton token={toToken} onClick={() => setModal('to')} />
                     </div>
@@ -425,27 +298,26 @@ function App() {
                 {pool && displayPrice !== null && (
                     <div className="mt-3 rounded-xl bg-[#191b1f] px-4 py-3 space-y-2 text-sm">
                         <Row label="Price" value={`1 ${fromToken.symbol} = ${fmt(displayPrice, 4)} ${toToken.symbol}`} />
-                        {quote && !quote.error && quote.ticks_crossed > 0 && (
-                            <Row label="Ticks crossed" value={quote.ticks_crossed.toString()} white />
+                        {quote && !quote.error && quote.slippage !== undefined && quote.slippage > 0.01 && (
+                            <Row label="Price impact" value={quote.slippage.toFixed(2) + '%'}
+                                valueColor={quote.slippage > 5 ? '#ef4444' : quote.slippage > 1 ? '#f59e0b' : undefined} />
                         )}
-                        {feesAmt !== null && feesAmt > 0 && (
-                            <Row label="Fees" value={`${fmt(feesAmt, 6)} ${fromToken.symbol}`} />
+                        {quote && !quote.error && quote.fees > 0 && (
+                            <Row label="Fee" value={`${fmt(quote.fees, 6)} ${fromToken.symbol}`} />
                         )}
                         {quote?.error && (
-                            <Row label="Quote" value={quote.error} valueColor="#ef4444" />
+                            <Row label="Error" value={quote.error} valueColor="#ef4444" />
                         )}
                         <Row label="Tick" value={pool.tick.toLocaleString()} white />
-                        <Row label="Ticks loaded" value={pool.ticks.length.toString()} />
                     </div>
                 )}
 
-                {/* Action */}
                 <div className="mt-3">
                     {error && <div className="text-red-400 text-xs mb-2 break-all">{error}</div>}
                     <button onClick={fetchPool} disabled={loading}
                         className="cursor-pointer w-full py-3.5 rounded-2xl text-base font-semibold transition-colors"
                         style={{ background: loading ? '#2c2f36' : '#e8590c', color: '#fff' }}>
-                        {loading ? 'Loading ticks...' : 'Refresh Price'}
+                        {loading ? 'Loading...' : 'Refresh Price'}
                     </button>
                 </div>
             </div>
