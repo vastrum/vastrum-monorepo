@@ -24,11 +24,8 @@ const TOKEN_LIST: Token[] = [
     { address: '0x075afe6402ad5a5c20dd25e10ec3b3986acaa647b77e4ae24b0cbc9a54a27a87', decimals: 18, symbol: 'EKUBO',   name: 'Ekubo Protocol',  logo: logoEKUBO },
 ];
 
-const SEL = {
-    balance_of:         '0x35a73cd311a05d46deda634c5ee045db92f811b4e74bca4437fcb5302b7af33',
-    get_pool_price:     '0x63ecb4395e589622a41a66715a0eac930abc9f0b92c0b1dcda630adfb2bf2d',
-    get_pool_liquidity: '0xa99e1b0ff9d47a610510a60e7494dd5174b28b600c30eee35d157e8688e9a6',
-};
+const SEL_POOL_PRICE     = '0x63ecb4395e589622a41a66715a0eac930abc9f0b92c0b1dcda630adfb2bf2d';
+const SEL_POOL_LIQUIDITY = '0xa99e1b0ff9d47a610510a60e7494dd5174b28b600c30eee35d157e8688e9a6';
 
 const FEE = '0x20c49ba5e353f80000000000000000';
 const TICK_SP = '0x3e8';
@@ -146,8 +143,6 @@ interface PoolState {
     tick: number;
     liquidity: string;
     price: number;
-    bal0: number;
-    bal1: number;
 }
 
 function App() {
@@ -161,19 +156,17 @@ function App() {
 
     const [t0, t1] = sortPair(fromToken, toToken);
     const fromIsT0 = fromToken.symbol === t0.symbol;
-    const pkc = [t0.address, t1.address, FEE, TICK_SP, '0x0'];
 
-    // ─── Fetch pool price + liquidity (2 RPC calls) ──────────────────────────
+    // ─── Fetch pool price + liquidity (4 parallel RPC calls) ─────────────────
 
     const fetchPool = useCallback(async () => {
         setLoading(true);
         setError('');
         try {
-            const [priceRes, liqRes, b0, b1] = await Promise.all([
-                starknetRpc('starknet_call', [{ contract_address: EKUBO_CORE, entry_point_selector: SEL.get_pool_price, calldata: pkc }, 'latest']),
-                starknetRpc('starknet_call', [{ contract_address: EKUBO_CORE, entry_point_selector: SEL.get_pool_liquidity, calldata: pkc }, 'latest']),
-                starknetRpc('starknet_call', [{ contract_address: t0.address, entry_point_selector: SEL.balance_of, calldata: [EKUBO_CORE] }, 'latest']),
-                starknetRpc('starknet_call', [{ contract_address: t1.address, entry_point_selector: SEL.balance_of, calldata: [EKUBO_CORE] }, 'latest']),
+            const pkc = [t0.address, t1.address, FEE, TICK_SP, '0x0'];
+            const [priceRes, liqRes] = await Promise.all([
+                starknetRpc('starknet_call', [{ contract_address: EKUBO_CORE, entry_point_selector: SEL_POOL_PRICE, calldata: pkc }, 'latest']),
+                starknetRpc('starknet_call', [{ contract_address: EKUBO_CORE, entry_point_selector: SEL_POOL_LIQUIDITY, calldata: pkc }, 'latest']),
             ]);
 
             const sr = Number(feltToU256(priceRes[0], priceRes[1])) / Number(2n ** 128n);
@@ -184,8 +177,6 @@ function App() {
                 tick: toSignedTick(priceRes[2], priceRes[3]),
                 liquidity: liqRes[0],
                 price: sr * sr * 10 ** (t0.decimals - t1.decimals),
-                bal0: Number(feltToU256(b0[0], b0[1])) / 10 ** t0.decimals,
-                bal1: Number(feltToU256(b1[0], b1[1])) / 10 ** t1.decimals,
             });
         } catch (e: any) {
             setError(e?.message || String(e));
@@ -207,8 +198,10 @@ function App() {
         const amountRaw = BigInt(Math.floor(Number(inputAmt) * 10 ** fromToken.decimals));
         if (amountRaw <= 0n) return null;
 
-        // No ticks — from_partial_data gets empty ticks + min/max = current tick
-        // This gives a single liquidity segment at the current sqrt_ratio
+        // No ticks — from_partial_data creates synthetic boundary ticks spanning the full range.
+        // Use Starknet's chain-wide min/max tick so the single liquidity segment covers all prices.
+        const MIN_TICK = -88722883;
+        const MAX_TICK = 88722883;
         try {
             const result = JSON.parse(compute_quote(
                 pool.sqrtRatioLow, pool.sqrtRatioHigh, pool.liquidity, pool.tick,
@@ -216,7 +209,7 @@ function App() {
                 '[]',
                 amountRaw.toString(),
                 !fromIsT0,
-                pool.tick, pool.tick,
+                MIN_TICK, MAX_TICK,
             ));
             if (result.error) return { output: 0, fees: 0, error: result.error as string };
             const output = Number(BigInt(result.output)) / 10 ** toToken.decimals;
@@ -229,7 +222,7 @@ function App() {
             if (!displayPrice) return null;
             return { output: Number(inputAmt) * displayPrice * (1 - FEE_PCT), fees: Number(inputAmt) * FEE_PCT, slippage: 0, error: null };
         }
-    }, [pool, inputAmt, fromToken, toToken, fromIsT0, displayPrice]);
+    }, [pool, inputAmt, fromToken, toToken, fromIsT0]);
 
     // ─── Token selection ──────────────────────────────────────────────────────
 
@@ -247,9 +240,6 @@ function App() {
 
     const flip = () => { setFromToken(toToken); setToToken(fromToken); setInputAmt(''); };
 
-    const fromBal = pool ? (fromIsT0 ? pool.bal0 : pool.bal1) : null;
-    const toBal = pool ? (fromIsT0 ? pool.bal1 : pool.bal0) : null;
-
     return (
         <div className="min-h-screen bg-[#191b1f] flex flex-col items-center pt-12 px-4">
             <div className="w-full max-w-[420px] mb-3">
@@ -259,9 +249,8 @@ function App() {
             <div className="w-full max-w-[420px] rounded-2xl bg-[#212429] border border-[#2c2f36] p-3">
                 {/* From */}
                 <div className="rounded-2xl bg-[#191b1f] p-4 mb-1">
-                    <div className="flex justify-between mb-2">
+                    <div className="mb-2">
                         <span className="text-xs text-[#8f96ac]">From</span>
-                        {fromBal !== null && <span className="text-xs text-[#8f96ac]">Pool: {fmt(fromBal)} {fromToken.symbol}</span>}
                     </div>
                     <div className="flex items-center gap-3">
                         <input type="text" inputMode="decimal" placeholder="0" value={inputAmt}
@@ -282,9 +271,8 @@ function App() {
 
                 {/* To */}
                 <div className="rounded-2xl bg-[#191b1f] p-4 mt-1">
-                    <div className="flex justify-between mb-2">
+                    <div className="mb-2">
                         <span className="text-xs text-[#8f96ac]">To (estimated)</span>
-                        {toBal !== null && <span className="text-xs text-[#8f96ac]">Pool: {fmt(toBal)} {toToken.symbol}</span>}
                     </div>
                     <div className="flex items-center gap-3">
                         <div className="flex-1 text-3xl font-medium min-w-0" style={{ color: quote?.output ? '#fff' : '#5d6785' }}>
