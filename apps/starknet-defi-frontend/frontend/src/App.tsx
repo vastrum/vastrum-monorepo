@@ -44,9 +44,7 @@ function feltToU256(low: string, high: string): bigint {
 function fmt(n: number, d = 2): string {
     if (!isFinite(n) || isNaN(n)) return '—';
     if (n === 0) return '0';
-    if (n >= 1e6) return (n / 1e6).toFixed(d) + 'M';
-    if (n >= 1e3) return (n / 1e3).toFixed(d) + 'K';
-    if (n >= 1) return n.toFixed(d);
+    if (n >= 1) return n.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
     if (n >= 0.0001) return n.toFixed(6);
     return n.toExponential(3);
 }
