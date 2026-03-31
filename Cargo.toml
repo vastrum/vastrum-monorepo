@@ -76,6 +76,7 @@ members = [
     "apps/starknet-docs/contract",
     "apps/starknet-docs/abi",
     "apps/starknet-docs/deploy",
+    "apps/starknet-docs/frontend/wasm",
 
     "runtime/runtime-tests/contract",
     "runtime/runtime-tests/abi",

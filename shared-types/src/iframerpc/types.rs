@@ -204,7 +204,6 @@ pub struct GetEthRPCResponse {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct StarknetRPCRequest {
-    pub rpc_url: String,
     pub method: String,
     #[serde(default)]
     pub params: Value,

@@ -26,17 +26,13 @@ function assertExists(value: unknown, message: string): void {
     assert(value !== undefined && value !== null, message);
 }
 
-// Starknet mainnet public RPC
-const RPC_URL = 'https://rpc.starknet.lava.build';
-
 // Well-known Starknet mainnet contracts
 const ETH_TOKEN = '0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7';
 
 async function testChainId(): Promise<void> {
     console.log('\n[STARKNET] Testing starknet_chainId...');
-    const result = await starknetRpc(RPC_URL, 'starknet_chainId', []);
+    const result = await starknetRpc('starknet_chainId', []);
     assertExists(result, 'Chain ID should exist');
-    // SN_MAIN is "0x534e5f4d41494e" in hex
     assert(typeof result === 'string', `Chain ID should be a string, got ${typeof result}`);
     assert(result.startsWith('0x'), `Chain ID should be hex, got ${result}`);
     console.log(`   Chain ID: ${result}`);
@@ -44,7 +40,7 @@ async function testChainId(): Promise<void> {
 
 async function testBlockNumber(): Promise<void> {
     console.log('\n[STARKNET] Testing starknet_blockNumber...');
-    const result = await starknetRpc(RPC_URL, 'starknet_blockNumber', []);
+    const result = await starknetRpc('starknet_blockNumber', []);
     assertExists(result, 'Block number should exist');
     assert(typeof result === 'number', `Block number should be a number, got ${typeof result}`);
     assert(result > 0, `Block number should be positive, got ${result}`);
@@ -53,7 +49,7 @@ async function testBlockNumber(): Promise<void> {
 
 async function testGetBlockWithTxHashes(): Promise<void> {
     console.log('\n[STARKNET] Testing starknet_getBlockWithTxHashes...');
-    const result = await starknetRpc(RPC_URL, 'starknet_getBlockWithTxHashes', ['latest']);
+    const result = await starknetRpc('starknet_getBlockWithTxHashes', ['latest']);
     assertExists(result, 'Block should exist');
     assertExists(result.block_hash, 'Block hash should exist');
     assertExists(result.block_number, 'Block number should exist');
@@ -65,7 +61,7 @@ async function testGetBlockWithTxHashes(): Promise<void> {
 
 async function testGetNonce(): Promise<void> {
     console.log('\n[STARKNET] Testing starknet_getNonce...');
-    const result = await starknetRpc(RPC_URL, 'starknet_getNonce', [
+    const result = await starknetRpc('starknet_getNonce', [
         'latest',
         ETH_TOKEN,
     ]);
@@ -76,7 +72,7 @@ async function testGetNonce(): Promise<void> {
 
 async function testGetClassHashAt(): Promise<void> {
     console.log('\n[STARKNET] Testing starknet_getClassHashAt...');
-    const result = await starknetRpc(RPC_URL, 'starknet_getClassHashAt', [
+    const result = await starknetRpc('starknet_getClassHashAt', [
         'latest',
         ETH_TOKEN,
     ]);
@@ -89,8 +85,7 @@ async function testGetClassHashAt(): Promise<void> {
 
 async function testGetStorageAt(): Promise<void> {
     console.log('\n[STARKNET] Testing starknet_getStorageAt...');
-    // Storage key 0x0 (often the contract name or owner)
-    const result = await starknetRpc(RPC_URL, 'starknet_getStorageAt', [
+    const result = await starknetRpc('starknet_getStorageAt', [
         ETH_TOKEN,
         '0x0',
         'latest',
@@ -102,9 +97,7 @@ async function testGetStorageAt(): Promise<void> {
 
 async function testCall(): Promise<void> {
     console.log('\n[STARKNET] Testing starknet_call...');
-    // Call name() on ETH token contract
-    // name() selector: sn_keccak("name") = 0x361458367e696363fbcc70777d07ebbd2394e89fd0adcaf147faccd1d294d60
-    const result = await starknetRpc(RPC_URL, 'starknet_call', [
+    const result = await starknetRpc('starknet_call', [
         {
             contract_address: ETH_TOKEN,
             entry_point_selector: '0x361458367e696363fbcc70777d07ebbd2394e89fd0adcaf147faccd1d294d60',
@@ -120,13 +113,12 @@ async function testCall(): Promise<void> {
 
 async function testGetClassAt(): Promise<void> {
     console.log('\n[STARKNET] Testing starknet_getClassAt...');
-    const result = await starknetRpc(RPC_URL, 'starknet_getClassAt', [
+    const result = await starknetRpc('starknet_getClassAt', [
         'latest',
         ETH_TOKEN,
     ]);
     assertExists(result, 'Class definition should exist');
     assert(typeof result === 'object', `Class should be an object, got ${typeof result}`);
-    // Sierra classes have 'sierra_program', legacy have 'program'
     const hasSierra = 'sierra_program' in result;
     const hasLegacy = 'program' in result;
     assert(hasSierra || hasLegacy, 'Class should have sierra_program or program field');

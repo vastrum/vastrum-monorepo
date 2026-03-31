@@ -1,3 +1,5 @@
+const STARKNET_RPC_URL: &str = "https://rpc.starknet.lava.build";
+
 pub async fn send_starknet_rpc(req: StarknetRPCRequest) -> Value {
     let envelope = serde_json::json!({
         "jsonrpc": "2.0",
@@ -8,7 +10,7 @@ pub async fn send_starknet_rpc(req: StarknetRPCRequest) -> Value {
 
     let client = reqwest::Client::new();
     let response = client
-        .post(&req.rpc_url)
+        .post(STARKNET_RPC_URL)
         .timeout(std::time::Duration::from_secs(30))
         .json(&envelope)
         .send()
