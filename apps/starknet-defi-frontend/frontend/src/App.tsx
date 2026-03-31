@@ -70,7 +70,7 @@ function computeQuote(
 
     // Apply fee: effective_input = input * (1 - fee)
     // fee = input * FEE_NUMERATOR / 2^128
-    const feeNumerator = BigInt(FEE.replace('0x', ''));
+    const feeNumerator = BigInt(FEE);
     const fees = (inputRaw * feeNumerator + TWO_128 - 1n) / TWO_128; // ceil
     const input = inputRaw - fees;
     if (input <= 0n) return { output: 0n, fees };
