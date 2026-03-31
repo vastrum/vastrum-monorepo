@@ -170,6 +170,7 @@ function App() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [refreshKey, setRefreshKey] = useState(0);
+    const [showNotImplemented, setShowNotImplemented] = useState(false);
 
     const [t0, t1] = sortPair(fromToken, toToken);
     const fromIsT0 = fromToken.symbol === t0.symbol;
@@ -286,10 +287,12 @@ function App() {
 
                 <div className="mt-3">
                     {error && <div className="text-red-400 text-xs mb-2 break-all">{error}</div>}
-                    <button onClick={() => setRefreshKey(k => k + 1)} disabled={loading}
+                    <button
+                        onClick={() => quote ? setShowNotImplemented(true) : setRefreshKey(k => k + 1)}
+                        disabled={loading}
                         className="cursor-pointer w-full py-3.5 rounded-2xl text-base font-semibold transition-colors"
                         style={{ background: loading ? '#2c2f36' : '#e8590c', color: '#fff' }}>
-                        {loading ? 'Loading...' : 'Refresh Price'}
+                        {loading ? 'Loading...' : !pool ? 'Loading...' : quote ? 'Swap' : 'Enter an amount'}
                     </button>
                 </div>
             </div>
@@ -297,6 +300,27 @@ function App() {
             <div className="text-[#5d6785] text-xs mt-4">Ekubo Protocol on Starknet</div>
 
             <TokenModal open={modal !== null} onClose={() => setModal(null)} onSelect={handleSelectToken} />
+
+            {showNotImplemented && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center" onClick={() => setShowNotImplemented(false)}>
+                    <div className="absolute inset-0 bg-black/60" />
+                    <div className="relative w-full max-w-[360px] mx-4 rounded-2xl bg-[#212429] border border-[#2c2f36] overflow-hidden"
+                        onClick={e => e.stopPropagation()}>
+                        <div className="px-5 py-4 border-b border-[#2c2f36]">
+                            <span className="text-white font-medium">Not Implemented</span>
+                        </div>
+                        <div className="p-5 space-y-4">
+                            <p className="text-[#8f96ac] text-sm">
+                                Submitting transactions to Starknet is not currently supported. Only reading data from Starknet is implemented.
+                            </p>
+                            <button onClick={() => setShowNotImplemented(false)}
+                                className="cursor-pointer w-full py-2.5 rounded-xl bg-[#e8590c] text-white font-medium hover:bg-[#d14e0a] transition-colors">
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
