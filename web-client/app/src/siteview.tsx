@@ -71,7 +71,8 @@ export function SiteView({ page_route }: { page_route: string }) {
       {isLoading ? (
         <div className="z-1 w-full flex-1 flex flex-col items-center justify-center text-gray-600">
           <div className="w-8 h-8 border-4 border-gray-300 border-t-gray-600 rounded-full animate-spin mb-4"></div>
-          <div>Site not yet deployed / Connecting to RPC, polling..</div>
+          <div>Site not yet deployed / Connecting to RPC, polling.. (This might take 5-20 seconds)</div>
+          <div>WebRTC is required to connect to the RPC node, if it is disabled the RPC node connection will fail</div>
         </div>
       ) : (
         <iframe

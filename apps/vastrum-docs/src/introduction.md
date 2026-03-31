@@ -44,7 +44,7 @@ You do not have to install a wallet, the private key is stored by the vastrum.ne
 -   Very lightweight, 6k lines of Rust for vastrum-node, 30k lines of Rust for all apps+runtime+tooling+tests+webrtc-direct+web-client+vastrum-node
 
 
-
+This is a pretty radical architecture which presents many problems. If you are interested in the proposed solutions to these problems check [General Architecture Decisions](tech/general-architecture-decisions.md)
 
 
 <br>
