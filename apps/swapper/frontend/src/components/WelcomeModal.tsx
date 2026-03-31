@@ -26,7 +26,9 @@ export function WelcomeModal({ isOpen, onClose }: WelcomeModalProps) {
                     <p className="text-app-text-secondary mt-3">
                         Because Helios cryptographically verifies the RPC queries, it can take 5-20 seconds to execute a query.
                     </p>
-
+                    <p className="text-app-text-secondary mt-3">
+                        Currently you cannot sign or send transactions using Swapper.
+                    </p>
                     <p className="text-app-text-secondary mt-3">
                         For more details check the Swapper docs.
                     </p>
