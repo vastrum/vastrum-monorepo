@@ -1,4 +1,7 @@
+Note: Vastrum requires WebRTC to be enabled to connect, if it is disabled the frontend cannot load the website data from the RPC node.
+
 Vastrum is an experimental L1 for hosting decentralized websites and services.
+
 
 https://docs.vastrum.net
 
