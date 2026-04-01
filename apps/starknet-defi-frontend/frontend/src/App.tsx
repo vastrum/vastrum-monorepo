@@ -281,7 +281,6 @@ function App() {
                             <Row label="Price impact" value={quote.priceImpact.toFixed(2) + '%'}
                                 valueColor={quote.priceImpact > 5 ? '#ef4444' : quote.priceImpact > 1 ? '#f59e0b' : undefined} />
                         )}
-                        <Row label="Route" value={`${fromToken.symbol} → ${toToken.symbol} via Ekubo`} />
                     </div>
                 )}
 
