@@ -1,18 +1,6 @@
-Vastrum is a L1 for hosting decentralized websites and services.
-
-
-Basically it is a L1 that uses Rust Wasm smart contracts for website "backend" execution (Git object uploads, chat messages, forum posts)
-
-
-The frontend/website then does RPC reads from teh smart contract to render the current state of the page.
-
-The frontend/website is a self contained HTML file that is executed inside a sandboxed IFrame in the users web browser, this sandboxes any external internet connection by the application outside of the Vastrum RPC protocol.
-
-
-I have previously developed Swapper which was a Uniswap V2 frontend hosted on Vastrum using the Helios light client embedded inside the web browser to do verified RPC queries. 
-
 For this hackathon i implemented a Starknet light client.
 
+I have previously developed Swapper for Vastrum which was a Uniswap V2 frontend hosted on Vastrum using the Helios light client embedded inside the web browser to do verified RPC queries. 
 
 I did this by forking Beerus which is an abandoned project for creating a webbrowser embeddable light client for Starknet.
 https://github.com/vastrum/Beeruser
