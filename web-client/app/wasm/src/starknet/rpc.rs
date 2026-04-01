@@ -1,6 +1,28 @@
 const STARKNET_RPC_URL: &str = "https://rpc.starknet.lava.build";
 
 pub async fn send_starknet_rpc(req: StarknetRPCRequest) -> Value {
+    // Route starknet_call through beerus for proof-verified execution
+    if req.method == "starknet_call" {
+        if let Some(params) = req.params.as_array() {
+            if let Some(call_obj) = params.first() {
+                match super::client::execute(call_obj).await {
+                    Ok(result) => return result,
+                    Err(e) => {
+                        web_sys::console::warn_1(
+                            &format!("beerus execute failed, falling back to direct RPC: {e}")
+                                .into(),
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    // Default path: direct JSON-RPC
+    send_direct_rpc(&req).await
+}
+
+async fn send_direct_rpc(req: &StarknetRPCRequest) -> Value {
     let envelope = serde_json::json!({
         "jsonrpc": "2.0",
         "id": 1,

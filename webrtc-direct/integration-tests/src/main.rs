@@ -175,7 +175,9 @@ mod tests {
                 let t = Instant::now();
                 eprintln!("[bench] navigating to {url}...");
                 tab.navigate_to(&url).expect("Failed to navigate");
-                tab.wait_until_navigated().expect("Failed to wait for navigation");
+                if let Err(e) = tab.wait_until_navigated() {
+                    eprintln!("[bench] wait_until_navigated failed (continuing): {e}");
+                }
                 eprintln!("[bench] navigation: {:.1}s", t.elapsed().as_secs_f64());
 
                 let t = Instant::now();

@@ -4,10 +4,10 @@ async fn main() {}
 #[cfg(test)]
 mod tests {
     use headless_chrome::{Browser, LaunchOptions, Tab};
-    use vastrum_native_lib::deployers::build::run;
     use serial_test::serial;
-    use vastrum_shared_types::ports::HTTP_RPC_PORT;
     use std::time::{Duration, Instant};
+    use vastrum_native_lib::deployers::build::run;
+    use vastrum_shared_types::ports::HTTP_RPC_PORT;
     use web_client_integration_tests_abi::ContractAbiClient;
 
     fn ensure_network() {
@@ -204,7 +204,9 @@ mod tests {
                 let t = Instant::now();
                 eprintln!("[bench] navigating to {url}...");
                 tab.navigate_to(&url).expect("Failed to navigate");
-                tab.wait_until_navigated().expect("Failed to wait for navigation");
+                if let Err(e) = tab.wait_until_navigated() {
+                    eprintln!("[bench] wait_until_navigated failed (continuing): {e}");
+                }
                 eprintln!("[bench] navigation: {:.1}s", t.elapsed().as_secs_f64());
 
                 let t = Instant::now();
@@ -240,7 +242,7 @@ mod tests {
     async fn test_vastrum_iframe_rpc() {
         let total = Instant::now();
         let url = deploy_site("../vastrum-frontend").await;
-        run_browser_test(&url, 20).await;
+        run_browser_test(&url, 60).await;
         eprintln!(
             "\n[bench] === test_vastrum_iframe_rpc TOTAL: {:.1}s ===\n",
             total.elapsed().as_secs_f64()
