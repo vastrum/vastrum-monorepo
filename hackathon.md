@@ -12,6 +12,7 @@ Common problems with DeFi frontends
 -   Disappears if developers stops hosting it, leaving abandoned onchain contracts no regular user can interact with
 -   Need to trust RPC infrastructure, no way to verify the data displayed by the frontend is correct
 -   Operational complexity, a contract can just be deployed but a frontend requires continuous maintenance in most cases.
+-   Privacy, most DeFi frontend hosting stacks have many middlemen involved in hosting it, for example DDOS protection, CDN, analytics and more services. By reducing the amount of dependencies you increaes privacy and robustness.
 
 I think to have fullstack decentralization the frontend also needs to be hosted onchain in some manner with the same decentralization guarantees that the contract has.
 
