@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { type GetRepoDetail, type ExplorerEntry } from '../../../wasm/pkg';
@@ -15,11 +15,16 @@ function FileExplorer({ repoData, initialPath }: FileExplorerProps): React.JSX.E
     const navigate = useNavigate();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [selectedEntry, setSelectedEntry] = useState<ExplorerEntry | null>(null);
+    const userNavigated = useRef(false);
 
     const { git_repo, top_level_files } = repoData;
 
-    // Walk the path to find and select the entry
+    // Walk the path to find and select the entry (only on initial load or browser back/forward)
     useEffect(() => {
+        if (userNavigated.current) {
+            userNavigated.current = false;
+            return;
+        }
         const loadPath = async () => {
             if (initialPath.length === 0) {
                 setSelectedEntry(null);
@@ -42,6 +47,7 @@ function FileExplorer({ repoData, initialPath }: FileExplorerProps): React.JSX.E
         if (!entry.is_directory) {
             setIsSidebarOpen(false);
         }
+        userNavigated.current = true;
         const newPath = [...parentPath, entry.name].join('/');
         navigate(`/repo/${git_repo.name}/tree/${newPath}`);
     }, [git_repo.name, navigate]);
