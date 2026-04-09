@@ -4503,6 +4503,7 @@ name = "gitter-wasm"
 version = "1.0.0"
 dependencies = [
  "borsh",
+ "futures",
  "getrandom 0.2.17",
  "getrandom 0.4.1",
  "gix-hash",

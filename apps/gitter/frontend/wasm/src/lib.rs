@@ -224,9 +224,11 @@ pub async fn get_repo_counts(repo_name: String) -> RepoCounts {
     let gitter = new_client();
     let state = gitter.state().await;
     let repo = state.repo_store.get(&repo_name).await.unwrap();
-    let issue_count = repo.issues.length().await;
-    let pr_count = repo.pull_requests.length().await;
-    let discussion_count = repo.discussions.length().await;
+    let (issue_count, pr_count, discussion_count) = futures::join!(
+        repo.issues.length(),
+        repo.pull_requests.length(),
+        repo.discussions.length(),
+    );
     RepoCounts { issue_count, pr_count, discussion_count }
 }
 
@@ -235,6 +237,7 @@ pub async fn get_repo_page_data(repo_name: String) -> GetRepoDetail {
     let gitter = new_client();
     let state = gitter.state().await;
     let repo = state.repo_store.get(&repo_name).await.unwrap();
+    let ctx = GitContext::new(state.git_object_store.clone());
 
     let has_commits = repo.head_commit_hash.is_some();
 
@@ -244,31 +247,45 @@ pub async fn get_repo_page_data(repo_name: String) -> GetRepoDetail {
         head_commit_hash,
         top_level_files,
         readme_text,
+        issue_count,
+        pr_count,
+        discussion_count,
     ) = if has_commits {
-        let head_commit_id = vastrum_get_head_commit(&repo_name, &gitter).await.unwrap();
-        let head_commit = vastrum_commit_read(head_commit_id, &gitter).await.unwrap();
+        let head_oid = sha1_to_oid(repo.head_commit_hash.as_ref().unwrap());
+        let head_commit = ctx.read_commit(head_oid).await.unwrap();
 
-        let top_files = get_top_level_files(&repo_name, &gitter).await.unwrap();
+        let (tree_result, ic, pc, dc) = futures::join!(
+            get_files_for_tree(head_commit.tree, &ctx),
+            repo.issues.length(),
+            repo.pull_requests.length(),
+            repo.discussions.length(),
+        );
+
+        let top_files = tree_result.unwrap();
         let mut readme = String::new();
         if let Some(readme_entry) = top_files.iter().find(|e| e.name == "README.md") {
             let oid = ObjectId::from_str(&readme_entry.oid).unwrap();
-            let data = get_file_data(oid, &gitter).await.unwrap();
+            let data = get_file_data(oid, &ctx).await.unwrap_or_default();
             readme = String::from_utf8(data).unwrap_or_default();
         }
         (
             head_commit.author.name.to_string(),
             head_commit.message.to_string(),
-            head_commit_id.to_string(),
+            head_oid.to_string(),
             top_files,
             readme,
+            ic,
+            pc,
+            dc,
         )
     } else {
-        (String::new(), String::new(), String::new(), Vec::new(), String::new())
+        let (ic, pc, dc) = futures::join!(
+            repo.issues.length(),
+            repo.pull_requests.length(),
+            repo.discussions.length(),
+        );
+        (String::new(), String::new(), String::new(), Vec::new(), String::new(), ic, pc, dc)
     };
-
-    let issue_count = repo.issues.length().await;
-    let pr_count = repo.pull_requests.length().await;
-    let discussion_count = repo.discussions.length().await;
 
     let converted_repo = convert_git_repository(&repo);
     GetRepoDetail {
@@ -287,8 +304,9 @@ pub async fn get_repo_page_data(repo_name: String) -> GetRepoDetail {
 #[wasm_bindgen]
 pub async fn get_file(git_hash: String) -> String {
     let gitter = new_client();
+    let ctx = GitContext::from_contract(&gitter).await;
     let oid = ObjectId::from_hex(git_hash.as_bytes()).unwrap();
-    let data = get_file_data(oid, &gitter).await.unwrap();
+    let data = get_file_data(oid, &ctx).await.unwrap();
     let file_is_binary = data.iter().take(8000).any(|&b| b == 0);
     if file_is_binary {
         return String::new();
@@ -299,8 +317,9 @@ pub async fn get_file(git_hash: String) -> String {
 #[wasm_bindgen]
 pub async fn is_file_binary(git_hash: String) -> bool {
     let gitter = new_client();
+    let ctx = GitContext::from_contract(&gitter).await;
     let oid = ObjectId::from_hex(git_hash.as_bytes()).unwrap();
-    let data = get_file_data(oid, &gitter).await.unwrap();
+    let data = get_file_data(oid, &ctx).await.unwrap();
     let file_is_binary = data.iter().take(8000).any(|&b| b == 0);
     return file_is_binary;
 }
@@ -313,24 +332,34 @@ pub async fn get_directory_contents(tree_oid: String) -> Result<Vec<ExplorerEntr
     let gitter = new_client();
     let oid =
         ObjectId::from_hex(tree_oid.as_bytes()).map_err(|e| format!("Invalid tree OID: {}", e))?;
-    Ok(get_files_for_tree(oid, &gitter).await.unwrap())
+    let ctx = GitContext::from_contract(&gitter).await;
+    Ok(get_files_for_tree(oid, &ctx).await.unwrap())
 }
 
 #[wasm_bindgen]
 pub async fn get_pull_request_detail(repo_name: String, id: u64) -> GetPullRequestDetail {
     let gitter = new_client();
     let state = gitter.state().await;
+    let ctx = GitContext::new(state.git_object_store.clone());
 
     let base_repo = state.repo_store.get(&repo_name).await.unwrap();
     let pull_request = base_repo.pull_requests.get(id).await.unwrap();
 
     let merging_repo_name = pull_request.merging_repo.clone();
 
+    let (merging_repo_opt, pub_key) =
+        futures::join!(state.repo_store.get(&merging_repo_name), get_pub_key(),);
+    let merging_repo = merging_repo_opt.unwrap();
+    let is_owner = pub_key == base_repo.owner;
+
+    let base_head = sha1_to_oid(base_repo.head_commit_hash.as_ref().unwrap());
+    let merge_head = sha1_to_oid(merging_repo.head_commit_hash.as_ref().unwrap());
+
     let frontend_status = if pull_request.is_merged {
         FrontendMergability::AlreadyMerged
     } else {
         let mergability =
-            merge_repos(&repo_name, &merging_repo_name, &gitter, MergeMode::Preview).await.unwrap();
+            merge_branches(base_head, merge_head, &ctx, &gitter, MergeMode::Preview).await.unwrap();
         match mergability {
             MergeResult::FastForward(_) | MergeResult::Merged(_) => FrontendMergability::CanMerge,
             MergeResult::Conflict(_) | MergeResult::NoCommonAncestor => {
@@ -340,25 +369,23 @@ pub async fn get_pull_request_detail(repo_name: String, id: u64) -> GetPullReque
         }
     };
 
-    let file_diffs = diff_repos(&repo_name, &merging_repo_name, &gitter).await.unwrap();
+    let (diff_result, feature_commits) = futures::join!(
+        diff_commits(base_head, merge_head, &ctx),
+        ctx.get_feature_commits(base_head, merge_head),
+    );
 
-    let feature_branch_commits =
-        get_feature_repo_commits(&repo_name, &merging_repo_name, &gitter).await.unwrap();
+    let file_diffs = diff_result.unwrap();
 
     let mut frontend_commits = vec![];
-    for commit in feature_branch_commits {
-        let frontend_commit = FrontendCommit {
+    for commit in feature_commits.unwrap_or_default() {
+        frontend_commits.push(FrontendCommit {
             author_name: commit.author.name.to_string(),
             author_timestamp: commit.author.time.seconds as u64,
             message: commit.message.to_string(),
-        };
-        frontend_commits.push(frontend_commit);
+        });
     }
 
     let converted_pr = convert_pull_request(&pull_request);
-
-    let pub_key = get_pub_key().await;
-    let is_owner = pub_key == base_repo.owner;
 
     GetPullRequestDetail {
         pull_request: converted_pr,
@@ -376,14 +403,14 @@ mod types;
 use converters::*;
 use gix_hash::ObjectId;
 use helpers::new_client;
-use vastrum_rpc_client::SentTxBehavior;
 use std::str::FromStr;
 pub use types::*;
 use vastrum_frontend_lib::get_pub_key;
 use vastrum_git_lib::universal::{
-    differ::diff_repos,
-    directory_explorer::{ExplorerEntry, get_file_data, get_files_for_tree, get_top_level_files},
-    merger::{MergeMode, MergeResult, merge_repos},
-    utils::{get_feature_repo_commits, vastrum_commit_read, vastrum_get_head_commit},
+    differ::diff_commits,
+    directory_explorer::{ExplorerEntry, get_file_data, get_files_for_tree},
+    merger::{MergeMode, MergeResult, merge_branches, merge_repos},
+    utils::{GitContext, sha1_to_oid},
 };
+use vastrum_rpc_client::SentTxBehavior;
 use wasm_bindgen::prelude::*;

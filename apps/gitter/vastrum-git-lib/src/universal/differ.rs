@@ -3,23 +3,22 @@ pub async fn diff_repos(
     repo2: &str,
     contract: &ContractAbiClient,
 ) -> Result<RepoDiff> {
+    let ctx = GitContext::from_contract(contract).await;
     let commit1 = vastrum_get_head_commit(repo1, contract).await?;
     let commit2 = vastrum_get_head_commit(repo2, contract).await?;
-
-    return diff_commits(commit1, commit2, contract).await;
+    return diff_commits(commit1, commit2, &ctx).await;
 }
 
 pub async fn diff_commits(
     commit1: ObjectId,
     commit2: ObjectId,
-    contract: &ContractAbiClient,
+    ctx: &GitContext,
 ) -> Result<RepoDiff> {
-    let tree1 = vastrum_commit_read(commit1, contract).await?.tree;
-    let tree2 = vastrum_commit_read(commit2, contract).await?.tree;
+    let tree1 = ctx.read_commit(commit1).await?.tree;
+    let tree2 = ctx.read_commit(commit2).await?.tree;
 
     let mut diffs = Vec::new();
-
-    diff_trees(tree1, tree2, "", &mut diffs, contract).await?;
+    diff_trees(tree1, tree2, "", &mut diffs, ctx).await?;
 
     let mut total_additions = 0;
     let mut total_deletions = 0;
@@ -72,15 +71,15 @@ async fn collect_removed(
     mode: EntryMode,
     path: &str,
     diffs: &mut Vec<FileDiff>,
-    contract: &ContractAbiClient,
+    ctx: &GitContext,
 ) -> Result<()> {
     if mode.is_tree() {
-        for (name, (oid, mode)) in read_tree_entries(Some(oid), contract).await? {
+        for (name, (oid, mode)) in ctx.read_tree_entries(Some(oid)).await? {
             let child = join_path(path, &name);
-            Box::pin(collect_removed(oid, mode, &child, diffs, contract)).await?;
+            Box::pin(collect_removed(oid, mode, &child, diffs, ctx)).await?;
         }
     } else {
-        match read_blob_text(oid, contract).await? {
+        match read_blob_text(oid, ctx).await? {
             None => diffs.push(binary_diff(path.to_string(), FileStatus::Deleted)),
             Some(c) => diffs.push(create_file_diff(path, FileStatus::Deleted, &c, "")),
         }
@@ -93,15 +92,15 @@ async fn collect_added(
     mode: EntryMode,
     path: &str,
     diffs: &mut Vec<FileDiff>,
-    contract: &ContractAbiClient,
+    ctx: &GitContext,
 ) -> Result<()> {
     if mode.is_tree() {
-        for (name, (oid, mode)) in read_tree_entries(Some(oid), contract).await? {
+        for (name, (oid, mode)) in ctx.read_tree_entries(Some(oid)).await? {
             let child = join_path(path, &name);
-            Box::pin(collect_added(oid, mode, &child, diffs, contract)).await?;
+            Box::pin(collect_added(oid, mode, &child, diffs, ctx)).await?;
         }
     } else {
-        match read_blob_text(oid, contract).await? {
+        match read_blob_text(oid, ctx).await? {
             None => diffs.push(binary_diff(path.to_string(), FileStatus::Added)),
             Some(c) => diffs.push(create_file_diff(path, FileStatus::Added, "", &c)),
         }
@@ -114,21 +113,20 @@ async fn diff_trees(
     new_tree: ObjectId,
     prefix: &str,
     diffs: &mut Vec<FileDiff>,
-    contract: &ContractAbiClient,
+    ctx: &GitContext,
 ) -> Result<()> {
     if old_tree == new_tree {
         return Ok(());
     }
 
-    let old_entries = read_tree_entries(Some(old_tree), contract).await?;
-    let new_entries = read_tree_entries(Some(new_tree), contract).await?;
+    let old_entries = ctx.read_tree_entries(Some(old_tree)).await?;
+    let new_entries = ctx.read_tree_entries(Some(new_tree)).await?;
     let all_names: HashSet<_> = old_entries.keys().chain(new_entries.keys()).cloned().collect();
 
     for name in all_names {
         let old = old_entries.get(&name).copied();
         let new = new_entries.get(&name).copied();
-        let no_diff = old.map(|e| e.0) == new.map(|e| e.0);
-        if no_diff {
+        if old.map(|e| e.0) == new.map(|e| e.0) {
             continue;
         }
 
@@ -137,11 +135,11 @@ async fn diff_trees(
         match (old, new) {
             //new commit added file
             (None, Some((oid, mode))) => {
-                collect_added(oid, mode, &path, diffs, contract).await?;
+                collect_added(oid, mode, &path, diffs, ctx).await?;
             }
             //new commit removed file
             (Some((oid, mode)), None) => {
-                collect_removed(oid, mode, &path, diffs, contract).await?;
+                collect_removed(oid, mode, &path, diffs, ctx).await?;
             }
             //new commit changed old preexisting file
             (Some((old_oid, old_mode)), Some((new_oid, new_mode))) => {
@@ -150,12 +148,12 @@ async fn diff_trees(
                 let changed_between_tree_and_blob = !both_oids_are_trees && !both_oids_are_blobs;
 
                 if both_oids_are_trees {
-                    Box::pin(diff_trees(old_oid, new_oid, &path, diffs, contract)).await?;
+                    Box::pin(diff_trees(old_oid, new_oid, &path, diffs, ctx)).await?;
                 } else if both_oids_are_blobs {
-                    diff_blobs(old_oid, new_oid, &path, diffs, contract).await?;
+                    diff_blobs(old_oid, new_oid, &path, diffs, ctx).await?;
                 } else if changed_between_tree_and_blob {
-                    collect_removed(old_oid, old_mode, &path, diffs, contract).await?;
-                    collect_added(new_oid, new_mode, &path, diffs, contract).await?;
+                    collect_removed(old_oid, old_mode, &path, diffs, ctx).await?;
+                    collect_added(new_oid, new_mode, &path, diffs, ctx).await?;
                 }
             }
             (None, None) => unreachable!(),
@@ -169,10 +167,10 @@ async fn diff_blobs(
     new_oid: ObjectId,
     path: &str,
     diffs: &mut Vec<FileDiff>,
-    contract: &ContractAbiClient,
+    ctx: &GitContext,
 ) -> Result<()> {
-    let old_text = read_blob_text(old_oid, contract).await?;
-    let new_text = read_blob_text(new_oid, contract).await?;
+    let old_text = read_blob_text(old_oid, ctx).await?;
+    let new_text = read_blob_text(new_oid, ctx).await?;
     let blob_diff = match (old_text, new_text) {
         (Some(old), Some(new)) => create_file_diff(path, FileStatus::Modified, &old, &new),
         _ => binary_diff(path.to_string(), FileStatus::ModifiedBinary),
@@ -181,8 +179,8 @@ async fn diff_blobs(
     return Ok(());
 }
 
-async fn read_blob_text(oid: ObjectId, contract: &ContractAbiClient) -> Result<Option<String>> {
-    let blob = vastrum_blob_read(oid, contract).await?;
+async fn read_blob_text(oid: ObjectId, ctx: &GitContext) -> Result<Option<String>> {
+    let blob = ctx.blob_read(oid).await?;
     let text = if is_binary(&blob.data) {
         None
     } else {
@@ -308,9 +306,7 @@ pub struct RepoDiff {
 
 use crate::ContractAbiClient;
 use crate::error::Result;
-use crate::universal::utils::{
-    read_tree_entries, vastrum_blob_read, vastrum_commit_read, vastrum_get_head_commit,
-};
+use crate::universal::utils::{GitContext, vastrum_get_head_commit};
 use gix_hash::ObjectId;
 use gix_object::tree::EntryMode;
 use serde::Serialize;
@@ -323,8 +319,8 @@ mod tests {
     use crate::native::upload::push_to_repo;
     use crate::testing::test_helpers::{TestContext, TestRepoBuilder};
 
-    use vastrum_rpc_client::SentTxBehavior;
     use serial_test::serial;
+    use vastrum_rpc_client::SentTxBehavior;
 
     #[tokio::test]
     #[serial]
@@ -438,7 +434,8 @@ mod tests {
         ctx.contract.create_repository(repo_name, "test").await.await_confirmation().await;
         push_to_repo(local.path_str(), repo_name, &ctx.contract, None).await.unwrap();
 
-        let diff = diff_commits(commit1, commit2, &ctx.contract).await.unwrap();
+        let git_ctx = GitContext::from_contract(&ctx.contract).await;
+        let diff = diff_commits(commit1, commit2, &git_ctx).await.unwrap();
 
         assert_eq!(diff.files.len(), 3);
 
@@ -473,7 +470,8 @@ mod tests {
         ctx.contract.create_repository(repo_name, "test").await.await_confirmation().await;
         push_to_repo(local.path_str(), repo_name, &ctx.contract, None).await.unwrap();
 
-        let diff = diff_commits(commit1, commit2, &ctx.contract).await.unwrap();
+        let git_ctx = GitContext::from_contract(&ctx.contract).await;
+        let diff = diff_commits(commit1, commit2, &git_ctx).await.unwrap();
 
         assert_eq!(diff.files.len(), 2);
 

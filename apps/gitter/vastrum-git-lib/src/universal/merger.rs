@@ -6,10 +6,11 @@ pub async fn merge_repos(
 ) -> Result<MergeResult> {
     let repo_name: String = repo_name.into();
     let fork_repo: String = fork_repo.into();
+    let ctx = GitContext::from_contract(contract).await;
 
     let ours_commit_id = vastrum_get_head_commit(&repo_name, contract).await?;
     let theirs_commit_id = vastrum_get_head_commit(&fork_repo, contract).await?;
-    let res = merge_branches(ours_commit_id, theirs_commit_id, contract, mode).await?;
+    let res = merge_branches(ours_commit_id, theirs_commit_id, &ctx, contract, mode).await?;
 
     //only update headcommit if mergemode is live
     if mode == MergeMode::Live {
@@ -24,30 +25,31 @@ pub async fn merge_repos(
 pub async fn merge_branches(
     ours_commit_id: ObjectId,
     theirs_commit_id: ObjectId,
+    ctx: &GitContext,
     contract: &ContractAbiClient,
     mode: MergeMode,
 ) -> Result<MergeResult> {
     // Check if theirs is ancestor of ours = already up to date
-    let already_up_to_date = is_ancestor(theirs_commit_id, ours_commit_id, contract).await?;
+    let already_up_to_date = is_ancestor(theirs_commit_id, ours_commit_id, ctx).await?;
     if already_up_to_date {
         return Ok(MergeResult::AlreadyUpToDate);
     }
 
     // Check if ours is ancestor of theirs = fastforward
-    let fast_forward = is_ancestor(ours_commit_id, theirs_commit_id, contract).await?;
+    let fast_forward = is_ancestor(ours_commit_id, theirs_commit_id, ctx).await?;
     if fast_forward {
         return Ok(MergeResult::FastForward(theirs_commit_id));
     }
 
     // Perform 3 way merge
-    let result = merge_trees(ours_commit_id, theirs_commit_id, contract, mode).await;
+    let result = merge_trees(ours_commit_id, theirs_commit_id, ctx, contract, mode).await;
     return result;
 }
 
 async fn is_ancestor(
     potential_ancestor: ObjectId,
     descendant: ObjectId,
-    contract: &ContractAbiClient,
+    ctx: &GitContext,
 ) -> Result<bool> {
     if potential_ancestor == descendant {
         return Ok(true);
@@ -66,7 +68,7 @@ async fn is_ancestor(
         }
         visited.insert(current);
 
-        let commit = vastrum_commit_read(current, contract).await?;
+        let commit = ctx.read_commit(current).await?;
         for parent in commit.parents.iter() {
             if !visited.contains(parent) {
                 to_visit.push(*parent);
@@ -107,6 +109,7 @@ async fn merge_entry(
     theirs: Option<(ObjectId, EntryMode)>,
     path: &str,
     conflicts: &mut Vec<ConflictEntry>,
+    ctx: &GitContext,
     contract: &ContractAbiClient,
     mode: MergeMode,
 ) -> Result<Option<(ObjectId, EntryMode)>> {
@@ -139,6 +142,7 @@ async fn merge_entry(
             theirs_oid,
             path.to_string(),
             conflicts,
+            ctx,
             contract,
             mode,
         ))
@@ -167,6 +171,7 @@ async fn merge_trees_recursive(
     theirs: Option<ObjectId>,
     prefix: String,
     conflicts: &mut Vec<ConflictEntry>,
+    ctx: &GitContext,
     contract: &ContractAbiClient,
     mode: MergeMode,
 ) -> Result<Option<ObjectId>> {
@@ -184,19 +189,13 @@ async fn merge_trees_recursive(
     }
 
     // Both changed differently, need to read and merge entries
-    let base_entries = read_tree_entries(base, contract).await?;
-    let ours_entries = read_tree_entries(ours, contract).await?;
-    let theirs_entries = read_tree_entries(theirs, contract).await?;
+    let base_entries = ctx.read_tree_entries(base).await?;
+    let ours_entries = ctx.read_tree_entries(ours).await?;
+    let theirs_entries = ctx.read_tree_entries(theirs).await?;
 
     // Collect all entry names from all three trees
     let mut all_names = HashSet::new();
-    for name in base_entries.keys() {
-        all_names.insert(name.clone());
-    }
-    for name in ours_entries.keys() {
-        all_names.insert(name.clone());
-    }
-    for name in theirs_entries.keys() {
+    for name in base_entries.keys().chain(ours_entries.keys()).chain(theirs_entries.keys()) {
         all_names.insert(name.clone());
     }
 
@@ -206,11 +205,10 @@ async fn merge_trees_recursive(
         let base_entry = base_entries.get(&name).copied();
         let ours_entry = ours_entries.get(&name).copied();
         let theirs_entry = theirs_entries.get(&name).copied();
-
         let path = if prefix.is_empty() { name.clone() } else { format!("{}/{}", prefix, name) };
 
         if let Some((oid, mode_entry)) =
-            merge_entry(base_entry, ours_entry, theirs_entry, &path, conflicts, contract, mode)
+            merge_entry(base_entry, ours_entry, theirs_entry, &path, conflicts, ctx, contract, mode)
                 .await?
         {
             merged_entries.push((name, oid, mode_entry));
@@ -232,19 +230,20 @@ async fn merge_trees_recursive(
 async fn merge_trees(
     ours_commit_id: ObjectId,
     theirs_commit_id: ObjectId,
+    ctx: &GitContext,
     contract: &ContractAbiClient,
     mode: MergeMode,
 ) -> Result<MergeResult> {
     // Find common ancestor for 3-way merge
-    let base_commit_id = match find_merge_base(ours_commit_id, theirs_commit_id, contract).await? {
+    let base_commit_id = match ctx.find_merge_base(ours_commit_id, theirs_commit_id).await? {
         Some(id) => id,
         None => return Ok(MergeResult::NoCommonAncestor),
     };
 
     // Get tree IDs
-    let ours_tree = vastrum_commit_read(ours_commit_id, contract).await?.tree;
-    let theirs_tree = vastrum_commit_read(theirs_commit_id, contract).await?.tree;
-    let base_tree = vastrum_commit_read(base_commit_id, contract).await?.tree;
+    let ours_tree = ctx.read_commit(ours_commit_id).await?.tree;
+    let theirs_tree = ctx.read_commit(theirs_commit_id).await?.tree;
+    let base_tree = ctx.read_commit(base_commit_id).await?.tree;
 
     let mut conflicts = Vec::new();
 
@@ -254,6 +253,7 @@ async fn merge_trees(
         Some(theirs_tree),
         String::new(),
         &mut conflicts,
+        ctx,
         contract,
         mode,
     )
@@ -290,7 +290,6 @@ async fn create_merge_commit(
 ) -> ObjectId {
     let now = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs()
         as i64;
-
     let time = Time::new(now, 0);
 
     let commit = Commit {
@@ -313,7 +312,6 @@ async fn create_merge_commit(
 
     let commit_object = Object::Commit(commit);
     upload_git_object(commit_object.clone(), contract).await;
-
     return calculate_object_hash(&commit_object);
 }
 
@@ -344,8 +342,7 @@ use crate::{
     ContractAbiClient,
     error::Result,
     universal::utils::{
-        calculate_object_hash, find_merge_base, oid_to_sha1, read_tree_entries, upload_git_object,
-        vastrum_commit_read, vastrum_get_head_commit,
+        GitContext, calculate_object_hash, oid_to_sha1, upload_git_object, vastrum_get_head_commit,
     },
 };
 use gix_actor::Signature;
@@ -356,16 +353,16 @@ use gix_object::{
     bstr::BString,
     tree::{Entry, EntryKind, EntryMode},
 };
-use vastrum_rpc_client::SentTxBehavior;
 use std::collections::HashSet;
+use vastrum_rpc_client::SentTxBehavior;
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::native::upload::push_to_repo;
     use crate::testing::test_helpers::{TestContext, TestRepoBuilder};
-    use vastrum_rpc_client::SentTxBehavior;
     use serial_test::serial;
+    use vastrum_rpc_client::SentTxBehavior;
 
     #[tokio::test]
     #[serial]
@@ -400,7 +397,8 @@ mod tests {
         // 3-way merge: verify merge commit has correct parents
         let result = merge_repos("base", "b2", &ctx.contract, MergeMode::Live).await.unwrap();
         if let MergeResult::Merged(merge_commit_id) = result {
-            let merge_commit = vastrum_commit_read(merge_commit_id, &ctx.contract).await.unwrap();
+            let git_ctx = GitContext::from_contract(&ctx.contract).await;
+            let merge_commit = git_ctx.read_commit(merge_commit_id).await.unwrap();
             // After fast-forward, base HEAD is now b1_commit
             assert_eq!(merge_commit.parents.len(), 2);
             assert_eq!(merge_commit.parents[0], b1_commit);
@@ -490,7 +488,8 @@ mod tests {
         // 3-way merge: verify parents
         let result = merge_repos("nbase", "nb2", &ctx.contract, MergeMode::Live).await.unwrap();
         if let MergeResult::Merged(merge_commit_id) = result {
-            let merge_commit = vastrum_commit_read(merge_commit_id, &ctx.contract).await.unwrap();
+            let git_ctx = GitContext::from_contract(&ctx.contract).await;
+            let merge_commit = git_ctx.read_commit(merge_commit_id).await.unwrap();
             assert_eq!(merge_commit.parents.len(), 2);
             assert_eq!(merge_commit.parents[0], nb1_commit);
             assert_eq!(merge_commit.parents[1], nb2_commit);

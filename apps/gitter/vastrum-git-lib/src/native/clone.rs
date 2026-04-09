@@ -63,7 +63,8 @@ pub async fn download_commit(
         return Ok(vec![]);
     }
 
-    let commit = vastrum_commit_read(oid, contract).await?;
+    let ctx = GitContext::from_contract(contract).await;
+    let commit = ctx.read_commit(oid).await?;
     let parents = commit.parents.to_vec();
 
     download_trees(commit.tree, repo, contract, progress).await?;
@@ -83,15 +84,16 @@ pub async fn download_trees(
     contract: &ContractAbiClient,
     progress: Option<&ProgressBar>,
 ) -> Result<()> {
-    let tree = vastrum_tree_read(tree_id, contract).await?;
-    download_tree(tree, tree_id, repo, contract, progress).await
+    let ctx = GitContext::from_contract(contract).await;
+    let tree = ctx.read_tree(tree_id).await?;
+    download_tree(tree, tree_id, repo, &ctx, progress).await
 }
 
 pub async fn download_tree(
     tree: Tree,
     tree_id: ObjectId,
     repo: &Repository,
-    contract: &ContractAbiClient,
+    ctx: &GitContext,
     progress: Option<&ProgressBar>,
 ) -> Result<()> {
     let tree_already_downloaded = repo.find_tree(tree_id).is_ok();
@@ -109,15 +111,15 @@ pub async fn download_tree(
         if kind == EntryKind::Tree {
             let entry_not_yet_downloaded = repo.find_tree(entry.oid).is_err();
             if entry_not_yet_downloaded {
-                let tree = vastrum_tree_read(entry.oid, contract).await?;
-                Box::pin(download_tree(tree, entry.oid, repo, contract, progress)).await?;
+                let tree = ctx.read_tree(entry.oid).await?;
+                Box::pin(download_tree(tree, entry.oid, repo, ctx, progress)).await?;
             }
         } else if kind == EntryKind::Commit {
             return Err(VastrumGitError::SubmodulesNotSupported);
         } else {
             let blob_not_yet_downloaded = repo.find_blob(entry.oid).is_err();
             if blob_not_yet_downloaded {
-                let blob = vastrum_blob_read(entry.oid, contract).await?;
+                let blob = ctx.blob_read(entry.oid).await?;
                 repo.write_object(blob)?;
                 if let Some(progress) = progress {
                     progress.inc(1);
@@ -161,9 +163,7 @@ fn checkout_head_to_workdir(repo: &Repository, head: ObjectId, work_dir: &Path) 
 use crate::{
     ContractAbiClient,
     error::{Result, VastrumGitError},
-    universal::utils::{
-        vastrum_blob_read, vastrum_commit_read, vastrum_get_head_commit, vastrum_tree_read,
-    },
+    universal::utils::{GitContext, vastrum_get_head_commit},
 };
 use gix::{
     ObjectId, Repository, ThreadSafeRepository, create,

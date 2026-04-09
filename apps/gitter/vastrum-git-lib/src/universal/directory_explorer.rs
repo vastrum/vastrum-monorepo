@@ -11,18 +11,15 @@ pub async fn get_top_level_files(
     name: &str,
     contract: &ContractAbiClient,
 ) -> Result<Vec<ExplorerEntry>> {
+    let ctx = GitContext::from_contract(contract).await;
     let head = vastrum_get_head_commit(name, contract).await?;
-    let head_commit = vastrum_commit_read(head, contract).await?;
-    let top_level_files = get_files_for_tree(head_commit.tree, contract).await?;
-    return Ok(top_level_files);
+    let head_commit = ctx.read_commit(head).await?;
+    return get_files_for_tree(head_commit.tree, &ctx).await;
 }
 
 //for subfolder exploration
-pub async fn get_files_for_tree(
-    tree_id: ObjectId,
-    contract: &ContractAbiClient,
-) -> Result<Vec<ExplorerEntry>> {
-    let head_tree = vastrum_tree_read(tree_id, contract).await?;
+pub async fn get_files_for_tree(tree_id: ObjectId, ctx: &GitContext) -> Result<Vec<ExplorerEntry>> {
+    let head_tree = ctx.read_tree(tree_id).await?;
     let mut top_level_files = vec![];
     for entry in head_tree.entries {
         let is_directory = entry.mode.is_tree();
@@ -41,17 +38,15 @@ pub async fn get_files_for_tree(
     return Ok(top_level_files);
 }
 
-pub async fn get_file_data(blob_id: ObjectId, contract: &ContractAbiClient) -> Result<Vec<u8>> {
-    let blob = vastrum_blob_read(blob_id, contract).await?;
+pub async fn get_file_data(blob_id: ObjectId, ctx: &GitContext) -> Result<Vec<u8>> {
+    let blob = ctx.blob_read(blob_id).await?;
     return Ok(blob.data);
 }
 
 use crate::{
     ContractAbiClient,
     error::Result,
-    universal::utils::{
-        vastrum_blob_read, vastrum_commit_read, vastrum_get_head_commit, vastrum_tree_read,
-    },
+    universal::utils::{GitContext, vastrum_get_head_commit},
 };
 use gix_hash::ObjectId;
 use serde::Serialize;
@@ -62,15 +57,16 @@ mod tests {
     use super::*;
     use crate::native::upload::push_to_repo;
     use crate::testing::test_helpers::{TestContext, TestRepoBuilder};
-    use vastrum_rpc_client::SentTxBehavior;
     use serial_test::serial;
     use std::str::FromStr;
+    use vastrum_rpc_client::SentTxBehavior;
 
     #[tokio::test]
     #[serial]
     async fn test_directory_explorer() {
         let ctx = TestContext::new().await;
         let contract = &ctx.contract;
+        let git_ctx = GitContext::from_contract(contract).await;
         let repo_name = "explorer_test";
 
         let test_repo = TestRepoBuilder::new()
@@ -97,7 +93,7 @@ mod tests {
 
         // Test get_files_for_tree (subfolder)
         let subdir_files =
-            get_files_for_tree(ObjectId::from_str(&subdir.oid).unwrap(), contract).await.unwrap();
+            get_files_for_tree(ObjectId::from_str(&subdir.oid).unwrap(), &git_ctx).await.unwrap();
         assert_eq!(subdir_files.len(), 2);
 
         let nested = subdir_files.iter().find(|e| e.name == "nested.txt").unwrap();
@@ -108,27 +104,27 @@ mod tests {
 
         // Test get_file_data
         let readme_data =
-            get_file_data(ObjectId::from_str(&readme.oid).unwrap(), contract).await.unwrap();
+            get_file_data(ObjectId::from_str(&readme.oid).unwrap(), &git_ctx).await.unwrap();
         assert_eq!(readme_data, b"# README");
 
         let nested_data =
-            get_file_data(ObjectId::from_str(&nested.oid).unwrap(), contract).await.unwrap();
+            get_file_data(ObjectId::from_str(&nested.oid).unwrap(), &git_ctx).await.unwrap();
         assert_eq!(nested_data, b"nested content");
 
         // Test deeply nested
         let deep_files =
-            get_files_for_tree(ObjectId::from_str(&deep.oid).unwrap(), contract).await.unwrap();
+            get_files_for_tree(ObjectId::from_str(&deep.oid).unwrap(), &git_ctx).await.unwrap();
         assert_eq!(deep_files.len(), 1);
         assert_eq!(deep_files[0].name, "deep.txt");
 
         let deep_data =
-            get_file_data(ObjectId::from_str(&deep_files[0].oid).unwrap(), contract).await.unwrap();
+            get_file_data(ObjectId::from_str(&deep_files[0].oid).unwrap(), &git_ctx).await.unwrap();
         assert_eq!(deep_data, b"deep content");
 
         // Test empty directory
         let empty_dir = top_files.iter().find(|e| e.name == "empty").unwrap();
         assert!(empty_dir.is_directory);
-        let empty_files = get_files_for_tree(ObjectId::from_str(&empty_dir.oid).unwrap(), contract)
+        let empty_files = get_files_for_tree(ObjectId::from_str(&empty_dir.oid).unwrap(), &git_ctx)
             .await
             .unwrap();
         assert_eq!(empty_files.len(), 0);
@@ -137,7 +133,7 @@ mod tests {
         let binary = top_files.iter().find(|e| e.name == "binary.bin").unwrap();
         assert!(!binary.is_directory);
         let binary_data =
-            get_file_data(ObjectId::from_str(&binary.oid).unwrap(), contract).await.unwrap();
+            get_file_data(ObjectId::from_str(&binary.oid).unwrap(), &git_ctx).await.unwrap();
         assert_eq!(binary_data, vec![0x00, 0x01, 0xFF, 0xFE]);
     }
 }
