@@ -11655,6 +11655,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "vastrum-beerus-worker-wasm"
+version = "1.0.0"
+dependencies = [
+ "async-trait",
+ "beerus",
+ "console_error_panic_hook",
+ "getrandom 0.2.17",
+ "getrandom 0.4.1",
+ "iamgroot",
+ "reqwest 0.13.2",
+ "serde",
+ "serde_json",
+ "vastrum-shared-types",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
+]
+
+[[package]]
 name = "vastrum-bindings-guest"
 version = "0.1.0"
 
@@ -11945,8 +11964,6 @@ dependencies = [
 name = "vastrum-wasm"
 version = "1.0.0"
 dependencies = [
- "async-trait",
- "beerus",
  "borsh",
  "console_error_panic_hook",
  "futures",
@@ -11954,7 +11971,6 @@ dependencies = [
  "getrandom 0.4.1",
  "gloo-timers 0.3.0",
  "hex",
- "iamgroot",
  "js-sys",
  "reqwest 0.13.2",
  "serde",

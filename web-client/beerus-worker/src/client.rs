@@ -1,5 +1,4 @@
 use std::cell::RefCell;
-use std::rc::Rc;
 
 use beerus::client::{Client, State};
 use beerus::config::Config;
@@ -12,7 +11,7 @@ thread_local! {
 }
 
 struct BeerusState {
-    client: Rc<Client<Http>>,
+    client: Client<Http>,
     state: Option<State>,
 }
 
@@ -104,7 +103,6 @@ pub async fn init() {
     let http = Http::new();
     match Client::new(&config, http).await {
         Ok(client) => {
-            let client = Rc::new(client);
             let state = client.get_state().await.ok();
             BEERUS.with(|b| {
                 *b.borrow_mut() = Some(BeerusState { client, state });
@@ -145,33 +143,41 @@ pub async fn execute(request_json: &Value) -> Result<Value, String> {
     })
 }
 
-pub async fn get_state() -> Result<Value, String> {
-    let initialized = BEERUS.with(|b| b.borrow().is_some());
-    if !initialized {
-        init().await;
-    }
+pub async fn send_direct_rpc(method: &str, params: &Value) -> Value {
+    let envelope = serde_json::json!({
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": method,
+        "params": params,
+    });
 
-    let client = BEERUS.with(|b| b.borrow().as_ref().map(|s| Rc::clone(&s.client)));
-    let Some(client) = client else {
-        return Err("beerus not initialized".to_string());
+    let client = reqwest::Client::new();
+    let response = client
+        .post(STARKNET_RPC_URL)
+        .timeout(std::time::Duration::from_secs(30))
+        .json(&envelope)
+        .send()
+        .await;
+
+    let response = match response {
+        Ok(r) => r,
+        Err(e) => return rpc_error(&format!("fetch failed: {e}")),
     };
 
-    let state = client
-        .get_state()
-        .await
-        .map_err(|e| format!("get_state failed: {e}"))?;
+    let parsed: Value = match response.json().await {
+        Ok(v) => v,
+        Err(e) => return rpc_error(&format!("json parse failed: {e}")),
+    };
 
-    let result = serde_json::json!({
-        "block_number": state.block_number,
-        "block_hash": state.block_hash.as_ref(),
-        "root": state.root.as_ref(),
-    });
+    if let Some(result) = parsed.get("result") {
+        return result.clone();
+    }
+    if let Some(error) = parsed.get("error") {
+        return serde_json::json!({"error": error});
+    }
+    parsed
+}
 
-    BEERUS.with(|b| {
-        if let Some(beerus) = b.borrow_mut().as_mut() {
-            beerus.state = Some(state);
-        }
-    });
-
-    Ok(result)
+pub fn rpc_error(msg: &str) -> Value {
+    serde_json::json!({"error": {"code": -32603, "message": msg}})
 }

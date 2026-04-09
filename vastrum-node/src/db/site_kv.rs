@@ -76,7 +76,7 @@ impl Db {
         site_id: Sha256Digest,
         height: u64,
     ) -> Option<(Vec<u8>, StateProof)> {
-        let value = self.read_kv_at_height(key, site_id, height)?;
+        let value = self.read_kv_at_height(key, site_id, height).unwrap_or_default();
         let sk = SiteKvStorageKey::new(site_id, key).encode();
         let proof = self.generate_state_proof(cf::SITE_KV, &sk, height)?;
         return Some((value, proof));

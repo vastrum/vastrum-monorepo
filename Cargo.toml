@@ -27,6 +27,7 @@ members = [
 
     "web-client/app/wasm",
     "web-client/helios-worker",
+    "web-client/beerus-worker",
 
     "apps/gitter/contract",
     "apps/gitter/abi",
