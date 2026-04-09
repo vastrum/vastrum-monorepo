@@ -428,6 +428,26 @@ systemctl daemon-reload
 systemctl enable --now caddy
 CADDY_SERVICE_EOF
 
+    # Wait for wildcard cert, reload Caddy if needed
+    if [[ -n "$SITE_DOMAIN" ]]; then
+        log "  [$ip] Waiting for wildcard cert (*.${SITE_DOMAIN})..."
+        local max_attempts=5
+        local attempt=0
+        while (( attempt < max_attempts )); do
+            sleep 60
+            if curl -sf --max-time 10 "https://${SITE_DOMAIN}" &>/dev/null; then
+                log "  [$ip] Wildcard cert: OK"
+                break
+            fi
+            attempt=$((attempt + 1))
+            log "  [$ip] Wildcard cert not ready (attempt ${attempt}/${max_attempts}), reloading Caddy..."
+            remote_exec "$user" "$ip" "sudo systemctl reload caddy"
+        done
+        if (( attempt >= max_attempts )); then
+            warn "  [$ip] Wildcard cert not obtained after ${max_attempts} attempts — check Caddy logs"
+        fi
+    fi
+
     log "  [$ip] Caddy configured with HTTPS"
 }
 
@@ -508,6 +528,15 @@ verify_network() {
         log "  HTTPS health check: OK"
     else
         warn "  HTTPS health check: failed (node may still be starting)"
+    fi
+
+    # Check site domain HTTPS
+    if [[ -n "$SITE_DOMAIN" ]]; then
+        if curl -sf --max-time 10 "https://${SITE_DOMAIN}" &>/dev/null; then
+            log "  HTTPS site domain check: OK (${SITE_DOMAIN})"
+        else
+            warn "  HTTPS site domain check: FAILED (${SITE_DOMAIN})"
+        fi
     fi
 
     # Check block height advancing
