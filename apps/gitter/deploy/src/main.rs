@@ -45,6 +45,161 @@ async fn deploy_monorepo(site_id: Sha256Digest, monorepo_key: &ed25519::PrivateK
 
     let repo = create_monorepo_snapshot();
     push_to_repo(repo.path_str(), "vastrum", &client, None).await.unwrap();
+
+    // Create example issue with replies
+    client
+        .create_issue(
+            "Chatter DOS issue",
+            "
+Currently any user can write to any key, this means you could DOS other users by overwriting their inboxes with garbage data.
+
+Instead could treat the shared seed as a private key, then write to the public key of that private key.
+
+The contract would then require all writes to be to an ed25519 public key and require the user to provide a signature for the content.
+
+Letterer had similar problem, this was solved by each document key being a public key.
+
+```rust
+#[authenticated]
+pub fn save_document(
+    &mut self,
+    document_key: Ed25519PublicKey,
+    signature: Ed25519Signature,
+    operation: DocumentWriteOperation,
+) {
+    let encoded = borsh::to_vec(&operation).unwrap();
+    let hash = runtime::sha256(&encoded);
+    let signature_matches_document_key = document_key.verify(&hash, &signature);
+    if !signature_matches_document_key {
+        return;
+    }
+    self.documents.set(&document_key, operation.content);
+    self.doc_metadata.set(&document_key, operation.metadata);
+}
+```
+
+https://gitter.vastrum.net/repo/vastrum/tree/apps/letterer/contract/src/lib.rs
+
+and frontend WASM
+
+```rust
+pub async fn save_document(
+    doc_priv: &PrivateKey,
+    content: &DocumentContent,
+    meta: &DocumentMeta,
+) -> String {
+    let encrypted_content = encrypt_content(doc_priv, content);
+    let encrypted_meta = encrypt_metadata(doc_priv, meta);
+    let operation = DocumentWriteOperation { content: encrypted_content, metadata: encrypted_meta };
+    let signature = sign_document(doc_priv, &operation);
+    let doc_pub = doc_priv.public_key();
+    let client = new_client();
+    let sent_tx = client.save_document(doc_pub, signature, operation).await;
+    return sent_tx.tx_hash().to_string();
+}
+```
+
+https://gitter.vastrum.net/repo/vastrum/tree/apps/letterer/frontend/wasm/src/encryption.rs
+
+current chatter
+
+```rust
+pub fn write_to_inbox(&mut self, inbox_id: String, content: String) {
+    self.inbox.set(&inbox_id, content);
+}
+```
+
+https://gitter.vastrum.net/repo/vastrum/tree/apps/chatter/contract/src/lib.rs
+
+
+",
+            "vastrum",
+        )
+        .await
+        .await_confirmation()
+        .await;
+
+    client.reply_to_issue("Issue reply test", "vastrum", 0).await.await_confirmation().await;
+
+    client.fork_repository("vastrum-pr-fork", "vastrum").await.await_confirmation().await;
+
+    repo.add_commit_modify(&[("README.md", b"# Vastrum
+
+Experimental protocol for decentralized website hosting. [Docs](https://xpkeuoccopibhnakya3luhrsphalhnqo2ifmxe65murdjft54n3q.vastrum.net).
+
+## Setup
+
+1. Install [Rust](https://rustup.rs)
+2. Install [Node.js](https://nodejs.org)
+3. Run:
+
+```bash
+sudo apt install clang build-essential liblz4-dev
+rustup target add wasm32-unknown-unknown
+cargo install wasm-pack
+cargo install mdbook
+```
+
+## Run website locally
+
+```bash
+cd apps/gitter && cargo run -p vastrum-cli -- run-dev
+```
+
+## Deploy all websites locally
+
+```bash
+make deploy-all-localnet
+```
+
+## Scaffold project
+
+### Install vastrum-cli
+
+**Prebuilt binary:**
+
+```bash
+curl -sSf https://raw.githubusercontent.com/vastrum/vastrum-monorepo/HEAD/tooling/cli/install.sh | sh
+```
+
+**From source:**
+
+```
+make cli_install
+```
+
+### Scaffold options
+
+```
+vastrum-cli init <name> --template site                                       
+vastrum-cli init <name> --template eth_dapp       
+```
+
+### Project structure
+
+6K lines Rust for vastrum-node, 30K lines Rust for whole monorepo (excluding Helios + jmt-main).
+
+- **vastrum-node** - Blockchain node
+- **apps** - Prototype apps
+- **runtime** - Libs, tooling, tests for smart contract runtime
+- **shared-types** - Shared internal lib
+- **web-client** - Frontend served by vastrum.net
+  - **app** - Frontend
+  - **helios-worker** - Web worker hosting helios
+  - **integration tests**
+- **webrtc-direct** - WebRTC-direct impl
+- **tooling** - CLI, app libs
+- **vendored-helios** - https://github.com/a16z/helios
+- **vendored-jmt-main** - https://github.com/penumbra-zone/jmt")]);
+    push_to_repo(repo.path_str(), "vastrum-pr-fork", &client, None).await.unwrap();
+
+    client
+        .create_pull_request("vastrum", "vastrum-pr-fork", "Improve README", "Improved readme")
+        .await
+        .await_confirmation()
+        .await;
+
+    client.reply_to_pull_request("PR reply example", "vastrum", 0).await.await_confirmation().await;
 }
 
 fn create_monorepo_snapshot() -> TestRepo {

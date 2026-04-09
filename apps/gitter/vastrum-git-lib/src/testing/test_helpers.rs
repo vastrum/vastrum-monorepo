@@ -31,6 +31,114 @@ impl TestRepo {
         return commit_id;
     }
 
+    /// Like `add_commit`, but overlays modifications onto the existing HEAD tree
+    /// instead of replacing it entirely. Only the specified files are changed.
+    pub fn add_commit_modify(&self, files: &[(&str, &[u8])]) -> ObjectId {
+        let head_commit = self.repo.head().unwrap().peel_to_commit().unwrap();
+        let head_tree_id = head_commit.tree_id().unwrap().detach();
+        let tree_id = Self::overlay_tree_recursive(&self.repo, head_tree_id, files);
+        let parent = head_commit.id().detach();
+        let commit_id = self.write_commit(tree_id, vec![parent]);
+        self.update_head(commit_id);
+        return commit_id;
+    }
+
+    fn overlay_tree_recursive(
+        repo: &Repository,
+        base_tree_id: ObjectId,
+        modifications: &[(&str, &[u8])],
+    ) -> ObjectId {
+        // Split modifications into files at this level vs files in subdirectories
+        let mut here_files: HashMap<&str, &[u8]> = HashMap::new();
+        let mut subdirs: HashMap<&str, Vec<(&str, &[u8])>> = HashMap::new();
+
+        for &(path, content) in modifications {
+            if let Some((dir, rest)) = path.split_once('/') {
+                subdirs.entry(dir).or_default().push((rest, content));
+            } else {
+                here_files.insert(path, content);
+            }
+        }
+
+        // Read existing tree entries
+        let base_tree = repo.find_tree(base_tree_id).unwrap();
+        let mut entries: Vec<Entry> = Vec::new();
+
+        for entry in base_tree.iter() {
+            let entry = entry.unwrap();
+            let name = entry.filename().to_string();
+
+            if entry.mode().is_tree() {
+                if let Some(sub_mods) = subdirs.remove(name.as_str()) {
+                    // Recurse into existing subtree with modifications
+                    let new_subtree_id =
+                        Self::overlay_tree_recursive(repo, entry.object_id(), &sub_mods);
+                    entries.push(Entry {
+                        mode: EntryKind::Tree.into(),
+                        filename: name.into(),
+                        oid: new_subtree_id,
+                    });
+                } else {
+                    // Keep existing subtree unchanged
+                    entries.push(Entry {
+                        mode: entry.mode(),
+                        filename: name.into(),
+                        oid: entry.object_id(),
+                    });
+                }
+            } else if let Some(new_content) = here_files.remove(name.as_str()) {
+                // Replace this file's blob
+                let blob = Blob { data: new_content.to_vec() };
+                let blob_id = repo.write_object(&blob).unwrap().detach();
+                entries.push(Entry {
+                    mode: entry.mode(),
+                    filename: name.into(),
+                    oid: blob_id,
+                });
+            } else {
+                // Keep existing file unchanged
+                entries.push(Entry {
+                    mode: entry.mode(),
+                    filename: name.into(),
+                    oid: entry.object_id(),
+                });
+            }
+        }
+
+        // Add new files that don't exist in the base tree
+        for (name, content) in here_files {
+            let blob = Blob { data: content.to_vec() };
+            let blob_id = repo.write_object(&blob).unwrap().detach();
+            entries.push(Entry {
+                mode: EntryKind::Blob.into(),
+                filename: name.into(),
+                oid: blob_id,
+            });
+        }
+
+        // Add new subdirectories that don't exist in the base tree
+        for (dir_name, sub_files) in subdirs {
+            let subtree_id = Self::build_tree_recursive(repo, &sub_files, &[]);
+            entries.push(Entry {
+                mode: EntryKind::Tree.into(),
+                filename: dir_name.into(),
+                oid: subtree_id,
+            });
+        }
+
+        entries.sort_by(|a, b| {
+            let a_key =
+                if a.mode.is_tree() { format!("{}/", a.filename) } else { a.filename.to_string() };
+            let b_key =
+                if b.mode.is_tree() { format!("{}/", b.filename) } else { b.filename.to_string() };
+            a_key.cmp(&b_key)
+        });
+
+        let tree = Tree { entries };
+        let object_id = repo.write_object(&tree).unwrap().detach();
+        return object_id;
+    }
+
     fn update_head(&self, commit_id: ObjectId) {
         self.repo
             .edit_reference(RefEdit {
