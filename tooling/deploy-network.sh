@@ -143,9 +143,12 @@ validate() {
     done
     log "  Keystores: OK (${#IPS[@]} found)"
 
-    # Clear stale host keys (VPS reimages change host keys)
+    # Clear stale host keys and pre-populate fresh ones (avoids race in parallel Phase 2)
     for ip in "${IPS[@]}"; do
         ssh-keygen -f "$HOME/.ssh/known_hosts" -R "$ip" 2>/dev/null || true
+    done
+    for ip in "${IPS[@]}"; do
+        ssh-keyscan -H "$ip" >> "$HOME/.ssh/known_hosts" 2>/dev/null || true
     done
 
     # Check SSH connectivity
@@ -360,13 +363,12 @@ $DOMAIN {
 *.$SITE_DOMAIN, $SITE_DOMAIN {
     tls {
         issuer acme {
-            dir https://acme.zerossl.com/v2/DV90
             email $EMAIL
             dns desec {
                 token {\$DESEC_TOKEN}
             }
-            propagation_delay 180s
-            propagation_timeout -1
+            propagation_delay 300s
+            propagation_timeout 600s
         }
     }
     reverse_proxy localhost:15556
@@ -409,7 +411,7 @@ Wants=network-online.target
 Type=notify
 User=caddy
 Group=caddy
-ExecStart=/usr/bin/caddy run --environ --config /etc/caddy/Caddyfile
+ExecStart=/usr/bin/caddy run --config /etc/caddy/Caddyfile
 ExecReload=/usr/bin/caddy reload --config /etc/caddy/Caddyfile --force
 TimeoutStopSec=5s
 LimitNOFILE=1048576
@@ -428,10 +430,10 @@ systemctl daemon-reload
 systemctl enable --now caddy
 CADDY_SERVICE_EOF
 
-    # Wait for wildcard cert, reload Caddy if needed
+    # Wait for wildcard cert (don't reload Caddy — reloads cancel in-flight DNS-01 challenges)
     if [[ -n "$SITE_DOMAIN" ]]; then
         log "  [$ip] Waiting for wildcard cert (*.${SITE_DOMAIN})..."
-        local max_attempts=5
+        local max_attempts=10
         local attempt=0
         while (( attempt < max_attempts )); do
             sleep 60
@@ -440,8 +442,7 @@ CADDY_SERVICE_EOF
                 break
             fi
             attempt=$((attempt + 1))
-            log "  [$ip] Wildcard cert not ready (attempt ${attempt}/${max_attempts}), reloading Caddy..."
-            remote_exec "$user" "$ip" "sudo systemctl reload caddy"
+            log "  [$ip] Wildcard cert not ready (attempt ${attempt}/${max_attempts}), waiting..."
         done
         if (( attempt >= max_attempts )); then
             warn "  [$ip] Wildcard cert not obtained after ${max_attempts} attempts — check Caddy logs"
