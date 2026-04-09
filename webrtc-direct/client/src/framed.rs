@@ -21,6 +21,10 @@ impl FramedClient {
         let wire = encode_framed(data);
         self.inner.write_all(&wire)
     }
+
+    pub fn close(&self) {
+        self.inner.close();
+    }
 }
 
 use crate::{WebRtcClient, WebRtcError};

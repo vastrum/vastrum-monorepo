@@ -122,6 +122,10 @@ impl WebRtcClient {
         }
         Ok(())
     }
+
+    pub fn close(&self) {
+        self.data_channel.close();
+    }
 }
 
 use crate::WebRtcError;

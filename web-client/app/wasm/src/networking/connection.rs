@@ -67,9 +67,23 @@ pub async fn send_request(route: &str, body: &[u8]) -> Result<Vec<u8>> {
     let timeout = gloo_timers::future::TimeoutFuture::new(REQUEST_TIMEOUT_MS);
     match futures::future::select(Box::pin(rx), Box::pin(timeout)).await {
         futures::future::Either::Left((Ok(resp), _)) => parse_response(resp),
-        futures::future::Either::Left((Err(_), _)) => Err(WasmErr::ChannelClosed),
-        futures::future::Either::Right(_) => Err(WasmErr::RequestTimeout),
+        futures::future::Either::Left((Err(_), _)) => {
+            close_transport();
+            Err(WasmErr::ChannelClosed)
+        }
+        futures::future::Either::Right(_) => {
+            close_transport();
+            Err(WasmErr::RequestTimeout)
+        }
     }
+}
+
+fn close_transport() {
+    TRANSPORT.with(|t| {
+        if let Some(transport) = t.borrow().as_ref() {
+            transport.inner.close();
+        }
+    });
 }
 
 pub async fn send_fire_and_forget(route: &str, body: &[u8]) -> Result<()> {
