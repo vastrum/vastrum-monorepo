@@ -20,12 +20,18 @@ impl RpcProvider for IFrameRpcClient {
     }
 
     async fn get_key_value(&self, key: String) -> Option<Vec<u8>> {
-        let res = vastrum_frontend_lib::get_key_value(key).await;
+        let res = vastrum_frontend_lib::get_key_value(key).await?;
+        if res.value.is_empty() {
+            return None;
+        }
         return Some(res.value);
     }
 
     async fn get_key_value_at_height(&self, key: String, height: u64) -> Option<Vec<u8>> {
-        let res = vastrum_frontend_lib::get_key_value_at_height(key, height).await;
+        let res = vastrum_frontend_lib::get_key_value_at_height(key, height).await?;
+        if res.value.is_empty() {
+            return None;
+        }
         return Some(res.value);
     }
 

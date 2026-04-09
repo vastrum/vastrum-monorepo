@@ -1,11 +1,7 @@
 pub async fn handle_get_key_value(params: GetKeyValueRequest) -> Result<GetKeyValueResponse> {
     let site_id = get_current_site_id()?;
-    let rpc_response = get_key_value_with_height(site_id, params.key, params.height).await;
-    let value = match rpc_response {
-        Ok(r) => r.value,
-        Err(_) => vec![],
-    };
-    Ok(GetKeyValueResponse { value })
+    let rpc_response = get_key_value_with_height(site_id, params.key, params.height).await?;
+    Ok(GetKeyValueResponse { value: rpc_response.value })
 }
 
 pub async fn handle_get_latest_block_height() -> Result<GetLatestBlockHeightResponse> {

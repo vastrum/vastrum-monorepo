@@ -47,7 +47,7 @@ async fn test_kv_history_delete_then_query() {
     assert_eq!(val, Some(vec![10]), "at height_1 should be Some([10])");
 
     let val = get_kv_at_height(ctx.site_id, "dkey", height_2).await;
-    assert_eq!(val, Some(vec![]), "at height_2 should be empty after delete");
+    assert_eq!(val, None, "at height_2 should be None after delete");
 }
 
 #[tokio::test]
@@ -61,7 +61,7 @@ async fn test_kv_history_before_first_write() {
     let height_after = get_height().await;
 
     let val = get_kv_at_height(ctx.site_id, "nkey", height_before).await;
-    assert_eq!(val, Some(vec![]), "before write should be empty");
+    assert_eq!(val, None, "before write should be None");
 
     let val = get_kv_at_height(ctx.site_id, "nkey", height_after).await;
     assert_eq!(val, Some(vec![7]), "after write should be Some([7])");
@@ -85,7 +85,7 @@ async fn test_kv_history_insert_delete_reinsert() {
     assert_eq!(val, Some(vec![1, 2]), "at height_1 should be [1, 2]");
 
     let val = get_kv_at_height(ctx.site_id, "rkey", height_2).await;
-    assert_eq!(val, Some(vec![]), "at height_2 should be empty after delete");
+    assert_eq!(val, None, "at height_2 should be None after delete");
 
     let val = get_kv_at_height(ctx.site_id, "rkey", height_3).await;
     assert_eq!(val, Some(vec![3, 4]), "at height_3 should be [3, 4]");
@@ -154,7 +154,7 @@ async fn test_kv_history_delete_survives_pruning() {
 
     let current = get_height().await;
     let val = get_kv_at_height(ctx.site_id, "dsp_key", current).await;
-    assert_eq!(val, Some(vec![]), "after delete should be empty");
+    assert_eq!(val, None, "after delete should be None");
 }
 
 #[tokio::test]
@@ -217,7 +217,7 @@ async fn test_kv_history_delete_reinsert_after_pruning() {
     ctx.client.kv_insert_raw("drap_key", vec![3, 4]).await.await_confirmation().await;
 
     let val = get_kv_at_height(ctx.site_id, "drap_key", h_before_reinsert).await;
-    assert_eq!(val, Some(vec![]), "before reinsert should be empty (key was deleted)");
+    assert_eq!(val, None, "before reinsert should be None (key was deleted)");
 
     let current = get_height().await;
     let val = get_kv_at_height(ctx.site_id, "drap_key", current).await;
