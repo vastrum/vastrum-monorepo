@@ -108,7 +108,7 @@ function IssuePage(): React.JSX.Element {
                     {/* Initial Issue */}
                     <div className="flex gap-3 md:gap-4">
                         <div className={`w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br ${generateAvatarGradient(issue.from)} flex-shrink-0`} />
-                        <div className="flex-1">
+                        <div className="flex-1 min-w-0">
                             <div className="comment-box">
                                 <div className="bg-app-bg-tertiary px-3 py-2 md:px-4 md:py-3 border-b border-app-border flex items-center justify-between">
                                     <div className="flex items-center gap-2 text-sm min-w-0">
@@ -131,7 +131,7 @@ function IssuePage(): React.JSX.Element {
                     {replies.map((reply, index) => (
                         <div key={index} className="flex gap-3 md:gap-4">
                             <div className={`w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br ${generateAvatarGradient(reply.from)} flex-shrink-0`} />
-                            <div className="flex-1">
+                            <div className="flex-1 min-w-0">
                                 <div className="comment-box">
                                     <div className="bg-app-bg-tertiary px-3 py-2 md:px-4 md:py-3 border-b border-app-border flex items-center justify-between">
                                         <div className="flex items-center gap-2 text-sm min-w-0">
@@ -152,7 +152,7 @@ function IssuePage(): React.JSX.Element {
                     {/* Comment Form */}
                     <div className="flex gap-3 md:gap-4">
                         <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-app-accent-purple to-app-accent-blue flex-shrink-0" />
-                        <div className="flex-1">
+                        <div className="flex-1 min-w-0">
                             <div className="comment-box">
                                 <div className="bg-app-bg-tertiary px-3 py-2 md:px-4 md:py-3 border-b border-app-border flex gap-4">
                                     <button className="text-sm font-medium text-app-text-primary">Reply</button>

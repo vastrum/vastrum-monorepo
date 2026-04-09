@@ -131,7 +131,7 @@ function ConversationTab({ pr, prDetail, repoId, onComment, onMerge }: Conversat
             {/* Initial Description */}
             <div className="flex gap-4">
                 <div className={`w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br ${generateAvatarGradient(pr.from)} flex-shrink-0`} />
-                <div className="flex-1">
+                <div className="flex-1 min-w-0">
                     <CommentBox
                         author={pr.from}
                         content={pr.description || 'No description provided.'}
@@ -170,7 +170,7 @@ function ConversationTab({ pr, prDetail, repoId, onComment, onMerge }: Conversat
             {replies.map((reply, index) => (
                 <div key={index} className="flex gap-4">
                     <div className={`w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br ${generateAvatarGradient(reply.from)} flex-shrink-0`} />
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                         <CommentBox
                             author={reply.from}
                             content={reply.content}
@@ -186,7 +186,7 @@ function ConversationTab({ pr, prDetail, repoId, onComment, onMerge }: Conversat
             {/* Comment Form */}
             <div className="flex gap-4">
                 <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-app-accent-purple to-app-accent-blue flex-shrink-0" />
-                <div className="flex-1">
+                <div className="flex-1 min-w-0">
                     <div className="comment-box">
                         <div className="bg-app-bg-tertiary px-4 py-3 md:px-5 md:py-4 border-b border-app-border flex gap-4">
                             <button className="text-sm font-medium text-app-text-primary">Reply</button>
