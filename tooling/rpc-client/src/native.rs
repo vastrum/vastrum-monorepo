@@ -44,6 +44,9 @@ impl RpcProvider for NativeRpcClient {
             eprintln!("proof verification failed for key {key}: {e}");
             return None;
         }
+        if response.value.is_empty() {
+            return None;
+        }
         return Some(response.value);
     }
 
@@ -68,6 +71,9 @@ impl RpcProvider for NativeRpcClient {
             now,
         ) {
             eprintln!("proof verification failed for key {key} at height {height}: {e}");
+            return None;
+        }
+        if response.value.is_empty() {
             return None;
         }
         return Some(response.value);
