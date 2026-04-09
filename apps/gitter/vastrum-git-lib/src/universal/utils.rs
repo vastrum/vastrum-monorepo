@@ -9,20 +9,15 @@ pub fn sha1_to_oid(hash: &Sha1Hash) -> ObjectId {
 }
 
 pub async fn vastrum_get_head_commit(
-    repo_name: impl Into<String>,
-    contract: &ContractAbiClient,
+    repo_store: &vastrum_abi::__private::vastrum_native_types::KvMap<String, crate::GitRepository>,
+    repo_name: &str,
 ) -> Result<ObjectId> {
-    let repo_name = repo_name.into();
-
-    let state = contract.state().await;
-    let Some(repo) = state.repo_store.get(&repo_name).await else {
-        return Err(VastrumGitError::RepoNotFound(repo_name.clone()));
+    let Some(repo) = repo_store.get(&repo_name.to_string()).await else {
+        return Err(VastrumGitError::RepoNotFound(repo_name.to_string()));
     };
-
     let Some(hash) = repo.head_commit_hash else {
         return Err(VastrumGitError::RepoDoesNotHaveHeadCommitYet);
     };
-
     return Ok(sha1_to_oid(&hash));
 }
 

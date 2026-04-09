@@ -11,8 +11,9 @@ pub async fn get_top_level_files(
     name: &str,
     contract: &ContractAbiClient,
 ) -> Result<Vec<ExplorerEntry>> {
-    let ctx = GitContext::from_contract(contract).await;
-    let head = vastrum_get_head_commit(name, contract).await?;
+    let state = contract.state().await;
+    let ctx = GitContext::new(state.git_object_store);
+    let head = vastrum_get_head_commit(&state.repo_store, name).await?;
     let head_commit = ctx.read_commit(head).await?;
     return get_files_for_tree(head_commit.tree, &ctx).await;
 }

@@ -3,9 +3,10 @@ pub async fn diff_repos(
     repo2: &str,
     contract: &ContractAbiClient,
 ) -> Result<RepoDiff> {
-    let ctx = GitContext::from_contract(contract).await;
-    let commit1 = vastrum_get_head_commit(repo1, contract).await?;
-    let commit2 = vastrum_get_head_commit(repo2, contract).await?;
+    let state = contract.state().await;
+    let ctx = GitContext::new(state.git_object_store);
+    let commit1 = vastrum_get_head_commit(&state.repo_store, repo1).await?;
+    let commit2 = vastrum_get_head_commit(&state.repo_store, repo2).await?;
     return diff_commits(commit1, commit2, &ctx).await;
 }
 

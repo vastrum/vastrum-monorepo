@@ -6,10 +6,11 @@ pub async fn merge_repos(
 ) -> Result<MergeResult> {
     let repo_name: String = repo_name.into();
     let fork_repo: String = fork_repo.into();
-    let ctx = GitContext::from_contract(contract).await;
+    let state = contract.state().await;
+    let ctx = GitContext::new(state.git_object_store);
 
-    let ours_commit_id = vastrum_get_head_commit(&repo_name, contract).await?;
-    let theirs_commit_id = vastrum_get_head_commit(&fork_repo, contract).await?;
+    let ours_commit_id = vastrum_get_head_commit(&state.repo_store, &repo_name).await?;
+    let theirs_commit_id = vastrum_get_head_commit(&state.repo_store, &fork_repo).await?;
     let res = merge_branches(ours_commit_id, theirs_commit_id, &ctx, contract, mode).await?;
 
     //only update headcommit if mergemode is live
@@ -342,7 +343,7 @@ use crate::{
     ContractAbiClient,
     error::Result,
     universal::utils::{
-        GitContext, calculate_object_hash, oid_to_sha1, upload_git_object, vastrum_get_head_commit,
+        GitContext, calculate_object_hash, vastrum_get_head_commit, oid_to_sha1, upload_git_object,
     },
 };
 use gix_actor::Signature;

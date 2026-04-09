@@ -5,7 +5,9 @@ pub async fn clone_repo(
     progress: Option<&ProgressBar>,
 ) -> Result<()> {
     let target_path = target_path.as_ref();
-    let head = vastrum_get_head_commit(repo_name, contract).await?;
+    let state = contract.state().await;
+    let ctx = GitContext::new(state.git_object_store);
+    let head = vastrum_get_head_commit(&state.repo_store, repo_name).await?;
 
     let mut new_repo = ThreadSafeRepository::init_opts(
         target_path,
@@ -17,7 +19,7 @@ pub async fn clone_repo(
 
     let _ = new_repo.committer_or_set_generic_fallback();
 
-    download_commits(&new_repo, head, contract, progress).await?;
+    download_commits(&new_repo, head, &ctx, progress).await?;
 
     new_repo.edit_reference(RefEdit {
         change: Change::Update {
@@ -42,12 +44,12 @@ pub async fn clone_repo(
 pub async fn download_commits(
     repository: &Repository,
     oid: ObjectId,
-    contract: &ContractAbiClient,
+    ctx: &GitContext,
     progress: Option<&ProgressBar>,
 ) -> Result<()> {
-    let parent_ids = download_commit(oid, repository, contract, progress).await?;
+    let parent_ids = download_commit(oid, repository, ctx, progress).await?;
     for parent in parent_ids {
-        Box::pin(download_commits(repository, parent, contract, progress)).await?;
+        Box::pin(download_commits(repository, parent, ctx, progress)).await?;
     }
     return Ok(());
 }
@@ -55,7 +57,7 @@ pub async fn download_commits(
 pub async fn download_commit(
     oid: ObjectId,
     repo: &Repository,
-    contract: &ContractAbiClient,
+    ctx: &GitContext,
     progress: Option<&ProgressBar>,
 ) -> Result<Vec<ObjectId>> {
     let commit_already_downloaded = repo.find_object(oid).is_ok();
@@ -63,11 +65,10 @@ pub async fn download_commit(
         return Ok(vec![]);
     }
 
-    let ctx = GitContext::from_contract(contract).await;
     let commit = ctx.read_commit(oid).await?;
     let parents = commit.parents.to_vec();
 
-    download_trees(commit.tree, repo, contract, progress).await?;
+    download_trees(commit.tree, repo, ctx, progress).await?;
 
     repo.write_object(commit)?;
 
@@ -81,12 +82,11 @@ pub async fn download_commit(
 pub async fn download_trees(
     tree_id: ObjectId,
     repo: &Repository,
-    contract: &ContractAbiClient,
+    ctx: &GitContext,
     progress: Option<&ProgressBar>,
 ) -> Result<()> {
-    let ctx = GitContext::from_contract(contract).await;
     let tree = ctx.read_tree(tree_id).await?;
-    download_tree(tree, tree_id, repo, &ctx, progress).await
+    download_tree(tree, tree_id, repo, ctx, progress).await
 }
 
 pub async fn download_tree(
