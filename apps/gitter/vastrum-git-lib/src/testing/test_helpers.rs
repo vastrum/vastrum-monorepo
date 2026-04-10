@@ -312,7 +312,8 @@ pub struct TestContext {
 impl TestContext {
     pub async fn new() -> Self {
         vastrum_native_lib::test_support::ensure_localnet("../contract", "../contract/out");
-        let client = ContractAbiClient::deploy("../contract/out/contract.wasm", vec![]).await;
+        let relay_key = ed25519::PrivateKey::from_rng();
+        let client = ContractAbiClient::deploy("../contract/out/contract.wasm", vec![], relay_key.public_key()).await;
         let account_key = ed25519::PrivateKey::from_seed(111);
         let ctx = Self { contract: client.with_account_key(account_key.clone()), account_key };
         return ctx;

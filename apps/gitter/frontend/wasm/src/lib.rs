@@ -33,6 +33,29 @@ pub async fn create_repo(name: String, description: String) -> String {
     sent_tx.tx_hash().to_string()
 }
 
+/// Accepts an SSH public key string (e.g. "ssh-ed25519 AAAA... user@host")
+/// and registers its SHA256 fingerprint for the repo.
+#[wasm_bindgen]
+pub async fn set_ssh_key_fingerprint(repo_name: String, ssh_public_key: String) -> String {
+    let fingerprint = parse_ssh_key_fingerprint(&ssh_public_key);
+    let gitter = new_client();
+    let sent_tx = gitter.set_ssh_key_fingerprint(repo_name, fingerprint).await;
+    sent_tx.tx_hash().to_string()
+}
+
+fn parse_ssh_key_fingerprint(ssh_public_key: &str) -> vastrum_git_lib::SshKeyFingerprint {
+    // SSH public key format: "type base64-data [comment]"
+    let parts: Vec<&str> = ssh_public_key.trim().split_whitespace().collect();
+    assert!(parts.len() >= 2, "invalid SSH public key format");
+    use base64::Engine;
+    let key_bytes = base64::engine::general_purpose::STANDARD
+        .decode(parts[1])
+        .expect("invalid base64 in SSH key");
+    let hash = sha256_hash(&key_bytes);
+    let fingerprint = vastrum_git_lib::SshKeyFingerprint(hash.to_bytes());
+    return fingerprint;
+}
+
 #[wasm_bindgen]
 pub async fn fork_repo(new_repo_name: String, repo_to_fork_name: String) -> String {
     let gitter = new_client();
@@ -413,4 +436,5 @@ use vastrum_git_lib::universal::{
     utils::{GitContext, sha1_to_oid},
 };
 use vastrum_rpc_client::SentTxBehavior;
+use vastrum_shared_types::crypto::sha256::sha256_hash;
 use wasm_bindgen::prelude::*;

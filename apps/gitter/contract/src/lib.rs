@@ -4,6 +4,7 @@ struct Contract {
     all_repos: KvVecBTree<u64, GitRepository>,
     forks_store: KvMap<ForksKey, Vec<String>>,
     git_object_store: KvMap<Sha1Hash, Vec<u8>>,
+    relay_key: Option<Ed25519PublicKey>,
 }
 
 #[contract_methods]
@@ -30,6 +31,7 @@ impl Contract {
             description,
             owner: message_sender(),
             head_commit_hash: None,
+            ssh_key_fingerprint: None,
             issues: KvVecBTree::default(),
             pull_requests: KvVecBTree::default(),
             discussions: KvVecBTree::default(),
@@ -69,6 +71,7 @@ impl Contract {
             description: old_repo.description,
             owner: message_sender(),
             head_commit_hash: old_repo.head_commit_hash,
+            ssh_key_fingerprint: None,
             issues: KvVecBTree::default(),
             pull_requests: KvVecBTree::default(),
             discussions: KvVecBTree::default(),
@@ -241,11 +244,32 @@ impl Contract {
 
         repo.discussions.update(id, timestamp, discussion);
     }
+    #[authenticated]
+    pub fn set_ssh_key_fingerprint(&mut self, repo_name: String, fingerprint: SshKeyFingerprint) {
+        let mut repo = self.repo_store.get(&repo_name).unwrap();
+        if repo.owner != message_sender() {
+            panic!("not the repo owner");
+        }
+        repo.ssh_key_fingerprint = Some(fingerprint);
+        self.repo_store.set(&repo_name, repo);
+    }
+
+    #[authenticated]
+    pub fn relay_set_head_commit(&mut self, repo_name: String, commit_hash: Sha1Hash) {
+        if message_sender() != self.relay_key.unwrap() {
+            panic!("not the relay");
+        }
+        let mut repo = self.repo_store.get(&repo_name).unwrap();
+        repo.head_commit_hash = Some(commit_hash);
+        self.repo_store.set(&repo_name, repo);
+    }
 
     #[constructor]
-    pub fn new(brotli_html_content: Vec<u8>) -> Self {
+    pub fn new(brotli_html_content: Vec<u8>, relay_key: Ed25519PublicKey) -> Self {
         runtime::register_static_route("", &brotli_html_content);
-        Self::default()
+        let mut state = Self::default();
+        state.relay_key = Some(relay_key);
+        return state;
     }
 }
 
@@ -260,6 +284,7 @@ struct GitRepository {
     description: String,
     owner: Ed25519PublicKey,
     head_commit_hash: Option<Sha1Hash>,
+    ssh_key_fingerprint: Option<SshKeyFingerprint>,
     issues: KvVecBTree<u64, Issue>,
     pull_requests: KvVecBTree<u64, PullRequest>,
     discussions: KvVecBTree<u64, Discussion>,
@@ -331,6 +356,11 @@ struct ForksKey {
 #[contract_type]
 struct Sha1Hash([u8; 20]);
 
+#[derive(Copy, PartialEq)]
+#[contract_type]
+struct SshKeyFingerprint([u8; 32]);
+
+use sha1::{Digest, Sha1};
 use vastrum_contract_macros::{
     authenticated, constructor, contract_methods, contract_state, contract_type,
 };
@@ -338,4 +368,3 @@ use vastrum_runtime_lib::{
     Ed25519PublicKey, KvMap, KvVecBTree,
     runtime::{block_time, message_sender},
 };
-use sha1::{Digest, Sha1};

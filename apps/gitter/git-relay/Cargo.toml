@@ -1,0 +1,48 @@
+[package]
+name = "vastrum-git-relay"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+# Workspace crates
+vastrum-git-lib = { path = "../vastrum-git-lib" }
+vastrum-shared-types.workspace = true
+vastrum-native-lib.workspace = true
+vastrum-rpc-client.workspace = true
+
+# Async runtime
+tokio = { version = "1", features = ["full"] }
+
+# HTTP server
+axum = "0.8"
+
+# SSH server
+russh = "0.49"
+russh-keys = "0.49"
+async-trait = "0.1"
+
+# Git
+gix = { version = "0.80", default-features = false }
+gix-hash = "0.22.1"
+gix-object = "0.57.0"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Config
+serde = { version = "1", features = ["derive"] }
+toml = "0.8"
+
+# Error handling
+anyhow = "1"
+
+# Crypto
+sha2 = "0.10"
+ssh-key = "0.6"
+
+# Utilities
+hex = "0.4"
+tempfile = "3"
+walkdir = "2"
+rand = "0.8"

@@ -16,6 +16,7 @@ borsh = {version = "1.6.0", features = ["derive"]}
 getrandom = { version = "0.4", features = ["wasm_js"] }
 getrandom_02 = { package = "getrandom", version = "0.2", features = ["js"] }
 hex = "0.4"
+base64 = "0.22"
 tsify = "0.5.6"
 vastrum-shared-types = { version = "0.1.0", path = "../../../../shared-types" }
 vastrum-git-lib = { path = "../../vastrum-git-lib" }

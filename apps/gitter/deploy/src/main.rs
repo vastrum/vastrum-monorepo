@@ -12,8 +12,14 @@ async fn main() {
     let html = std::fs::read_to_string("../frontend/dist/index.html").unwrap();
     let brotli_html_content =
         vastrum_shared_types::compression::brotli::brotli_compress_html(&html);
-    let client =
-        ContractAbiClient::deploy("../contract/out/contract.wasm", brotli_html_content).await;
+    let relay_key = ed25519::PrivateKey::from_rng();
+    std::fs::write("../relay.key", relay_key.to_string()).unwrap();
+    let client = ContractAbiClient::deploy(
+        "../contract/out/contract.wasm",
+        brotli_html_content,
+        relay_key.public_key(),
+    )
+    .await;
     let site_id = client.site_id();
     register_domain(site_id, GITTER_DOMAIN).await.await_confirmation().await;
     register_domain(site_id, "index").await.await_confirmation().await;
@@ -32,6 +38,7 @@ async fn main() {
     println!();
     println!("=== Deploy complete ===");
     println!("monorepo_key: {monorepo_key}");
+    println!("relay_key: {relay_key}");
 }
 
 async fn deploy_monorepo(site_id: Sha256Digest, monorepo_key: &ed25519::PrivateKey) {

@@ -79,7 +79,7 @@ pub async fn update_vastrum_head(head: ObjectId, repo_name: &str, contract: &Con
     contract.set_head_commit(repo_name, hash).await.await_confirmation().await;
 }
 
-fn collect_all_objects(
+pub fn collect_all_objects(
     repo: &Repository,
     head_oid: ObjectId,
     stop_at: Option<ObjectId>,
@@ -150,7 +150,7 @@ fn collect_tree_objects(
     return Ok(());
 }
 
-async fn upload_objects_concurrent(
+pub async fn upload_objects_concurrent(
     objects: &[Object],
     contract: &ContractAbiClient,
     progress: Option<&ProgressBar>,

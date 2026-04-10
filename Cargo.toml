@@ -23,6 +23,7 @@ members = [
     "tooling/vastrum-lib-rust-frontend",
     "tooling/react-vastrum-lib/wasm",
     "tooling/cli",
+    "apps/gitter/git-relay",
     "tooling/genesis-tool",
 
     "web-client/app/wasm",
