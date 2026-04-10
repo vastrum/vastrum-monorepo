@@ -303,6 +303,31 @@ EOF
 HARDEN_EOF
 }
 
+# --- Phase 0b: Stop all existing services ---
+
+stop_existing_services() {
+    log "Stopping any existing services..."
+
+    # Stop relay first to prevent stale state propagation
+    if [[ -n "$RELAY_IP" ]]; then
+        remote_exec "$RELAY_USER" "$RELAY_IP" "sudo systemctl stop vastrum-relay 2>/dev/null || true"
+    fi
+
+    # Stop all validator nodes
+    local pids=()
+    for i in $(seq 0 $((${#IPS[@]} - 1))); do
+        (
+            remote_exec "${SSH_USERS[$i]}" "${IPS[$i]}" "sudo systemctl stop vastrum-node 2>/dev/null || true"
+        ) &
+        pids+=($!)
+    done
+    for pid in "${pids[@]}"; do
+        wait "$pid" 2>/dev/null || true
+    done
+
+    log "  All existing services stopped"
+}
+
 # --- Phase 1: Deploy Bootstrap+RPC Node ---
 
 deploy_rpc_node() {
@@ -680,6 +705,7 @@ verify_network() {
 main() {
     parse_args "$@"
     validate
+    stop_existing_services
     deploy_rpc_node
     deploy_validators
     deploy_relay
