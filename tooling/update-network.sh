@@ -23,6 +23,8 @@ IPS=()
 SSH_USERS=()
 VERSION=""
 DOMAIN=""
+RELAY_IP=""
+RELAY_USER=""
 
 # --- Usage ---
 
@@ -37,6 +39,7 @@ Required:
   --version VERSION       Release version to install (e.g. v1.1.0)
 
 Optional:
+  --relay-ip USER@IP      Git-relay server (stopped/wiped/restarted with validators)
   --domain DOMAIN         RPC domain for health check after restart
   --ssh-key PATH          SSH private key path
   -h, --help              Show this help
@@ -44,6 +47,7 @@ Optional:
 Example:
   ./update-network.sh \
     --ips debian@203.0.113.1,debian@203.0.113.2,admin@203.0.113.3 \
+    --relay-ip debian@203.0.113.10 \
     --version v1.1.0 \
     --domain rpc.vastrum.org
 EOF
@@ -57,6 +61,7 @@ parse_args() {
     while [[ $# -gt 0 ]]; do
         case "$1" in
             --ips)        IFS=',' read -ra raw_ips <<< "$2"; shift 2 ;;
+            --relay-ip)   local relay_entry="$2"; RELAY_USER="${relay_entry%%@*}"; RELAY_IP="${relay_entry#*@}"; shift 2 ;;
             --version)    VERSION="$2"; shift 2 ;;
             --domain)     DOMAIN="$2"; shift 2 ;;
             --ssh-key)    SSH_KEY="$2"; shift 2 ;;
@@ -99,6 +104,13 @@ remote_exec() {
 
 stop_all_nodes() {
     log "Phase 1: Stopping all nodes..."
+
+    # Stop relay first to prevent stale state propagation
+    if [[ -n "$RELAY_IP" ]]; then
+        log "  Stopping git-relay on $RELAY_IP..."
+        remote_exec "$RELAY_USER" "$RELAY_IP" "sudo systemctl stop vastrum-relay 2>/dev/null || true"
+        log "  [$RELAY_IP] relay stopped"
+    fi
 
     local pids=()
     for i in $(seq 0 $((${#IPS[@]} - 1))); do
@@ -150,6 +162,23 @@ update_all_nodes() {
         fi
     done
     [[ "$failed" == false ]] || { err "Failed to update some nodes"; exit 1; }
+
+    # Update relay if configured
+    if [[ -n "$RELAY_IP" ]]; then
+        log "  [$RELAY_IP] Wiping relay node DB..."
+        remote_exec "$RELAY_USER" "$RELAY_IP" "sudo rm -rf /home/vastrum/.local/share/vastrum"
+
+        log "  [$RELAY_IP] Installing vastrum-cli $VERSION..."
+        remote_exec "$RELAY_USER" "$RELAY_IP" "VASTRUM_VERSION=$VERSION bash <(curl -fsSL https://raw.githubusercontent.com/vastrum/vastrum-monorepo/master/tooling/cli/install.sh)"
+
+        remote_exec "$RELAY_USER" "$RELAY_IP" sudo bash <<'RELAY_COPY_EOF'
+set -euo pipefail
+CALLER_HOME=$(eval echo "~$SUDO_USER")
+cp "$CALLER_HOME/.vastrum/bin/vastrum-cli" /home/vastrum/.vastrum/bin/vastrum-cli
+chown vastrum:vastrum /home/vastrum/.vastrum/bin/vastrum-cli
+RELAY_COPY_EOF
+        log "  [$RELAY_IP] Relay updated"
+    fi
 }
 
 update_single_node() {
@@ -202,6 +231,13 @@ start_all_nodes() {
         fi
     done
     [[ "$failed" == false ]] || { err "Failed to start some nodes"; exit 1; }
+
+    # Start relay after validators are up
+    if [[ -n "$RELAY_IP" ]]; then
+        log "  Starting git-relay on $RELAY_IP..."
+        remote_exec "$RELAY_USER" "$RELAY_IP" "sudo systemctl start vastrum-relay"
+        log "  [$RELAY_IP] relay started"
+    fi
 }
 
 # --- Phase 4: Verify ---

@@ -22,6 +22,9 @@ DOMAIN=""
 SITE_DOMAIN=""
 DNS_TOKEN=""
 VERSION=""
+RELAY_IP=""
+RELAY_USER=""
+RELAY_DOMAIN=""
 
 # --- Logging ---
 
@@ -44,6 +47,8 @@ Required:
   --version VERSION       Release version to install (e.g. v0.2.0)
 
 Optional:
+  --relay-ip USER@IP      Deploy git-relay on this server
+  --relay-domain DOMAIN   Domain for relay HTTPS (e.g. gitrelay.vastrum.org)
   --site-domain DOMAIN    Site-serving domain (e.g. vastrum.net). Enables *.DOMAIN
                           with wildcard cert via DNS-01/deSEC.
   --dns-token TOKEN       deSEC API token (required if --site-domain is set)
@@ -74,6 +79,8 @@ parse_args() {
             --domain)     DOMAIN="$2"; shift 2 ;;
             --site-domain) SITE_DOMAIN="$2"; shift 2 ;;
             --dns-token)  DNS_TOKEN="$2"; shift 2 ;;
+            --relay-ip)   local relay_entry="$2"; RELAY_USER="${relay_entry%%@*}"; RELAY_IP="${relay_entry#*@}"; shift 2 ;;
+            --relay-domain) RELAY_DOMAIN="$2"; shift 2 ;;
             --version)    VERSION="$2"; shift 2 ;;
             --ssh-key)    SSH_KEY="$2"; shift 2 ;;
             --email)      EMAIL="$2"; shift 2 ;;
@@ -506,6 +513,118 @@ FW_EOF
     log "  [$ip] Validator-$idx deployed"
 }
 
+# --- Deploy Git Relay (optional) ---
+
+deploy_relay() {
+    [[ -n "$RELAY_IP" ]] || return 0
+
+    log "Deploying git-relay to $RELAY_IP..."
+
+    local user="$RELAY_USER" ip="$RELAY_IP"
+    local relay_key="$KEYSTORE_DIR/relay.key"
+
+    [[ -f "$relay_key" ]] || { err "Relay key not found: $relay_key"; exit 1; }
+
+    harden_server "$user" "$ip"
+    install_binary "$user" "$ip"
+
+    # Create user and directories
+    remote_exec "$user" "$ip" sudo bash <<'RELAY_SETUP_EOF'
+set -euo pipefail
+id -u vastrum &>/dev/null || useradd --system --home-dir /home/vastrum --create-home --shell /usr/sbin/nologin vastrum
+mkdir -p /home/vastrum/.vastrum/bin /etc/vastrum /var/lib/vastrum-relay/relay-data
+chown -R vastrum:vastrum /home/vastrum /var/lib/vastrum-relay
+RELAY_SETUP_EOF
+
+    # Copy binary
+    remote_exec "$user" "$ip" sudo bash <<'RELAY_BIN_EOF'
+set -euo pipefail
+CALLER_HOME=$(eval echo "~$SUDO_USER")
+cp "$CALLER_HOME/.vastrum/bin/vastrum-cli" /home/vastrum/.vastrum/bin/vastrum-cli
+chown vastrum:vastrum /home/vastrum/.vastrum/bin/vastrum-cli
+RELAY_BIN_EOF
+
+    # Copy relay key
+    remote_copy "$user" "$relay_key" "$ip" "/tmp/relay.key"
+    remote_exec "$user" "$ip" sudo bash <<'RELAY_KEY_EOF'
+set -euo pipefail
+mv /tmp/relay.key /etc/vastrum/relay.key
+chown vastrum:vastrum /etc/vastrum/relay.key
+chmod 600 /etc/vastrum/relay.key
+RELAY_KEY_EOF
+
+    # Install systemd service
+    remote_exec "$user" "$ip" sudo bash <<'RELAY_SVC_EOF'
+set -euo pipefail
+cat > /etc/systemd/system/vastrum-relay.service <<EOF
+[Unit]
+Description=Vastrum Git Relay
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=vastrum
+Group=vastrum
+WorkingDirectory=/var/lib/vastrum-relay
+ExecStart=/home/vastrum/.vastrum/bin/vastrum-cli start-gitter-http-relay --relay-key /etc/vastrum/relay.key
+Restart=always
+RestartSec=5
+LimitNOFILE=65536
+ProtectSystem=full
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
+EOF
+systemctl daemon-reload
+systemctl enable vastrum-relay
+RELAY_SVC_EOF
+
+    # Firewall
+    remote_exec "$user" "$ip" sudo bash <<'RELAY_FW_EOF'
+set -euo pipefail
+DEBIAN_FRONTEND=noninteractive apt-get install -y -qq ufw >/dev/null
+ufw allow 22/tcp comment "SSH" >/dev/null
+ufw allow 2222/tcp comment "Git SSH" >/dev/null
+ufw allow 15555/tcp comment "Vastrum P2P" >/dev/null
+ufw allow 80/tcp comment "HTTP" >/dev/null
+ufw allow 443/tcp comment "HTTPS" >/dev/null
+ufw allow 443/udp comment "HTTPS QUIC/HTTP3" >/dev/null
+ufw --force enable >/dev/null
+RELAY_FW_EOF
+
+    # Setup Caddy for relay domain
+    if [[ -n "$RELAY_DOMAIN" ]]; then
+        remote_exec "$user" "$ip" sudo bash <<'RELAY_CADDY_INSTALL_EOF'
+set -euo pipefail
+DEBIAN_FRONTEND=noninteractive apt-get update -qq
+apt-get install -y -qq caddy >/dev/null 2>&1 || true
+RELAY_CADDY_INSTALL_EOF
+
+        remote_exec "$user" "$ip" sudo bash <<RELAY_CADDY_EOF
+set -euo pipefail
+cat > /etc/caddy/Caddyfile <<EOF
+{
+    email $EMAIL
+}
+
+$RELAY_DOMAIN {
+    reverse_proxy localhost:8080
+}
+EOF
+
+systemctl restart caddy
+RELAY_CADDY_EOF
+        log "  [$ip] Caddy configured for $RELAY_DOMAIN"
+    fi
+
+    # Start relay
+    remote_exec "$user" "$ip" "sudo systemctl start vastrum-relay"
+    log "  [$ip] Git-relay deployed"
+}
+
 # --- Phase 3: Verification ---
 
 verify_network() {
@@ -563,12 +682,14 @@ main() {
     validate
     deploy_rpc_node
     deploy_validators
+    deploy_relay
     verify_network
 
     log ""
     log "Deployment complete!"
     log "  RPC endpoint:  https://${DOMAIN}"
     [[ -n "$SITE_DOMAIN" ]] && log "  Sites:         https://*.$SITE_DOMAIN"
+    [[ -n "$RELAY_DOMAIN" ]] && log "  Git relay:     https://$RELAY_DOMAIN (SSH: $RELAY_IP:2222)"
     log "  Validators:    ${#IPS[@]}"
     log "  Bootstrap:     ${IPS[0]}"
 }

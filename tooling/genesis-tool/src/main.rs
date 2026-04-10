@@ -79,6 +79,11 @@ fn generate_genesis(
     let genesis_path = output_dir.join("genesis.json");
     std::fs::write(&genesis_path, &json)?;
 
+    // Generate relay key for gitter git-relay
+    let relay_key = ed25519::PrivateKey::from_rng();
+    let relay_key_path = output_dir.join("relay.key");
+    std::fs::write(&relay_key_path, relay_key.to_string())?;
+
     println!("Generated {validators} validator keystores");
     println!("Genesis config: {}", genesis_path.display());
     for i in 0..validators {
@@ -87,6 +92,8 @@ fn generate_genesis(
             output_dir.join(format!("validator-{i}/keystore.bin")).display()
         );
     }
+    println!("Relay key: {}", relay_key_path.display());
+    println!("Relay public key: {}", relay_key.public_key());
     let shared_types_genesis = Path::new("shared-types/genesis.json");
     if shared_types_genesis.parent().map(|p| p.exists()).unwrap_or(false) {
         std::fs::copy(&genesis_path, shared_types_genesis)?;
@@ -102,6 +109,7 @@ use anyhow::Result;
 use clap::Parser;
 use std::path::{Path, PathBuf};
 use vastrum_node::keystore::keyset::Keystore;
+use vastrum_shared_types::crypto::ed25519;
 use vastrum_shared_types::genesis::{
     GenesisBootstrapPeer, GenesisConfig, GenesisRpcNode, GenesisValidator,
 };

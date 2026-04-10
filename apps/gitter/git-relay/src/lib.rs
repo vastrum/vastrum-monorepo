@@ -42,12 +42,17 @@ pub async fn run(relay_key_path: PathBuf) -> Result<()> {
     // Point all RPC clients at the local embedded node
     unsafe { std::env::set_var("RPC_URL_HACK_FOR_GIT_RELAY", format!("http://127.0.0.1:{}", HTTP_RPC_PORT)) };
 
-    // Resolve gitter site ID via the now-local RPC
+    // Wait for gitter contract to be deployed (retries until available)
     let http = NativeHttpClient::new();
-    let site_id = http
-        .resolve_domain(GITTER_DOMAIN.to_string())
-        .await?
-        .with_context(|| format!("could not resolve domain: {}", GITTER_DOMAIN))?;
+    let site_id = loop {
+        match http.resolve_domain(GITTER_DOMAIN.to_string()).await {
+            Ok(Some(id)) => break id,
+            _ => {
+                tracing::info!("waiting for gitter contract deployment...");
+                tokio::time::sleep(Duration::from_secs(5)).await;
+            }
+        }
+    };
 
     tracing::info!(site_id = %site_id, "resolved gitter contract");
 

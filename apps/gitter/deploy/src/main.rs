@@ -12,8 +12,7 @@ async fn main() {
     let html = std::fs::read_to_string("../frontend/dist/index.html").unwrap();
     let brotli_html_content =
         vastrum_shared_types::compression::brotli::brotli_compress_html(&html);
-    let relay_key = ed25519::PrivateKey::from_rng();
-    std::fs::write("../relay.key", relay_key.to_string()).unwrap();
+    let relay_key = load_or_generate_relay_key();
     let client = ContractAbiClient::deploy(
         "../contract/out/contract.wasm",
         brotli_html_content,
@@ -300,6 +299,20 @@ async fn deploy_example_repos(site_id: Sha256Digest) {
         .await
         .await_confirmation()
         .await;
+}
+fn load_or_generate_relay_key() -> ed25519::PrivateKey {
+    for path in ["../relay.key", "../../genesis/relay.key"] {
+        if let Ok(s) = std::fs::read_to_string(path) {
+            if let Some(key) = ed25519::PrivateKey::try_from_string(s.trim().to_string()) {
+                println!("loaded relay key from {path}");
+                return key;
+            }
+        }
+    }
+    let key = ed25519::PrivateKey::from_rng();
+    std::fs::write("../relay.key", key.to_string()).unwrap();
+    println!("generated new relay key at ../relay.key");
+    key
 }
 
 use vastrum_git_lib::{
