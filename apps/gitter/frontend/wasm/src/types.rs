@@ -91,6 +91,7 @@ pub struct GetRepoDetail {
     pub issue_count: u64,
     pub pr_count: u64,
     pub discussion_count: u64,
+    pub is_owner: bool,
 }
 
 #[derive(Serialize, Tsify)]

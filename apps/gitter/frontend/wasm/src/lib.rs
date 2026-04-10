@@ -35,6 +35,7 @@ pub async fn create_repo(name: String, description: String) -> String {
 
 /// Accepts an SSH public key string (e.g. "ssh-ed25519 AAAA... user@host")
 /// and registers its SHA256 fingerprint for the repo.
+/// Caller must validate key format first (see utils/sshKey.ts).
 #[wasm_bindgen]
 pub async fn set_ssh_key_fingerprint(repo_name: String, ssh_public_key: String) -> String {
     let fingerprint = parse_ssh_key_fingerprint(&ssh_public_key);
@@ -310,6 +311,8 @@ pub async fn get_repo_page_data(repo_name: String) -> GetRepoDetail {
         (String::new(), String::new(), String::new(), Vec::new(), String::new(), ic, pc, dc)
     };
 
+    let pub_key = get_pub_key().await;
+    let is_owner = pub_key == repo.owner;
     let converted_repo = convert_git_repository(&repo);
     GetRepoDetail {
         git_repo: converted_repo,
@@ -321,6 +324,7 @@ pub async fn get_repo_page_data(repo_name: String) -> GetRepoDetail {
         issue_count,
         pr_count,
         discussion_count,
+        is_owner,
     }
 }
 

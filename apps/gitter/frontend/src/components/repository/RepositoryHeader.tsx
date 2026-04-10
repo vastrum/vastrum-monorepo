@@ -1,13 +1,15 @@
 import React from 'react';
-import { GitFork } from 'lucide-react';
+import { GitFork, Settings } from 'lucide-react';
 import { type GitRepository } from '../../../wasm/pkg';
 
 interface RepositoryHeaderProps {
     repository: GitRepository;
+    isOwner: boolean;
     onFork: () => void;
+    onSettings: () => void;
 }
 
-function RepositoryHeader({ repository, onFork }: RepositoryHeaderProps): React.JSX.Element {
+function RepositoryHeader({ repository, isOwner, onFork, onSettings }: RepositoryHeaderProps): React.JSX.Element {
     return (
         <div className="mb-6">
             <div className="flex items-center gap-2 mb-4">
@@ -27,6 +29,15 @@ function RepositoryHeader({ repository, onFork }: RepositoryHeaderProps): React.
 
                 {/* Action Buttons */}
                 <div className="flex items-center gap-2">
+                    {isOwner && (
+                        <button
+                            onClick={onSettings}
+                            className="flex items-center gap-2 px-4 py-1.5 bg-app-bg-tertiary border border-app-border rounded-md hover:bg-app-hover transition-colors text-sm font-medium"
+                        >
+                            <Settings className="w-4 h-4" />
+                            <span>Settings</span>
+                        </button>
+                    )}
                     <button
                         onClick={onFork}
                         className="flex items-center gap-2 px-4 py-1.5 bg-app-bg-tertiary border border-app-border rounded-md hover:bg-app-hover transition-colors text-sm font-medium"

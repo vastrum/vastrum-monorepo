@@ -1,16 +1,31 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { create_repo } from '../../wasm/pkg';
+import { create_repo, set_ssh_key_fingerprint } from '../../wasm/pkg';
 import { await_tx_inclusion } from '@vastrum/react-lib';
+import { validateSshKey } from '../utils/sshKey';
 
 function CreateRepository(): React.JSX.Element {
     const navigate = useNavigate();
     const [repoName, setRepoName] = useState('');
     const [description, setDescription] = useState('');
+    const [sshKey, setSshKey] = useState('');
+    const [error, setError] = useState('');
 
     const handleSubmit = async (): Promise<void> => {
+        setError('');
+        if (sshKey.trim()) {
+            const validationError = validateSshKey(sshKey);
+            if (validationError) {
+                setError(validationError);
+                return;
+            }
+        }
         const txHash = await create_repo(repoName, description);
         await await_tx_inclusion(txHash);
+        if (sshKey.trim()) {
+            const sshTxHash = await set_ssh_key_fingerprint(repoName, sshKey);
+            await await_tx_inclusion(sshTxHash);
+        }
         navigate(`/repo/${repoName}`);
     };
 
@@ -54,6 +69,27 @@ function CreateRepository(): React.JSX.Element {
                         placeholder="A short description of your repository"
                         className="w-full px-3 py-2 bg-app-bg-secondary border border-app-border rounded-md text-app-text-primary focus:outline-none focus:ring-2 focus:ring-app-accent-blue focus:border-transparent"
                     />
+                </div>
+
+                {/* SSH Key (optional) */}
+                <div>
+                    <label htmlFor="ssh-key" className="block text-sm font-semibold mb-2">
+                        SSH Public Key <span className="text-app-text-secondary font-normal">(optional)</span>
+                    </label>
+                    <textarea
+                        id="ssh-key"
+                        value={sshKey}
+                        onChange={(e) => setSshKey(e.target.value)}
+                        placeholder="ssh-ed25519 AAAA... user@host"
+                        className="w-full px-3 py-2 bg-app-bg-secondary border border-app-border rounded-md text-app-text-primary focus:outline-none focus:ring-2 focus:ring-app-accent-blue focus:border-transparent font-mono text-sm"
+                        rows={2}
+                    />
+                    <p className="text-xs text-app-text-secondary mt-1">
+                        Required to push via SSH. You can set this later in repository settings.
+                    </p>
+                    {error && (
+                        <p className="text-sm text-app-accent-red mt-2">{error}</p>
+                    )}
                 </div>
 
                 {/* Action buttons */}

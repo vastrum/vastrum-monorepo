@@ -9,6 +9,7 @@ import RepositoryHeader from '../components/repository/RepositoryHeader';
 import RepositoryTabs from '../components/repository/RepositoryTabs';
 import RepositorySidebar from '../components/repository/RepositorySidebar';
 import ForkModal from '../components/common/ForkModal';
+import SSHKeyModal from '../components/repository/modals/SSHKeyModal';
 
 type TabType = 'code' | 'issues' | 'pulls' | 'discussions';
 
@@ -16,6 +17,7 @@ function Repository(): React.JSX.Element {
     const { repoId } = useParams<{ repoId: string }>();
     const location = useLocation();
     const [showForkModal, setShowForkModal] = useState(false);
+    const [showSettingsModal, setShowSettingsModal] = useState(false);
     const [repoData, setRepoData] = useState<GetRepoDetail | null>(null);
     const [loading, setLoading] = useState(true);
 
@@ -59,15 +61,16 @@ function Repository(): React.JSX.Element {
 
     const activeTab = getActiveTab();
 
-    const handleFork = (): void => {
-        setShowForkModal(true);
-    };
-
-    const { git_repo, issue_count, pr_count, discussion_count } = repoData;
+    const { git_repo, issue_count, pr_count, discussion_count, is_owner } = repoData;
 
     return (
         <div className="max-w-7xl mx-auto px-5 py-5 md:px-6 md:py-6">
-            <RepositoryHeader repository={git_repo} onFork={handleFork} />
+            <RepositoryHeader
+                repository={git_repo}
+                isOwner={is_owner}
+                onFork={() => setShowForkModal(true)}
+                onSettings={() => setShowSettingsModal(true)}
+            />
 
             <RepositoryTabs
                 repoId={git_repo.name}
@@ -92,11 +95,17 @@ function Repository(): React.JSX.Element {
                 <RepositorySidebar repository={git_repo} />
             </div>
 
-            {/* Fork Modal */}
             <ForkModal
                 isOpen={showForkModal}
                 onClose={() => setShowForkModal(false)}
                 repositoryName={git_repo.name}
+            />
+
+            <SSHKeyModal
+                isOpen={showSettingsModal}
+                onClose={() => setShowSettingsModal(false)}
+                repositoryName={git_repo.name}
+                onRefresh={fetchRepoData}
             />
         </div>
     );
