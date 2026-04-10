@@ -1,4 +1,3 @@
-use crate::repo_cache::RepoCache;
 use axum::{
     body::Bytes,
     extract::{Path, Query, State},
@@ -9,22 +8,56 @@ use axum::{
 };
 use std::sync::Arc;
 use tokio::process::Command;
+use vastrum_git_lib::ContractAbiClient;
 
 #[derive(serde::Deserialize)]
 pub struct InfoRefsParams {
     service: Option<String>,
 }
 
-pub fn router(cache: Arc<RepoCache>) -> Router {
+pub fn router(contract: Arc<ContractAbiClient>) -> Router {
     Router::new()
         .route("/{repo}/info/refs", get(info_refs))
         .route("/{repo}/git-upload-pack", post(upload_pack))
-        .with_state(cache)
+        .with_state(contract)
+}
+
+/// Materialize a temp bare repo from chain for the given repo name.
+/// Returns the TempDir (must be kept alive) and the bare repo path.
+async fn materialize_temp_repo(
+    contract: &ContractAbiClient,
+    repo: &str,
+) -> Result<(tempfile::TempDir, std::path::PathBuf), String> {
+    let site_id = contract.site_id();
+    let repo_owned = repo.to_string();
+
+    let tmp = tempfile::tempdir().map_err(|e| format!("failed to create temp dir: {}", e))?;
+    let bare_path = tmp.path().join(format!("{}.git", repo));
+
+    let handle = tokio::runtime::Handle::current();
+    let bare_path_clone = bare_path.clone();
+
+    tokio::task::spawn_blocking(move || {
+        let contract = ContractAbiClient::new(site_id);
+        handle.block_on(async {
+            crate::materialize::materialize_bare_repo(
+                &bare_path_clone,
+                &repo_owned,
+                &contract,
+            )
+            .await
+        })
+    })
+    .await
+    .map_err(|e| format!("spawn_blocking failed: {}", e))?
+    .map_err(|e| format!("repo '{}': {}", repo, e))?;
+
+    Ok((tmp, bare_path))
 }
 
 /// GET /:repo/info/refs?service=git-upload-pack
 async fn info_refs(
-    State(cache): State<Arc<RepoCache>>,
+    State(contract): State<Arc<ContractAbiClient>>,
     Path(repo): Path<String>,
     Query(params): Query<InfoRefsParams>,
 ) -> Response {
@@ -37,16 +70,14 @@ async fn info_refs(
             .into_response();
     }
 
-    let repo_path = match cache.ensure_fresh(&repo).await {
-        Ok(path) => path,
-        Err(e) => {
-            return (StatusCode::NOT_FOUND, format!("repo '{}': {}", repo, e)).into_response()
-        }
+    let (_tmp, bare_path) = match materialize_temp_repo(&contract, &repo).await {
+        Ok(r) => r,
+        Err(e) => return (StatusCode::NOT_FOUND, e).into_response(),
     };
 
     let output = match Command::new("git")
         .args(["upload-pack", "--stateless-rpc", "--advertise-refs"])
-        .arg(&repo_path)
+        .arg(&bare_path)
         .output()
         .await
     {
@@ -92,20 +123,18 @@ async fn info_refs(
 
 /// POST /:repo/git-upload-pack
 async fn upload_pack(
-    State(cache): State<Arc<RepoCache>>,
+    State(contract): State<Arc<ContractAbiClient>>,
     Path(repo): Path<String>,
     body: Bytes,
 ) -> Response {
-    let repo_path = match cache.ensure_fresh(&repo).await {
-        Ok(path) => path,
-        Err(e) => {
-            return (StatusCode::NOT_FOUND, format!("repo '{}': {}", repo, e)).into_response()
-        }
+    let (_tmp, bare_path) = match materialize_temp_repo(&contract, &repo).await {
+        Ok(r) => r,
+        Err(e) => return (StatusCode::NOT_FOUND, e).into_response(),
     };
 
     let mut child = match Command::new("git")
         .args(["upload-pack", "--stateless-rpc"])
-        .arg(&repo_path)
+        .arg(&bare_path)
         .stdin(std::process::Stdio::piped())
         .stdout(std::process::Stdio::piped())
         .stderr(std::process::Stdio::piped())
@@ -142,6 +171,17 @@ async fn upload_pack(
                 .into_response()
         }
     };
+
+    if !output.status.success() {
+        return (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            format!(
+                "git upload-pack failed: {}",
+                String::from_utf8_lossy(&output.stderr)
+            ),
+        )
+            .into_response();
+    }
 
     let mut headers = HeaderMap::new();
     headers.insert(

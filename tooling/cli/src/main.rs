@@ -36,6 +36,10 @@ enum Commands {
         repo_name: String,
         private_key: String,
     },
+    StartGitterHttpRelay {
+        #[arg(long, default_value = "relay.key")]
+        relay_key: PathBuf,
+    },
 }
 
 #[tokio::main]
@@ -53,6 +57,7 @@ async fn main() -> Result<()> {
         Commands::VastrumGitPush { repo_name, private_key } => {
             vastrum_git_push(repo_name, private_key).await?
         }
+        Commands::StartGitterHttpRelay { relay_key } => vastrum_git_relay::run(relay_key).await?,
     }
     Ok(())
 }

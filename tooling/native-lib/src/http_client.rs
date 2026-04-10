@@ -6,7 +6,9 @@ pub struct NativeHttpClient {
 
 impl NativeHttpClient {
     pub fn new() -> Self {
-        let base_url = if std::env::var("VASTRUM_LOCALNET").is_ok() {
+        let base_url = if let Ok(url) = std::env::var("RPC_URL_HACK_FOR_GIT_RELAY") {
+            url
+        } else if std::env::var("VASTRUM_LOCALNET").is_ok() {
             format!("http://127.0.0.1:{HTTP_RPC_PORT}")
         } else {
             "https://rpc.vastrum.org".to_string()

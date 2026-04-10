@@ -392,7 +392,7 @@ impl PeerManager {
 pub fn rate_config_for_tier(tier: PeerTier) -> f64 {
     match tier {
         PeerTier::Validator => 10_000.0,
-        PeerTier::Normal => 50.0,
+        PeerTier::Normal => 500.0,
     }
 }
 

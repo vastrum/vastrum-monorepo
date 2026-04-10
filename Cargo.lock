@@ -12159,6 +12159,7 @@ dependencies = [
  "rust-embed",
  "tokio",
  "vastrum-git-lib",
+ "vastrum-git-relay",
  "vastrum-native-lib",
  "vastrum-node",
  "vastrum-shared-types",
@@ -12276,18 +12277,15 @@ dependencies = [
  "russh",
  "russh-keys",
  "serde",
- "sha2 0.10.9",
  "ssh-key",
  "tempfile",
  "tokio",
- "toml 0.8.23",
  "tracing",
- "tracing-subscriber 0.3.22",
  "vastrum-git-lib",
  "vastrum-native-lib",
+ "vastrum-node",
  "vastrum-rpc-client",
  "vastrum-shared-types",
- "walkdir",
 ]
 
 [[package]]
