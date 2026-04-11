@@ -58,9 +58,9 @@ pub async fn run(relay_key_path: PathBuf) -> Result<()> {
 
     tracing::info!(site_id = %site_id, "resolved gitter contract");
 
-    // Create contract client authenticated with relay key
-    let site_key = derive_site_key(&relay_private_key, site_id);
-    let contract = Arc::new(ContractAbiClient::new(site_id).with_account_key(site_key));
+    // Create contract client authenticated with raw relay key
+    // (contract stores relay_key.public_key() directly, no derivation)
+    let contract = Arc::new(ContractAbiClient::new(site_id).with_account_key(relay_private_key));
 
     // Start HTTP server
     let http_contract = contract.clone();
@@ -101,5 +101,5 @@ use std::time::Duration;
 use vastrum_git_lib::ContractAbiClient;
 use vastrum_git_lib::config::GITTER_DOMAIN;
 use vastrum_native_lib::NativeHttpClient;
-use vastrum_shared_types::crypto::{ed25519, site_key::derive_site_key};
+use vastrum_shared_types::crypto::ed25519;
 use vastrum_shared_types::ports::HTTP_RPC_PORT;
