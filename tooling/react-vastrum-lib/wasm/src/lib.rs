@@ -38,24 +38,10 @@ pub async fn send_eth_rpc_request(request: JsValue) -> Result<JsValue, JsError> 
     return Ok(js_value);
 }
 
-#[wasm_bindgen]
-pub async fn send_starknet_rpc_request(request: JsValue) -> Result<JsValue, JsError> {
-    let req: StarknetRPCRequest = serde_wasm_bindgen::from_value(request)?;
-    let res = make_starknet_rpc_request(req).await;
-
-    if let Some(err_obj) = res.value_json.get("error") {
-        let msg = err_obj.get("message").and_then(|m| m.as_str()).unwrap_or("unknown RPC error");
-        return Err(JsError::new(msg));
-    }
-    let serializer = serde_wasm_bindgen::Serializer::new().serialize_maps_as_objects(true);
-    let js_value = res.value_json.serialize(&serializer)?;
-    return Ok(js_value);
-}
-
 use gloo_timers::future::TimeoutFuture;
 use serde::Serialize;
 use vastrum_shared_types::crypto::sha256::Sha256Digest;
-use vastrum_shared_types::iframerpc::types::{EthRPCRequest, StarknetRPCRequest};
-use vastrum_frontend_lib::{make_eth_rpc_request, make_starknet_rpc_request};
+use vastrum_shared_types::iframerpc::types::EthRPCRequest;
+use vastrum_frontend_lib::make_eth_rpc_request;
 use wasm_bindgen::prelude::wasm_bindgen;
 use wasm_bindgen::prelude::*;

@@ -111,11 +111,6 @@ async fn handle_request_methods(request: &RpcRequest) -> Result<String> {
             let res = handle_eth_rpc_request(params).await;
             Ok(serde_json::to_string(&res).unwrap())
         }
-        RpcMethod::StarknetRpcRequest => {
-            let params = serde_json::from_str(&request.params)?;
-            let res = handle_starknet_rpc_request(params).await;
-            Ok(serde_json::to_string(&res).unwrap())
-        }
         RpcMethod::GetKeyValueBySiteId => {
             let params: GetKeyValueBySiteIdRequest = serde_json::from_str(&request.params)?;
             let rpc_res = get_key_value(params.site_id, params.key).await?;

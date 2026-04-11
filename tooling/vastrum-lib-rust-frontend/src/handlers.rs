@@ -72,16 +72,6 @@ pub async fn make_eth_rpc_request(request: EthRPCRequest) -> EthRPCResponse {
     res.eth_rpc_response
 }
 
-pub async fn make_starknet_rpc_request(request: StarknetRPCRequest) -> StarknetRPCResponse {
-    let params = GetStarknetRPCRequest { request };
-    match send_request::<_, GetStarknetRPCResponse>(params, RpcMethod::StarknetRpcRequest).await {
-        Ok(res) => res.starknet_rpc_response,
-        Err(()) => StarknetRPCResponse {
-            value_json: serde_json::json!({"error": {"code": -32603, "message": "Request timed out"}}),
-        },
-    }
-}
-
 pub async fn get_current_path() -> String {
     let params = GetCurrentPath {};
     let res: GetCurrentPathResponse =
@@ -114,11 +104,10 @@ use vastrum_shared_types::iframerpc::types::{
     EthRPCRequest, EthRPCResponse, GetCurrentPath, GetCurrentPathResponse, GetEthRPCRequest,
     GetEthRPCResponse, GetKeyValueBySiteIdRequest, GetKeyValueRequest, GetKeyValueResponse,
     GetLatestBlockHeight, GetLatestBlockHeightResponse, GetPrivateKeyResponse, GetPrivateKeyRpc,
-    GetPrivateSalt, GetPrivateSaltResponse, GetPubKey, GetPubKeyResponse, GetStarknetRPCRequest,
-    GetStarknetRPCResponse, GetTXHashIsConfirmed, GetTXHashIsConfirmedResponse,
-    MakeAuthCallRequest, MakeAuthCallResponse, MakeCallRequest, MakeCallResponse,
-    PageNavigationEventMessage, RpcMethod, StarknetRPCRequest, StarknetRPCResponse,
-    UpdateCurrentPath, UpdateCurrentPathResponse,
+    GetPrivateSalt, GetPrivateSaltResponse, GetPubKey, GetPubKeyResponse, GetTXHashIsConfirmed,
+    GetTXHashIsConfirmedResponse, MakeAuthCallRequest, MakeAuthCallResponse, MakeCallRequest,
+    MakeCallResponse, PageNavigationEventMessage, RpcMethod, UpdateCurrentPath,
+    UpdateCurrentPathResponse,
 };
 use wasm_bindgen::prelude::*;
 use web_sys::{CustomEvent, CustomEventInit, window};

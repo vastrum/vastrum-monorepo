@@ -57,14 +57,6 @@ pub async fn handle_eth_rpc_request(params: GetEthRPCRequest) -> GetEthRPCRespon
     return GetEthRPCResponse { eth_rpc_response };
 }
 
-pub async fn handle_starknet_rpc_request(
-    params: GetStarknetRPCRequest,
-) -> GetStarknetRPCResponse {
-    let res = crate::starknet::rpc::send_starknet_rpc(params.request).await;
-    let starknet_rpc_response = StarknetRPCResponse { value_json: res };
-    return GetStarknetRPCResponse { starknet_rpc_response };
-}
-
 pub fn get_current_path(_params: GetCurrentPath) -> GetCurrentPathResponse {
     let path = web_sys::window().unwrap().location().pathname().unwrap_or_default();
     GetCurrentPathResponse { path }

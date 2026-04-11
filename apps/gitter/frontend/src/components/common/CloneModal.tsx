@@ -50,7 +50,7 @@ function CloneModal({ isOpen, onClose, repositoryName, isOwner }: CloneModalProp
             icon={<Terminal className="w-4 h-4" />}
             title="HTTPS clone (read-only)"
             command={`git clone https://gitrelay.vastrum.org/${repositoryName}`}
-            note="Read-only. Pushing over HTTPS will fail with a 403 — use SSH to push."
+            note="Read-only. Pushing over HTTPS will fail, use SSH to push."
         />
     );
 

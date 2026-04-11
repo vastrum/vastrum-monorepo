@@ -28,7 +28,6 @@ members = [
 
     "web-client/app/wasm",
     "web-client/helios-worker",
-    "web-client/beerus-worker",
 
     "apps/gitter/contract",
     "apps/gitter/abi",
@@ -74,10 +73,6 @@ members = [
     "apps/vastrum-docs/contract",
     "apps/vastrum-docs/abi",
     "apps/vastrum-docs/deploy",
-
-    "apps/starknet-defi-frontend/contract",
-    "apps/starknet-defi-frontend/abi",
-    "apps/starknet-defi-frontend/deploy",
 
     "runtime/runtime-tests/contract",
     "runtime/runtime-tests/abi",

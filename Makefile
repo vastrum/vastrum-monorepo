@@ -40,7 +40,6 @@ deploy-all-localnet:
 	(cd apps/letterer/deploy && cargo run) & \
 	(cd apps/mapper/deploy && cargo run) & \
 	(cd apps/vastrum-docs/deploy && cargo run) & \
-	(cd apps/starknet-defi-frontend/deploy && cargo run) & \
 	wait
 
 
@@ -58,5 +57,4 @@ deploy-all-production:
 	(cd apps/letterer/deploy && cargo run) & \
 	(cd apps/mapper/deploy && cargo run) & \
 	(cd apps/vastrum-docs/deploy && cargo run) & \
-	(cd apps/starknet-defi-frontend/deploy && cargo run) & \
 	wait

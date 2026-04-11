@@ -9,7 +9,7 @@ const EmptyRepoGuide = ({ repositoryName }: EmptyRepoGuideProps): React.JSX.Elem
     return (
         <div className="p-6 space-y-6">
             <p className="text-sm text-app-text-secondary">
-                This repository is empty. Clone and push using the SSH URL below — the same URL handles both.
+                This repository is empty, you can push a repository to it.
             </p>
             <p className="text-sm text-app-text-secondary">
                 You must first register your SSH public key in the repository settings (click the Settings button above).
