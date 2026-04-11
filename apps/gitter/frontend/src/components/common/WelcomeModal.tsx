@@ -20,7 +20,7 @@ function WelcomeModal({ isOpen, onClose }: WelcomeModalProps): React.JSX.Element
                         Currently you can
                     </p>
                     <ul className="list-disc list-inside text-app-text-secondary ml-2 space-y-1">
-                        <li>Clone via HTTPS and push via SSH using any standard git client</li>
+                        <li>Clone via HTTPS/SSH and push via SSH using any standard git client</li>
                         <li>Fork and submit pull requests using the Gitter frontend</li>
                         <li>Create issues and discussions</li>
                         <li>Merge pull requests locally inside the frontend (No CLI required)</li>

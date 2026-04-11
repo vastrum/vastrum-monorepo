@@ -19,7 +19,7 @@ interface CodeTabProps {
 
 const CodeTab = ({ repoData, onBranchChange }: CodeTabProps): React.JSX.Element => {
     const [showCloneModal, setShowCloneModal] = useState(false);
-    const { git_repo, head_commit_author_name, head_commit_message, head_commit_hash, readme_contents, branches, current_branch } = repoData;
+    const { git_repo, head_commit_author_name, head_commit_message, head_commit_hash, readme_contents, branches, current_branch, is_owner } = repoData;
 
     const topLevelEntries: ExplorerEntry[] = repoData.top_level_files;
     const isEmpty = head_commit_hash === "";
@@ -126,6 +126,7 @@ const CodeTab = ({ repoData, onBranchChange }: CodeTabProps): React.JSX.Element 
                 isOpen={showCloneModal}
                 onClose={() => setShowCloneModal(false)}
                 repositoryName={git_repo.name}
+                isOwner={is_owner}
             />
         </div>
     );

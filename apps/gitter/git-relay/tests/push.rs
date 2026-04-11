@@ -2,7 +2,6 @@ mod common;
 
 use common::*;
 use serial_test::serial;
-use std::path::{Path, PathBuf};
 use std::process::Command;
 use tempfile::TempDir;
 use vastrum_git_lib::ContractAbiClient;
@@ -498,77 +497,3 @@ async fn test_force_push() {
     assert!(state.git_object_store.get(&vastrum_git_lib::Sha1Hash(old_head)).await.is_some());
 }
 
-/// Generate an SSH keypair, return (private_key_file, ssh_pubkey_string).
-fn generate_ssh_keypair(tmp: &Path) -> (PathBuf, String) {
-    use ssh_key::{Algorithm, LineEnding, PrivateKey};
-    let key = PrivateKey::random(&mut rand::thread_rng(), Algorithm::Ed25519).unwrap();
-    let priv_path = tmp.join("id_ed25519");
-    key.write_openssh_file(&priv_path, LineEnding::LF).unwrap();
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::PermissionsExt;
-        std::fs::set_permissions(&priv_path, std::fs::Permissions::from_mode(0o600)).unwrap();
-    }
-    let pub_key = key.public_key().to_openssh().unwrap();
-    (priv_path, pub_key)
-}
-
-fn run_git(dir: &Path, args: &[&str]) {
-    let out = Command::new("git").args(args).current_dir(dir).output().unwrap();
-    assert!(
-        out.status.success(),
-        "git {:?} failed: {}",
-        args,
-        String::from_utf8_lossy(&out.stderr)
-    );
-}
-
-/// Read the commit SHA of a local branch as raw 20 bytes.
-fn git_branch_head(dir: &Path, branch: &str) -> [u8; 20] {
-    let repo = gix::open(dir).unwrap();
-    let reference = repo.find_reference(&format!("refs/heads/{}", branch)).unwrap();
-    let oid = match reference.target() {
-        gix::refs::TargetRef::Object(oid) => oid.to_owned(),
-        gix::refs::TargetRef::Symbolic(_) => panic!("expected direct ref"),
-    };
-    oid.as_bytes().try_into().unwrap()
-}
-
-/// Initialize a local git repo with one commit on the given branch.
-fn init_repo(dir: &Path, branch: &str, content: &str) {
-    run_git(dir, &["init", "-q", "-b", branch]);
-    std::fs::write(dir.join("README.md"), content).unwrap();
-    run_git(dir, &["add", "."]);
-    run_git(
-        dir,
-        &["-c", "user.email=test@test", "-c", "user.name=test", "commit", "-q", "-m", "init"],
-    );
-}
-
-fn git_ssh_push(
-    local: &Path,
-    priv_key: &Path,
-    repo_name: &str,
-    refspec: &str,
-) -> std::process::Output {
-    let ssh_cmd = format!(
-        "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes -i {} -p 2222",
-        priv_key.display()
-    );
-    let url = format!("ssh://git@127.0.0.1/{}", repo_name);
-    Command::new("git")
-        .args(["push", &url, refspec])
-        .env("GIT_SSH_COMMAND", &ssh_cmd)
-        .current_dir(local)
-        .output()
-        .unwrap()
-}
-
-fn assert_push_ok(out: std::process::Output) {
-    assert!(
-        out.status.success(),
-        "git push failed:\nstdout: {}\nstderr: {}",
-        String::from_utf8_lossy(&out.stdout),
-        String::from_utf8_lossy(&out.stderr)
-    );
-}
