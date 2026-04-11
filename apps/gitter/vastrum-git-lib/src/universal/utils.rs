@@ -126,49 +126,42 @@ impl GitContext {
             }
         }
     }
-
     /// Find the merge base (common ancestor) of two commits
     pub async fn find_merge_base(
         &self,
         ours: ObjectId,
         theirs: ObjectId,
     ) -> Result<Option<ObjectId>> {
-        // Build ancestor set for ours
-        let mut ours_ancestors = HashSet::new();
-        let mut to_visit = vec![ours];
-
-        while let Some(current) = to_visit.pop() {
-            if ours_ancestors.contains(&current) {
-                continue;
-            }
-            ours_ancestors.insert(current);
-
-            let commit = self.read_commit(current).await?;
-            for parent in commit.parents.iter() {
-                if !ours_ancestors.contains(parent) {
-                    to_visit.push(*parent);
-                }
-            }
+        if ours == theirs {
+            return Ok(Some(ours));
         }
 
-        // Walk theirs ancestors until finding common commit
-        let mut to_visit = vec![theirs];
-        let mut visited = HashSet::new();
+        let mut visited_ours: HashSet<ObjectId> = HashSet::from([ours]);
+        let mut visited_theirs: HashSet<ObjectId> = HashSet::from([theirs]);
+        let mut frontier_ours: VecDeque<ObjectId> = VecDeque::from([ours]);
+        let mut frontier_theirs: VecDeque<ObjectId> = VecDeque::from([theirs]);
 
-        while let Some(current) = to_visit.pop() {
-            if ours_ancestors.contains(&current) {
-                return Ok(Some(current));
+        while !frontier_ours.is_empty() || !frontier_theirs.is_empty() {
+            if let Some(current) = frontier_ours.pop_front() {
+                let commit = self.read_commit(current).await?;
+                for parent in commit.parents.iter() {
+                    if visited_theirs.contains(parent) {
+                        return Ok(Some(*parent));
+                    }
+                    if visited_ours.insert(*parent) {
+                        frontier_ours.push_back(*parent);
+                    }
+                }
             }
-
-            if visited.contains(&current) {
-                continue;
-            }
-            visited.insert(current);
-
-            let commit = self.read_commit(current).await?;
-            for parent in commit.parents.iter() {
-                if !visited.contains(parent) {
-                    to_visit.push(*parent);
+            if let Some(current) = frontier_theirs.pop_front() {
+                let commit = self.read_commit(current).await?;
+                for parent in commit.parents.iter() {
+                    if visited_ours.contains(parent) {
+                        return Ok(Some(*parent));
+                    }
+                    if visited_theirs.insert(*parent) {
+                        frontier_theirs.push_back(*parent);
+                    }
                 }
             }
         }
@@ -229,6 +222,6 @@ use gix_hash::{Kind, ObjectId};
 use gix_object::{
     Blob, Commit, Object, ObjectRef, Tree, WriteTo, compute_hash, encode, tree::EntryMode,
 };
-use std::collections::{HashMap, HashSet};
+use std::collections::{HashMap, HashSet, VecDeque};
 use vastrum_rpc_client::SentTxBehavior;
 use vastrum_shared_types::crypto::ed25519::PublicKey;

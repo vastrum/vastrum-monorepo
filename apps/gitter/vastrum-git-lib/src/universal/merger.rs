@@ -21,11 +21,7 @@ pub async fn merge_repos(
     if mode == MergeMode::Live {
         if let MergeResult::Merged(id) | MergeResult::FastForward(id) = res {
             let hash = oid_to_sha1(id);
-            contract
-                .set_branch_head(base_repo, base_branch, hash)
-                .await
-                .await_confirmation()
-                .await;
+            contract.set_branch_head(base_repo, base_branch, hash).await.await_confirmation().await;
         }
     }
     return Ok(res);
@@ -38,54 +34,27 @@ pub async fn merge_branches(
     contract: &ContractAbiClient,
     mode: MergeMode,
 ) -> Result<MergeResult> {
-    // Check if theirs is ancestor of ours = already up to date
-    let already_up_to_date = is_ancestor(theirs_commit_id, ours_commit_id, ctx).await?;
-    if already_up_to_date {
+    if ours_commit_id == theirs_commit_id {
         return Ok(MergeResult::AlreadyUpToDate);
     }
 
+    let Some(base_commit_id) = ctx.find_merge_base(ours_commit_id, theirs_commit_id).await? else {
+        return Ok(MergeResult::NoCommonAncestor);
+    };
+
+    // Check if theirs is ancestor of ours = already up to date
+    if base_commit_id == theirs_commit_id {
+        return Ok(MergeResult::AlreadyUpToDate);
+    }
     // Check if ours is ancestor of theirs = fastforward
-    let fast_forward = is_ancestor(ours_commit_id, theirs_commit_id, ctx).await?;
-    if fast_forward {
+    if base_commit_id == ours_commit_id {
         return Ok(MergeResult::FastForward(theirs_commit_id));
     }
 
     // Perform 3 way merge
-    let result = merge_trees(ours_commit_id, theirs_commit_id, ctx, contract, mode).await;
+    let result =
+        merge_trees(ours_commit_id, theirs_commit_id, base_commit_id, ctx, contract, mode).await;
     return result;
-}
-
-async fn is_ancestor(
-    potential_ancestor: ObjectId,
-    descendant: ObjectId,
-    ctx: &GitContext,
-) -> Result<bool> {
-    if potential_ancestor == descendant {
-        return Ok(true);
-    }
-
-    let mut to_visit = vec![descendant];
-    let mut visited = HashSet::new();
-
-    while let Some(current) = to_visit.pop() {
-        if current == potential_ancestor {
-            return Ok(true);
-        }
-
-        if visited.contains(&current) {
-            continue;
-        }
-        visited.insert(current);
-
-        let commit = ctx.read_commit(current).await?;
-        for parent in commit.parents.iter() {
-            if !visited.contains(parent) {
-                to_visit.push(*parent);
-            }
-        }
-    }
-
-    return Ok(false);
 }
 
 async fn create_and_upload_tree(
@@ -239,16 +208,11 @@ async fn merge_trees_recursive(
 async fn merge_trees(
     ours_commit_id: ObjectId,
     theirs_commit_id: ObjectId,
+    base_commit_id: ObjectId,
     ctx: &GitContext,
     contract: &ContractAbiClient,
     mode: MergeMode,
 ) -> Result<MergeResult> {
-    // Find common ancestor for 3-way merge
-    let base_commit_id = match ctx.find_merge_base(ours_commit_id, theirs_commit_id).await? {
-        Some(id) => id,
-        None => return Ok(MergeResult::NoCommonAncestor),
-    };
-
     // Get tree IDs
     let ours_tree = ctx.read_commit(ours_commit_id).await?.tree;
     let theirs_tree = ctx.read_commit(theirs_commit_id).await?.tree;
