@@ -1,3 +1,4 @@
+use std::collections::{BTreeMap, BTreeSet};
 use vastrum_contract_macros::{
     authenticated, constructor, contract_methods, contract_state, contract_type,
 };
@@ -49,6 +50,25 @@ enum TestEnum {
     BVariation,
 }
 
+#[contract_type]
+struct PrimitiveFields {
+    flag_bool: bool,
+    small_u: u8,
+    mid_u: u16,
+    big_u: u128,
+    s8: i8,
+    s16: i16,
+    s32: i32,
+    s64: i64,
+    s128: i128,
+    maybe_string: Option<String>,
+    maybe_int: Option<u64>,
+    numbers: Vec<u32>,
+    fixed_bytes: [u8; 4],
+    pair: (u64, String),
+    btree: BTreeMap<String, u64>,
+}
+
 #[contract_state]
 struct Contract {
     counter: u32,
@@ -66,6 +86,11 @@ struct Contract {
     last_authenticated_sender: Ed25519PublicKey,
     current_time: u64,
     enum_test: TestEnum,
+    price_f32: f32,
+    price_f64: f64,
+    tag_set: BTreeSet<String>,
+    int_set: BTreeSet<u64>,
+    primitives: PrimitiveFields,
 }
 
 #[contract_methods]
@@ -263,6 +288,98 @@ impl Contract {
     #[authenticated]
     pub fn auth_record_sender(&mut self) {
         self.last_authenticated_sender = runtime::message_sender();
+    }
+
+    pub fn set_price_f32(&mut self, v: f32) {
+        self.price_f32 = v;
+    }
+
+    pub fn set_price_f64(&mut self, v: f64) {
+        self.price_f64 = v;
+    }
+
+    pub fn insert_tag(&mut self, tag: String) {
+        self.tag_set.insert(tag);
+    }
+
+    pub fn remove_tag(&mut self, tag: String) {
+        self.tag_set.remove(&tag);
+    }
+
+    pub fn insert_int(&mut self, v: u64) {
+        self.int_set.insert(v);
+    }
+
+    pub fn remove_int(&mut self, v: u64) {
+        self.int_set.remove(&v);
+    }
+
+    pub fn set_bool(&mut self, v: bool) {
+        self.primitives.flag_bool = v;
+    }
+
+    pub fn set_u8(&mut self, v: u8) {
+        self.primitives.small_u = v;
+    }
+
+    pub fn set_u16(&mut self, v: u16) {
+        self.primitives.mid_u = v;
+    }
+
+    pub fn set_u128(&mut self, v: u128) {
+        self.primitives.big_u = v;
+    }
+
+    pub fn set_i8(&mut self, v: i8) {
+        self.primitives.s8 = v;
+    }
+
+    pub fn set_i16(&mut self, v: i16) {
+        self.primitives.s16 = v;
+    }
+
+    pub fn set_i32(&mut self, v: i32) {
+        self.primitives.s32 = v;
+    }
+
+    pub fn set_i64(&mut self, v: i64) {
+        self.primitives.s64 = v;
+    }
+
+    pub fn set_i128(&mut self, v: i128) {
+        self.primitives.s128 = v;
+    }
+
+    pub fn set_maybe_string(&mut self, v: Option<String>) {
+        self.primitives.maybe_string = v;
+    }
+
+    pub fn set_maybe_int(&mut self, v: Option<u64>) {
+        self.primitives.maybe_int = v;
+    }
+
+    pub fn push_number(&mut self, v: u32) {
+        self.primitives.numbers.push(v);
+    }
+
+    pub fn clear_numbers(&mut self) {
+        self.primitives.numbers.clear();
+    }
+
+    pub fn set_fixed_bytes(&mut self, v: [u8; 4]) {
+        self.primitives.fixed_bytes = v;
+    }
+
+    pub fn set_pair(&mut self, a: u64, b: String) {
+        self.primitives.pair = (a, b);
+    }
+
+    pub fn btree_insert(&mut self, k: String, v: u64) {
+        self.primitives.btree.insert(k, v);
+    }
+
+    pub fn btree_remove(&mut self, k: String) {
+        self.primitives.btree.remove(&k);
     }
 
 }

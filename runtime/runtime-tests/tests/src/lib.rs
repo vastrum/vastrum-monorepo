@@ -17,6 +17,7 @@ mod tests {
     mod kvvecbtree;
     mod nested_kv;
     mod page_serving;
+    mod primitive_types;
     mod rollback;
     mod state_basics;
 

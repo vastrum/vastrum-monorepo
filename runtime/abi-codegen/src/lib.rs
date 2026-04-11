@@ -22,6 +22,8 @@ pub enum AbiType {
     I64,
     U128,
     I128,
+    F32,
+    F64,
     String,
 
     // Composites
@@ -29,6 +31,7 @@ pub enum AbiType {
     Vec(Box<AbiType>),
     Array { elem: Box<AbiType>, len: usize },
     BTreeMap { key: Box<AbiType>, value: Box<AbiType> },
+    BTreeSet(Box<AbiType>),
 
     // KV types (Vastrum-specific)
     KvMap { key: Box<AbiType>, value: Box<AbiType> },
@@ -103,6 +106,8 @@ impl AbiType {
             AbiType::I64 => quote! { i64 },
             AbiType::U128 => quote! { u128 },
             AbiType::I128 => quote! { i128 },
+            AbiType::F32 => quote! { f32 },
+            AbiType::F64 => quote! { f64 },
             AbiType::String => quote! { String },
             AbiType::Option(inner) => {
                 let inner_tokens = inner.to_tokens();
@@ -120,6 +125,10 @@ impl AbiType {
                 let k = key.to_tokens();
                 let v = value.to_tokens();
                 quote! { ::std::collections::BTreeMap<#k, #v> }
+            }
+            AbiType::BTreeSet(inner) => {
+                let inner_tokens = inner.to_tokens();
+                quote! { ::std::collections::BTreeSet<#inner_tokens> }
             }
             AbiType::KvMap { key, value } => {
                 let k = key.to_tokens();
@@ -225,6 +234,8 @@ pub fn syn_type_to_abi_type(ty: &Type) -> Result<AbiType, std::string::String> {
                 "i64" => return Ok(AbiType::I64),
                 "u128" => return Ok(AbiType::U128),
                 "i128" => return Ok(AbiType::I128),
+                "f32" => return Ok(AbiType::F32),
+                "f64" => return Ok(AbiType::F64),
                 "String" => return Ok(AbiType::String),
                 "Ed25519PublicKey" => return Ok(AbiType::Ed25519PublicKey),
                 "Ed25519Signature" => return Ok(AbiType::Ed25519Signature),
@@ -256,6 +267,9 @@ pub fn syn_type_to_abi_type(ty: &Type) -> Result<AbiType, std::string::String> {
                             key: Box::new(generics[0].clone()),
                             value: Box::new(generics[1].clone()),
                         }),
+                        "BTreeSet" if generics.len() == 1 => {
+                            Ok(AbiType::BTreeSet(Box::new(generics[0].clone())))
+                        }
                         "KvMap" if generics.len() == 2 => Ok(AbiType::KvMap {
                             key: Box::new(generics[0].clone()),
                             value: Box::new(generics[1].clone()),
@@ -443,6 +457,8 @@ const KNOWN_TYPES: &[&str] = &[
     "String",
     "Vec",
     "Option",
+    "BTreeMap",
+    "BTreeSet",
     "KvMap",
     "KvVec",
     "KvBTree",
@@ -457,6 +473,8 @@ const KNOWN_TYPES: &[&str] = &[
     "i32",
     "i64",
     "i128",
+    "f32",
+    "f64",
     "bool",
     "Ed25519PublicKey",
     "Ed25519Signature",
