@@ -4608,6 +4608,8 @@ dependencies = [
 name = "gitter-deploy"
 version = "0.1.0"
 dependencies = [
+ "gix",
+ "tempfile",
  "tokio",
  "vastrum-abi",
  "vastrum-git-lib",

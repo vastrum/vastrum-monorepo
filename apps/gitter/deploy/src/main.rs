@@ -49,8 +49,9 @@ async fn deploy_monorepo(site_id: Sha256Digest, monorepo_key: &ed25519::PrivateK
         .await_confirmation()
         .await;
 
-    let repo = create_monorepo_snapshot();
-    push_to_repo(repo.path_str(), "vastrum", &client, None).await.unwrap();
+    let monorepo_root = std::path::Path::new("../../..").canonicalize().unwrap();
+    let monorepo_path = monorepo_root.to_str().unwrap();
+    push_to_repo(monorepo_path, "vastrum", &client, None).await.unwrap();
 
     // Create example issue with replies
     client
@@ -129,7 +130,7 @@ https://gitter.vastrum.net/repo/vastrum/tree/apps/chatter/contract/src/lib.rs
 
     client.fork_repository("vastrum-pr-fork", "vastrum").await.await_confirmation().await;
 
-    repo.add_commit_modify(&[("README.md", b"# Vastrum
+    let new_readme: &[u8] = b"# Vastrum
 
 Experimental protocol for decentralized website hosting. [Docs](https://xpkeuoccopibhnakya3luhrsphalhnqo2ifmxe65murdjft54n3q.vastrum.net).
 
@@ -177,8 +178,8 @@ make cli_install
 ### Scaffold options
 
 ```
-vastrum-cli init <name> --template site                                       
-vastrum-cli init <name> --template eth_dapp       
+vastrum-cli init <name> --template site
+vastrum-cli init <name> --template eth_dapp
 ```
 
 ### Project structure
@@ -196,8 +197,12 @@ vastrum-cli init <name> --template eth_dapp
 - **webrtc-direct** - WebRTC-direct impl
 - **tooling** - CLI, app libs
 - **vendored-helios** - https://github.com/a16z/helios
-- **vendored-jmt-main** - https://github.com/penumbra-zone/jmt")]);
-    push_to_repo(repo.path_str(), "vastrum-pr-fork", &client, None).await.unwrap();
+- **vendored-jmt-main** - https://github.com/penumbra-zone/jmt";
+
+    let fork_dir = build_fork_commit(monorepo_path, &monorepo_root, new_readme);
+    push_to_repo(fork_dir.path().to_str().unwrap(), "vastrum-pr-fork", &client, None)
+        .await
+        .unwrap();
 
     client
         .create_pull_request(
@@ -215,39 +220,6 @@ vastrum-cli init <name> --template eth_dapp
     client.reply_to_pull_request("PR reply example", "vastrum", 0).await.await_confirmation().await;
 }
 
-fn create_monorepo_snapshot() -> TestRepo {
-    // Find monorepo root
-    let monorepo_root = std::path::Path::new("../../..").canonicalize().unwrap();
-
-    // Get all tracked files via git ls-files
-    let output = std::process::Command::new("git")
-        .args(["ls-files"])
-        .current_dir(&monorepo_root)
-        .output()
-        .unwrap();
-    assert!(output.status.success(), "git ls-files failed");
-
-    let file_list = String::from_utf8(output.stdout).unwrap();
-    let mut builder = TestRepoBuilder::new();
-
-    for relative_path in file_list.lines() {
-        if relative_path.is_empty() {
-            continue;
-        }
-        let full_path = monorepo_root.join(relative_path);
-        match std::fs::read(&full_path) {
-            Ok(contents) => {
-                builder = builder.file(relative_path, &contents);
-            }
-            Err(e) => {
-                eprintln!("Warning: skipping {relative_path}: {e}");
-            }
-        }
-    }
-
-    return builder.build();
-}
-
 async fn deploy_example_repos(site_id: Sha256Digest) {
     let client = ContractAbiClient::new(site_id).with_account_key(ed25519::PrivateKey::from_rng());
 
@@ -255,7 +227,11 @@ async fn deploy_example_repos(site_id: Sha256Digest) {
     client.create_repository("example-repo", "Example repo").await.await_confirmation().await;
 
     // Build base repo and push
+    let now_secs =
+        std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs()
+            as i64;
     let repo = TestRepoBuilder::new()
+        .time(now_secs)
         .file("README.md", b"# Example Repo")
         .file("src/main.rs", b"fn main() {\n    println!(\"Hello world\");\n}\n")
         .file(
@@ -314,6 +290,90 @@ async fn deploy_example_repos(site_id: Sha256Digest) {
         .await_confirmation()
         .await;
 }
+
+fn build_fork_commit(
+    monorepo_path: &str,
+    monorepo_root: &std::path::Path,
+    new_readme: &[u8],
+) -> tempfile::TempDir {
+    let fork_dir = tempfile::TempDir::new().unwrap();
+    let _ = gix::init(fork_dir.path()).unwrap();
+
+    let source_repo = gix::open(monorepo_path).unwrap();
+    let source_objects = source_repo.common_dir().join("objects");
+    let objects_abs = if source_objects.is_absolute() {
+        source_objects
+    } else {
+        monorepo_root.join(".git").join("objects")
+    };
+    let alternates_path = fork_dir.path().join(".git/objects/info/alternates");
+    std::fs::create_dir_all(alternates_path.parent().unwrap()).unwrap();
+    std::fs::write(&alternates_path, format!("{}\n", objects_abs.display())).unwrap();
+
+    let fork_repo = gix::open(fork_dir.path()).unwrap();
+
+    let source_head = source_repo.head_id().unwrap().detach();
+    let source_commit = source_repo.find_commit(source_head).unwrap();
+    let source_tree_id = source_commit.tree_id().unwrap().detach();
+    let source_tree = source_repo.find_tree(source_tree_id).unwrap();
+
+    let new_blob_id =
+        fork_repo.write_object(&gix::objs::Blob { data: new_readme.to_vec() }).unwrap().detach();
+
+    let mut new_entries: Vec<gix::objs::tree::Entry> = Vec::new();
+    for entry_result in source_tree.iter() {
+        let entry = entry_result.unwrap();
+        let filename = entry.filename();
+        let oid = if filename.to_string() == "README.md" { new_blob_id } else { entry.object_id() };
+        new_entries.push(gix::objs::tree::Entry {
+            mode: entry.mode(),
+            filename: filename.to_owned(),
+            oid,
+        });
+    }
+    let new_tree_id =
+        fork_repo.write_object(&gix::objs::Tree { entries: new_entries }).unwrap().detach();
+
+    let now_secs =
+        std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs()
+            as i64;
+    let sig = gix::actor::Signature {
+        name: "vastrum-deploy".into(),
+        email: "deploy@vastrum.local".into(),
+        time: gix::date::Time::new(now_secs, 0),
+    };
+    let new_commit_id = fork_repo
+        .write_object(&gix::objs::Commit {
+            tree: new_tree_id,
+            parents: vec![source_head].into(),
+            author: sig.clone(),
+            committer: sig,
+            encoding: None,
+            message: "Improve README".into(),
+            extra_headers: vec![],
+        })
+        .unwrap()
+        .detach();
+
+    fork_repo
+        .edit_reference(gix::refs::transaction::RefEdit {
+            change: gix::refs::transaction::Change::Update {
+                log: gix::refs::transaction::LogChange {
+                    mode: gix::refs::transaction::RefLog::AndReference,
+                    force_create_reflog: false,
+                    message: "update".into(),
+                },
+                expected: gix::refs::transaction::PreviousValue::Any,
+                new: gix::refs::Target::Object(new_commit_id),
+            },
+            name: "HEAD".try_into().unwrap(),
+            deref: false,
+        })
+        .unwrap();
+
+    fork_dir
+}
+
 fn load_or_generate_relay_key() -> ed25519::PrivateKey {
     for path in ["../../genesis/git-relay/relay.key", "../relay.key"] {
         if let Ok(s) = std::fs::read_to_string(path) {
@@ -330,10 +390,8 @@ fn load_or_generate_relay_key() -> ed25519::PrivateKey {
 }
 
 use vastrum_git_lib::{
-    ContractAbiClient,
-    config::GITTER_DOMAIN,
-    native::upload::push_to_repo,
-    testing::test_helpers::{TestRepo, TestRepoBuilder},
+    ContractAbiClient, config::GITTER_DOMAIN, native::upload::push_to_repo,
+    testing::test_helpers::TestRepoBuilder,
 };
 use vastrum_native_lib::deployers::{
     build::{build_contract, run},
