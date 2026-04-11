@@ -8,12 +8,13 @@ pub struct ExplorerEntry {
 
 //for initial preview
 pub async fn get_top_level_files(
-    name: &str,
+    repo_name: &str,
+    branch: &str,
     contract: &ContractAbiClient,
 ) -> Result<Vec<ExplorerEntry>> {
     let state = contract.state().await;
     let ctx = GitContext::new(state.git_object_store);
-    let head = vastrum_get_head_commit(&state.repo_store, name).await?;
+    let head = get_head_commit(&state.repo_store, repo_name, branch).await?;
     let head_commit = ctx.read_commit(head).await?;
     return get_files_for_tree(head_commit.tree, &ctx).await;
 }
@@ -47,7 +48,7 @@ pub async fn get_file_data(blob_id: ObjectId, ctx: &GitContext) -> Result<Vec<u8
 use crate::{
     ContractAbiClient,
     error::Result,
-    universal::utils::{GitContext, vastrum_get_head_commit},
+    universal::utils::{GitContext, get_head_commit},
 };
 use gix_hash::ObjectId;
 use serde::Serialize;
@@ -83,7 +84,7 @@ mod tests {
         push_to_repo(test_repo.path_str(), repo_name, contract, None).await.unwrap();
 
         // Test get_top_level_files
-        let top_files = get_top_level_files(repo_name, contract).await.unwrap();
+        let top_files = get_top_level_files(repo_name, "main", contract).await.unwrap();
         assert_eq!(top_files.len(), 4);
 
         let readme = top_files.iter().find(|e| e.name == "README.md").unwrap();

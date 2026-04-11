@@ -1,12 +1,14 @@
 pub async fn diff_repos(
     repo1: &str,
+    branch1: &str,
     repo2: &str,
+    branch2: &str,
     contract: &ContractAbiClient,
 ) -> Result<RepoDiff> {
     let state = contract.state().await;
     let ctx = GitContext::new(state.git_object_store);
-    let commit1 = vastrum_get_head_commit(&state.repo_store, repo1).await?;
-    let commit2 = vastrum_get_head_commit(&state.repo_store, repo2).await?;
+    let commit1 = get_head_commit(&state.repo_store, repo1, branch1).await?;
+    let commit2 = get_head_commit(&state.repo_store, repo2, branch2).await?;
     return diff_commits(commit1, commit2, &ctx).await;
 }
 
@@ -307,7 +309,7 @@ pub struct RepoDiff {
 
 use crate::ContractAbiClient;
 use crate::error::Result;
-use crate::universal::utils::{GitContext, vastrum_get_head_commit};
+use crate::universal::utils::{GitContext, get_head_commit};
 use gix_hash::ObjectId;
 use gix_object::tree::EntryMode;
 use serde::Serialize;
@@ -342,7 +344,7 @@ mod tests {
         ctx.contract.create_repository(repo2_name, "test").await.await_confirmation().await;
         push_to_repo(repo2.path_str(), repo2_name, &ctx.contract, None).await.unwrap();
 
-        let diff = diff_repos(repo1_name, repo2_name, &ctx.contract).await.unwrap();
+        let diff = diff_repos(repo1_name, "main", repo2_name, "main", &ctx.contract).await.unwrap();
 
         assert_eq!(diff.files.len(), 1);
         assert_eq!(diff.files[0].path, "file2.txt");
@@ -372,7 +374,7 @@ mod tests {
         ctx.contract.create_repository(repo2_name, "test").await.await_confirmation().await;
         push_to_repo(repo2.path_str(), repo2_name, &ctx.contract, None).await.unwrap();
 
-        let diff = diff_repos(repo1_name, repo2_name, &ctx.contract).await.unwrap();
+        let diff = diff_repos(repo1_name, "main", repo2_name, "main", &ctx.contract).await.unwrap();
 
         assert_eq!(diff.files.len(), 1);
         assert_eq!(diff.files[0].path, "file.txt");
@@ -402,7 +404,7 @@ mod tests {
         ctx.contract.create_repository(repo2_name, "test").await.await_confirmation().await;
         push_to_repo(repo2.path_str(), repo2_name, &ctx.contract, None).await.unwrap();
 
-        let diff = diff_repos(repo1_name, repo2_name, &ctx.contract).await.unwrap();
+        let diff = diff_repos(repo1_name, "main", repo2_name, "main", &ctx.contract).await.unwrap();
 
         assert_eq!(diff.files.len(), 1);
         assert_eq!(diff.files[0].path, "file2.txt");
@@ -562,7 +564,7 @@ mod tests {
         ctx.contract.create_repository(repo2_name, "test").await.await_confirmation().await;
         push_to_repo(repo2.path_str(), repo2_name, &ctx.contract, None).await.unwrap();
 
-        let diff = diff_repos(repo1_name, repo2_name, &ctx.contract).await.unwrap();
+        let diff = diff_repos(repo1_name, "main", repo2_name, "main", &ctx.contract).await.unwrap();
 
         assert_eq!(diff.files.len(), 1);
         assert_eq!(diff.files[0].path, "image.png");

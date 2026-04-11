@@ -15,7 +15,7 @@ function FileBrowser(): React.JSX.Element {
         const fetchRepoData = async () => {
             if (!repoId) return;
             try {
-                const data = await get_repo_page_data(repoId);
+                const data = await get_repo_page_data(repoId, undefined);
                 setRepoData(data);
             } catch (error) {
                 console.error('Failed to fetch repository data:', error);

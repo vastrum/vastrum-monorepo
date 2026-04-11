@@ -88,7 +88,7 @@ const PullRequestsTab = ({ repoId, repoOwner }: PullRequestsTabProps): React.JSX
                                             {pr.title}
                                         </h4>
                                         <p className="text-sm text-app-text-secondary mt-1 truncate">
-                                            #{pr.id} from {pr.merging_repo} • {pr.is_open ? 'Open' : 'Merged'}
+                                            #{pr.id} from {pr.head_repo}:{pr.head_branch} • {pr.is_open ? 'Open' : 'Merged'}
                                         </p>
                                     </div>
                                 </div>

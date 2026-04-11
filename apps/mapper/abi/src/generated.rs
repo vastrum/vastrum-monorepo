@@ -10,15 +10,10 @@ pub use vastrum_abi::__private::vastrum_rpc_client::{RpcProvider, SentTxBehavior
     Default,
 )]
 #[borsh(crate = "vastrum_abi::__private::borsh")]
-pub struct MapMetadata {
-    pub min_zoom: u8,
-    pub max_zoom: u8,
-    pub center_lat: i64,
-    pub center_lng: i64,
-    pub bounds_min_lat: i64,
-    pub bounds_min_lng: i64,
-    pub bounds_max_lat: i64,
-    pub bounds_max_lng: i64,
+pub struct TileCoord {
+    pub z: u8,
+    pub x: u32,
+    pub y: u32,
 }
 #[derive(
     vastrum_abi :: __private :: borsh :: BorshSerialize,
@@ -28,10 +23,15 @@ pub struct MapMetadata {
     Default,
 )]
 #[borsh(crate = "vastrum_abi::__private::borsh")]
-pub struct TileCoord {
-    pub z: u8,
-    pub x: u32,
-    pub y: u32,
+pub struct MapMetadata {
+    pub min_zoom: u8,
+    pub max_zoom: u8,
+    pub center_lat: i64,
+    pub center_lng: i64,
+    pub bounds_min_lat: i64,
+    pub bounds_min_lng: i64,
+    pub bounds_max_lat: i64,
+    pub bounds_max_lng: i64,
 }
 #[derive(Debug)]
 pub struct NativeContract {

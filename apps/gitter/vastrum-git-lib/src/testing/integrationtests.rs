@@ -51,7 +51,7 @@ mod tests {
         ctx.contract.create_repository(merging_repo, "").await.await_confirmation().await;
 
         ctx.contract
-            .create_pull_request(repo_name, merging_repo, "title", "description")
+            .create_pull_request(repo_name, "main", merging_repo, "main", "title", "description")
             .await
             .await_confirmation()
             .await;
@@ -63,7 +63,7 @@ mod tests {
         let pull_request_1 = repo.pull_requests.get(0).await.unwrap();
         assert_eq!(pull_request_1.title, "title");
         assert_eq!(pull_request_1.description, "description");
-        assert_eq!(pull_request_1.merging_repo, merging_repo);
+        assert_eq!(pull_request_1.head_repo, merging_repo);
         assert_eq!(pull_request_1.is_open, true);
 
         assert_eq!(pull_request_1.replies.get(0).await.unwrap().content, "reply1");

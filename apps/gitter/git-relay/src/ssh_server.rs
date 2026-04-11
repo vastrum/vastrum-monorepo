@@ -358,17 +358,14 @@ async fn drive_receive_pack(
     tracing::info!(repo = repo_name, "receive-pack complete, syncing to chain");
     send_remote_msg(handle, channel_id, "Collecting objects...").await;
 
-    let collected = push_handler::collect_new_objects(repo_path, repo_name, contract).await?;
+    let plan = push_handler::collect_push_plan(repo_path, repo_name, contract).await?;
 
-    let (local_head, objects) = match collected {
-        push_handler::CollectedObjects::AlreadyUpToDate => {
-            send_remote_msg(handle, channel_id, "Already up to date on chain").await;
-            return Ok(());
-        }
-        push_handler::CollectedObjects::New { local_head, objects } => (local_head, objects),
-    };
+    if plan.updates.is_empty() && plan.deletes.is_empty() {
+        send_remote_msg(handle, channel_id, "Already up to date on chain").await;
+        return Ok(());
+    }
 
-    let count = objects.len();
+    let count = plan.objects.len();
     send_remote_msg(
         handle,
         channel_id,
@@ -376,21 +373,36 @@ async fn drive_receive_pack(
     )
     .await;
 
-    let uploaded = push_handler::upload_objects(&objects, contract).await?;
+    let uploaded = push_handler::upload_objects(&plan.objects, contract).await?;
 
     send_remote_msg(
         handle,
         channel_id,
-        &format!("Uploaded {} objects, updating HEAD...", uploaded),
+        &format!("Uploaded {} objects, updating branches...", uploaded),
     )
     .await;
 
-    push_handler::update_and_verify_head(repo_name, local_head, contract).await?;
+    push_handler::apply_branch_updates(repo_name, &plan, contract).await?;
 
-    send_remote_msg(handle, channel_id, &format!("Synced to Vastrum chain ({} objects)", uploaded))
-        .await;
+    let summary = if plan.deletes.is_empty() {
+        format!("Synced {} branches ({} objects)", plan.updates.len(), uploaded)
+    } else {
+        format!(
+            "Synced {} branches, deleted {} ({} objects)",
+            plan.updates.len(),
+            plan.deletes.len(),
+            uploaded
+        )
+    };
+    send_remote_msg(handle, channel_id, &summary).await;
 
-    tracing::info!(repo = repo_name, objects = uploaded, head = %local_head, "pushed to chain");
+    tracing::info!(
+        repo = repo_name,
+        objects = uploaded,
+        updates = plan.updates.len(),
+        deletes = plan.deletes.len(),
+        "pushed to chain"
+    );
     Ok(())
 }
 

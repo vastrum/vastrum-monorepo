@@ -200,7 +200,14 @@ vastrum-cli init <name> --template eth_dapp
     push_to_repo(repo.path_str(), "vastrum-pr-fork", &client, None).await.unwrap();
 
     client
-        .create_pull_request("vastrum", "vastrum-pr-fork", "Improve README", "Improved readme")
+        .create_pull_request(
+            "vastrum",
+            "main",
+            "vastrum-pr-fork",
+            "main",
+            "Improve README",
+            "Improved readme",
+        )
         .await
         .await_confirmation()
         .await;
@@ -283,7 +290,14 @@ async fn deploy_example_repos(site_id: Sha256Digest) {
 
     // Create PR with replies
     client
-        .create_pull_request("example-repo", "example-repo-fork", "pull requester", "Goodbye world")
+        .create_pull_request(
+            "example-repo",
+            "main",
+            "example-repo-fork",
+            "main",
+            "pull requester",
+            "Goodbye world",
+        )
         .await
         .await_confirmation()
         .await;
@@ -301,7 +315,7 @@ async fn deploy_example_repos(site_id: Sha256Digest) {
         .await;
 }
 fn load_or_generate_relay_key() -> ed25519::PrivateKey {
-    for path in ["../relay.key", "../../genesis/relay.key"] {
+    for path in ["../../genesis/relay.key", "../relay.key"] {
         if let Ok(s) = std::fs::read_to_string(path) {
             if let Some(key) = ed25519::PrivateKey::try_from_string(s.trim().to_string()) {
                 println!("loaded relay key from {path}");

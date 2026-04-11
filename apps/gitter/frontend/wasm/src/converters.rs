@@ -1,5 +1,4 @@
 use crate::types::*;
-use vastrum_git_lib::universal::utils::sha1_to_oid;
 
 pub fn convert_issue_reply(reply: &vastrum_git_lib::IssueReply) -> IssueReply {
     IssueReply {
@@ -52,7 +51,10 @@ pub fn convert_pull_request(pr: &vastrum_git_lib::PullRequest) -> PullRequest {
         id: pr.id,
         title: pr.title.clone(),
         description: pr.description.clone(),
-        merging_repo: pr.merging_repo.clone(),
+        base_repo: pr.base_repo.clone(),
+        base_branch: pr.base_branch.clone(),
+        head_repo: pr.head_repo.clone(),
+        head_branch: pr.head_branch.clone(),
         reply_count: pr.reply_count,
         is_open: pr.is_open,
         is_merged: pr.is_merged,
@@ -61,15 +63,14 @@ pub fn convert_pull_request(pr: &vastrum_git_lib::PullRequest) -> PullRequest {
     }
 }
 
-pub fn convert_git_repository(repo: &vastrum_git_lib::GitRepository) -> GitRepository {
-    let head_commit_hash = match &repo.head_commit_hash {
-        Some(h) => sha1_to_oid(h).to_string(),
-        None => String::new(),
-    };
+pub fn convert_git_repository(
+    repo: &vastrum_git_lib::GitRepository,
+    head_commit_hash: &str,
+) -> GitRepository {
     GitRepository {
         name: repo.name.clone(),
         description: repo.description.clone(),
         owner: repo.owner.to_string(),
-        head_commit_hash,
+        head_commit_hash: head_commit_hash.to_string(),
     }
 }

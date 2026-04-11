@@ -29,7 +29,15 @@ function NewPullRequestModal({ isOpen, onClose, baseRepository, baseOwner, onRef
     }, [isOpen, baseRepository]);
 
     const handleSubmit = async (): Promise<void> => {
-        const txHash = await create_pull_request(baseRepository, selectedFork, title, description);
+        // Fork-based PR: base branch and head branch default to "main"
+        const txHash = await create_pull_request(
+            baseRepository,
+            "main",
+            selectedFork,
+            "main",
+            title,
+            description,
+        );
         onClose();
         setTitle('');
         setDescription('');

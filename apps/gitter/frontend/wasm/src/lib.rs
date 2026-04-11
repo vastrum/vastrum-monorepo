@@ -91,13 +91,17 @@ pub async fn get_default_fork_name(repo_name: String) -> String {
 
 #[wasm_bindgen]
 pub async fn create_pull_request(
-    to_repo: String,
-    merging_repo: String,
+    base_repo: String,
+    base_branch: String,
+    head_repo: String,
+    head_branch: String,
     title: String,
     description: String,
 ) -> String {
     let gitter = new_client();
-    let sent_tx = gitter.create_pull_request(to_repo, merging_repo, title, description).await;
+    let sent_tx = gitter
+        .create_pull_request(base_repo, base_branch, head_repo, head_branch, title, description)
+        .await;
     sent_tx.tx_hash().to_string()
 }
 
@@ -120,13 +124,22 @@ pub async fn close_pull_request(repo_name: String, pull_request_id: u64) -> Stri
 }
 
 #[wasm_bindgen]
-pub async fn merge_pull_request(
-    repo_name: String,
-    feature_repo: String,
-    pull_request_id: u64,
-) -> String {
+pub async fn merge_pull_request(repo_name: String, pull_request_id: u64) -> String {
     let gitter = new_client();
-    merge_repos(repo_name.clone(), feature_repo, &gitter, MergeMode::Live).await.unwrap();
+    // Look up PR to get branches
+    let state = gitter.state().await;
+    let repo = state.repo_store.get(&repo_name).await.unwrap();
+    let pr = repo.pull_requests.get(pull_request_id).await.unwrap();
+    merge_repos(
+        pr.base_repo.clone(),
+        pr.base_branch.clone(),
+        pr.head_repo.clone(),
+        pr.head_branch.clone(),
+        &gitter,
+        MergeMode::Live,
+    )
+    .await
+    .unwrap();
     let sent_tx = gitter.mark_pull_request_merged(repo_name, pull_request_id).await;
     sent_tx.tx_hash().to_string()
 }
@@ -136,7 +149,17 @@ pub async fn get_all_repos() -> Vec<GitRepository> {
     let gitter = new_client();
     let state = gitter.state().await;
     let repos = state.all_repos.get_descending_entries(50, 0).await;
-    repos.iter().map(convert_git_repository).collect()
+    repos
+        .iter()
+        .map(|r| {
+            let head = r
+                .branches
+                .get(&r.default_branch)
+                .map(|h| sha1_to_oid(h).to_string())
+                .unwrap_or_default();
+            convert_git_repository(r, &head)
+        })
+        .collect()
 }
 
 #[wasm_bindgen]
@@ -257,13 +280,24 @@ pub async fn get_repo_counts(repo_name: String) -> RepoCounts {
 }
 
 #[wasm_bindgen]
-pub async fn get_repo_page_data(repo_name: String) -> GetRepoDetail {
+pub async fn get_repo_page_data(repo_name: String, branch: Option<String>) -> GetRepoDetail {
     let gitter = new_client();
     let state = gitter.state().await;
     let repo = state.repo_store.get(&repo_name).await.unwrap();
     let ctx = GitContext::new(state.git_object_store.clone());
 
-    let has_commits = repo.head_commit_hash.is_some();
+    // Resolve which branch to show
+    let branch_names: Vec<String> = repo.branches.keys().cloned().collect();
+    let current_branch = branch.unwrap_or_else(|| {
+        if repo.branches.contains_key(&repo.default_branch) {
+            repo.default_branch.clone()
+        } else {
+            // Default branch missing (stale or empty) — pick first available
+            branch_names.first().cloned().unwrap_or_default()
+        }
+    });
+
+    let current_commit = repo.branches.get(&current_branch).cloned();
 
     let (
         head_commit_author_name,
@@ -274,8 +308,8 @@ pub async fn get_repo_page_data(repo_name: String) -> GetRepoDetail {
         issue_count,
         pr_count,
         discussion_count,
-    ) = if has_commits {
-        let head_oid = sha1_to_oid(repo.head_commit_hash.as_ref().unwrap());
+    ) = if let Some(hash) = current_commit {
+        let head_oid = sha1_to_oid(&hash);
         let head_commit = ctx.read_commit(head_oid).await.unwrap();
 
         let (tree_result, ic, pc, dc) = futures::join!(
@@ -313,7 +347,8 @@ pub async fn get_repo_page_data(repo_name: String) -> GetRepoDetail {
 
     let pub_key = get_pub_key().await;
     let is_owner = pub_key == repo.owner;
-    let converted_repo = convert_git_repository(&repo);
+    let default_branch = repo.default_branch.clone();
+    let converted_repo = convert_git_repository(&repo, &head_commit_hash);
     GetRepoDetail {
         git_repo: converted_repo,
         head_commit_author_name,
@@ -325,6 +360,9 @@ pub async fn get_repo_page_data(repo_name: String) -> GetRepoDetail {
         pr_count,
         discussion_count,
         is_owner,
+        branches: branch_names,
+        current_branch,
+        default_branch,
     }
 }
 
@@ -372,15 +410,15 @@ pub async fn get_pull_request_detail(repo_name: String, id: u64) -> GetPullReque
     let base_repo = state.repo_store.get(&repo_name).await.unwrap();
     let pull_request = base_repo.pull_requests.get(id).await.unwrap();
 
-    let merging_repo_name = pull_request.merging_repo.clone();
-
-    let (merging_repo_opt, pub_key) =
-        futures::join!(state.repo_store.get(&merging_repo_name), get_pub_key(),);
-    let merging_repo = merging_repo_opt.unwrap();
+    // Look up head repo (can be same as base_repo for same-repo PRs)
+    let head_repo_name = pull_request.head_repo.clone();
+    let (head_repo_opt, pub_key) =
+        futures::join!(state.repo_store.get(&head_repo_name), get_pub_key(),);
+    let head_repo = head_repo_opt.unwrap();
     let is_owner = pub_key == base_repo.owner;
 
-    let base_head = sha1_to_oid(base_repo.head_commit_hash.as_ref().unwrap());
-    let merge_head = sha1_to_oid(merging_repo.head_commit_hash.as_ref().unwrap());
+    let base_head = sha1_to_oid(base_repo.branches.get(&pull_request.base_branch).unwrap());
+    let merge_head = sha1_to_oid(head_repo.branches.get(&pull_request.head_branch).unwrap());
 
     let frontend_status = if pull_request.is_merged {
         FrontendMergability::AlreadyMerged

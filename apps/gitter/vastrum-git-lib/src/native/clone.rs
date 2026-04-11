@@ -7,7 +7,7 @@ pub async fn clone_repo(
     let target_path = target_path.as_ref();
     let state = contract.state().await;
     let ctx = GitContext::new(state.git_object_store);
-    let head = vastrum_get_head_commit(&state.repo_store, repo_name).await?;
+    let repo_info = get_repo(&state.repo_store, repo_name).await?;
 
     let mut new_repo = ThreadSafeRepository::init_opts(
         target_path,
@@ -19,7 +19,33 @@ pub async fn clone_repo(
 
     let _ = new_repo.committer_or_set_generic_fallback();
 
-    download_commits(&new_repo, head, &ctx, progress).await?;
+    // Download all branches
+    for (branch_name, hash) in &repo_info.branches {
+        let oid = sha1_to_oid(hash);
+        download_commits(&new_repo, oid, &ctx, progress).await?;
+
+        let ref_name = format!("refs/heads/{}", branch_name);
+        new_repo.edit_reference(RefEdit {
+            change: Change::Update {
+                log: LogChange {
+                    mode: RefLog::AndReference,
+                    force_create_reflog: false,
+                    message: "clone".into(),
+                },
+                expected: PreviousValue::Any,
+                new: Target::Object(oid),
+            },
+            name: ref_name.try_into().unwrap(),
+            deref: false,
+        })?;
+    }
+
+    // Set HEAD to default branch, checkout
+    let default_head_hash = repo_info
+        .branches
+        .get(&repo_info.default_branch)
+        .ok_or(VastrumGitError::RepoDoesNotHaveHeadCommitYet)?;
+    let default_head = sha1_to_oid(default_head_hash);
 
     new_repo.edit_reference(RefEdit {
         change: Change::Update {
@@ -29,13 +55,13 @@ pub async fn clone_repo(
                 message: "clone".into(),
             },
             expected: PreviousValue::Any,
-            new: Target::Object(head),
+            new: Target::Object(default_head),
         },
         name: "HEAD".try_into().unwrap(),
         deref: false,
     })?;
 
-    checkout_head_to_workdir(&new_repo, head, target_path)?;
+    checkout_head_to_workdir(&new_repo, default_head, target_path)?;
 
     return Ok(());
 }
@@ -163,7 +189,7 @@ fn checkout_head_to_workdir(repo: &Repository, head: ObjectId, work_dir: &Path) 
 use crate::{
     ContractAbiClient,
     error::{Result, VastrumGitError},
-    universal::utils::{GitContext, vastrum_get_head_commit},
+    universal::utils::{GitContext, get_repo, sha1_to_oid},
 };
 use gix::{
     ObjectId, Repository, ThreadSafeRepository, create,

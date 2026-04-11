@@ -1,23 +1,31 @@
 pub async fn merge_repos(
-    repo_name: impl Into<String>,
-    fork_repo: impl Into<String>,
+    base_repo: impl Into<String>,
+    base_branch: impl Into<String>,
+    head_repo: impl Into<String>,
+    head_branch: impl Into<String>,
     contract: &ContractAbiClient,
     mode: MergeMode,
 ) -> Result<MergeResult> {
-    let repo_name: String = repo_name.into();
-    let fork_repo: String = fork_repo.into();
+    let base_repo: String = base_repo.into();
+    let base_branch: String = base_branch.into();
+    let head_repo: String = head_repo.into();
+    let head_branch: String = head_branch.into();
     let state = contract.state().await;
     let ctx = GitContext::new(state.git_object_store);
 
-    let ours_commit_id = vastrum_get_head_commit(&state.repo_store, &repo_name).await?;
-    let theirs_commit_id = vastrum_get_head_commit(&state.repo_store, &fork_repo).await?;
+    let ours_commit_id = get_head_commit(&state.repo_store, &base_repo, &base_branch).await?;
+    let theirs_commit_id = get_head_commit(&state.repo_store, &head_repo, &head_branch).await?;
     let res = merge_branches(ours_commit_id, theirs_commit_id, &ctx, contract, mode).await?;
 
     //only update headcommit if mergemode is live
     if mode == MergeMode::Live {
         if let MergeResult::Merged(id) | MergeResult::FastForward(id) = res {
             let hash = oid_to_sha1(id);
-            contract.set_head_commit(repo_name, hash).await.await_confirmation().await;
+            contract
+                .set_branch_head(base_repo, base_branch, hash)
+                .await
+                .await_confirmation()
+                .await;
         }
     }
     return Ok(res);
@@ -343,7 +351,7 @@ use crate::{
     ContractAbiClient,
     error::Result,
     universal::utils::{
-        GitContext, calculate_object_hash, vastrum_get_head_commit, oid_to_sha1, upload_git_object,
+        GitContext, calculate_object_hash, get_head_commit, oid_to_sha1, upload_git_object,
     },
 };
 use gix_actor::Signature;
@@ -388,15 +396,21 @@ mod tests {
         push_to_repo(b2.path_str(), "b2", &ctx.contract, None).await.unwrap();
 
         // Fast-forward: result should be b1's HEAD
-        let result = merge_repos("base", "b1", &ctx.contract, MergeMode::Live).await.unwrap();
+        let result = merge_repos("base", "main", "b1", "main", &ctx.contract, MergeMode::Live)
+            .await
+            .unwrap();
         assert_eq!(result, MergeResult::FastForward(b1_commit));
 
         // Already up-to-date
-        let result = merge_repos("base", "b1", &ctx.contract, MergeMode::Live).await.unwrap();
+        let result = merge_repos("base", "main", "b1", "main", &ctx.contract, MergeMode::Live)
+            .await
+            .unwrap();
         assert_eq!(result, MergeResult::AlreadyUpToDate);
 
         // 3-way merge: verify merge commit has correct parents
-        let result = merge_repos("base", "b2", &ctx.contract, MergeMode::Live).await.unwrap();
+        let result = merge_repos("base", "main", "b2", "main", &ctx.contract, MergeMode::Live)
+            .await
+            .unwrap();
         if let MergeResult::Merged(merge_commit_id) = result {
             let git_ctx = GitContext::from_contract(&ctx.contract).await;
             let merge_commit = git_ctx.read_commit(merge_commit_id).await.unwrap();
@@ -428,11 +442,15 @@ mod tests {
         push_to_repo(cb2.path_str(), "cb2", &ctx.contract, None).await.unwrap();
 
         // First merge succeeds (fast-forward)
-        let result = merge_repos("cbase", "cb1", &ctx.contract, MergeMode::Live).await.unwrap();
+        let result = merge_repos("cbase", "main", "cb1", "main", &ctx.contract, MergeMode::Live)
+            .await
+            .unwrap();
         assert_eq!(result, MergeResult::FastForward(cb1_commit));
 
         // Second merge should conflict - verify conflict details
-        let result = merge_repos("cbase", "cb2", &ctx.contract, MergeMode::Live).await.unwrap();
+        let result = merge_repos("cbase", "main", "cb2", "main", &ctx.contract, MergeMode::Live)
+            .await
+            .unwrap();
         if let MergeResult::Conflict(conflicts) = result {
             assert_eq!(conflicts.len(), 1);
             assert_eq!(conflicts[0].path, "file.txt");
@@ -483,11 +501,15 @@ mod tests {
         push_to_repo(nb2.path_str(), "nb2", &ctx.contract, None).await.unwrap();
 
         // Fast-forward
-        let result = merge_repos("nbase", "nb1", &ctx.contract, MergeMode::Live).await.unwrap();
+        let result = merge_repos("nbase", "main", "nb1", "main", &ctx.contract, MergeMode::Live)
+            .await
+            .unwrap();
         assert_eq!(result, MergeResult::FastForward(nb1_commit));
 
         // 3-way merge: verify parents
-        let result = merge_repos("nbase", "nb2", &ctx.contract, MergeMode::Live).await.unwrap();
+        let result = merge_repos("nbase", "main", "nb2", "main", &ctx.contract, MergeMode::Live)
+            .await
+            .unwrap();
         if let MergeResult::Merged(merge_commit_id) = result {
             let git_ctx = GitContext::from_contract(&ctx.contract).await;
             let merge_commit = git_ctx.read_commit(merge_commit_id).await.unwrap();
@@ -523,11 +545,13 @@ mod tests {
         push_to_repo(dm2.path_str(), "dm2", &ctx.contract, None).await.unwrap();
 
         // Fast-forward (delete branch)
-        let result = merge_repos("dm", "dm1", &ctx.contract, MergeMode::Live).await.unwrap();
+        let result =
+            merge_repos("dm", "main", "dm1", "main", &ctx.contract, MergeMode::Live).await.unwrap();
         assert_eq!(result, MergeResult::FastForward(dm1_commit));
 
         // Conflict: delete vs modify
-        let result = merge_repos("dm", "dm2", &ctx.contract, MergeMode::Live).await.unwrap();
+        let result =
+            merge_repos("dm", "main", "dm2", "main", &ctx.contract, MergeMode::Live).await.unwrap();
         if let MergeResult::Conflict(conflicts) = result {
             assert_eq!(conflicts.len(), 1);
             assert_eq!(conflicts[0].path, "file.txt");

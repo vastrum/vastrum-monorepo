@@ -17,7 +17,10 @@ pub struct PullRequest {
     pub id: u64,
     pub title: String,
     pub description: String,
-    pub merging_repo: String,
+    pub base_repo: String,
+    pub base_branch: String,
+    pub head_repo: String,
+    pub head_branch: String,
     pub reply_count: u64,
     pub is_open: bool,
     pub is_merged: bool,
@@ -92,6 +95,9 @@ pub struct GetRepoDetail {
     pub pr_count: u64,
     pub discussion_count: u64,
     pub is_owner: bool,
+    pub branches: Vec<String>,
+    pub current_branch: String,
+    pub default_branch: String,
 }
 
 #[derive(Serialize, Tsify)]

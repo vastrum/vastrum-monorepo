@@ -8,17 +8,37 @@ pub fn sha1_to_oid(hash: &Sha1Hash) -> ObjectId {
     return oid;
 }
 
-pub async fn vastrum_get_head_commit(
+pub async fn get_repo(
     repo_store: &vastrum_abi::__private::vastrum_native_types::KvMap<String, crate::GitRepository>,
     repo_name: &str,
-) -> Result<ObjectId> {
+) -> Result<crate::GitRepository> {
     let Some(repo) = repo_store.get(&repo_name.to_string()).await else {
         return Err(VastrumGitError::RepoNotFound(repo_name.to_string()));
     };
-    let Some(hash) = repo.head_commit_hash else {
+    return Ok(repo);
+}
+
+pub async fn get_head_commit(
+    repo_store: &vastrum_abi::__private::vastrum_native_types::KvMap<String, crate::GitRepository>,
+    repo_name: &str,
+    branch: &str,
+) -> Result<ObjectId> {
+    let repo = get_repo(repo_store, repo_name).await?;
+    let Some(hash) = repo.branches.get(branch) else {
         return Err(VastrumGitError::RepoDoesNotHaveHeadCommitYet);
     };
-    return Ok(sha1_to_oid(&hash));
+    return Ok(sha1_to_oid(hash));
+}
+
+pub async fn get_default_branch_head_commit(
+    repo_store: &vastrum_abi::__private::vastrum_native_types::KvMap<String, crate::GitRepository>,
+    repo_name: &str,
+) -> Result<ObjectId> {
+    let repo = get_repo(repo_store, repo_name).await?;
+    let Some(hash) = repo.branches.get(&repo.default_branch) else {
+        return Err(VastrumGitError::RepoDoesNotHaveHeadCommitYet);
+    };
+    return Ok(sha1_to_oid(hash));
 }
 
 pub async fn publickey_is_owner_of_repo(
@@ -26,9 +46,7 @@ pub async fn publickey_is_owner_of_repo(
     public_key: PublicKey,
     contract: &ContractAbiClient,
 ) -> Result<bool> {
-    let Some(repo) = contract.state().await.repo_store.get(&repo_name.to_string()).await else {
-        return Err(VastrumGitError::RepoNotFound(repo_name.to_string()));
-    };
+    let repo = get_repo(&contract.state().await.repo_store, repo_name).await?;
     return Ok(repo.owner == public_key);
 }
 
@@ -53,17 +71,6 @@ pub fn calculate_object_hash(object: &Object) -> ObjectId {
     let oid = compute_hash(Kind::Sha1, object.kind(), &buf).unwrap();
     return oid;
 }
-
-use crate::ContractAbiClient;
-use crate::Sha1Hash;
-use crate::error::{Result, VastrumGitError};
-use gix_hash::{Kind, ObjectId};
-use gix_object::{
-    Blob, Commit, Object, ObjectRef, Tree, WriteTo, compute_hash, encode, tree::EntryMode,
-};
-use std::collections::{HashMap, HashSet};
-use vastrum_rpc_client::SentTxBehavior;
-use vastrum_shared_types::crypto::ed25519::PublicKey;
 
 pub struct GitContext {
     store: vastrum_abi::__private::vastrum_native_types::KvMap<Sha1Hash, Vec<u8>>,
@@ -214,3 +221,14 @@ impl GitContext {
         return Ok(commits);
     }
 }
+
+use crate::ContractAbiClient;
+use crate::Sha1Hash;
+use crate::error::{Result, VastrumGitError};
+use gix_hash::{Kind, ObjectId};
+use gix_object::{
+    Blob, Commit, Object, ObjectRef, Tree, WriteTo, compute_hash, encode, tree::EntryMode,
+};
+use std::collections::{HashMap, HashSet};
+use vastrum_rpc_client::SentTxBehavior;
+use vastrum_shared_types::crypto::ed25519::PublicKey;

@@ -28,6 +28,7 @@ pub enum AbiType {
     Option(Box<AbiType>),
     Vec(Box<AbiType>),
     Array { elem: Box<AbiType>, len: usize },
+    BTreeMap { key: Box<AbiType>, value: Box<AbiType> },
 
     // KV types (Vastrum-specific)
     KvMap { key: Box<AbiType>, value: Box<AbiType> },
@@ -114,6 +115,11 @@ impl AbiType {
             AbiType::Array { elem, len } => {
                 let elem_tokens = elem.to_tokens();
                 quote! { [#elem_tokens; #len] }
+            }
+            AbiType::BTreeMap { key, value } => {
+                let k = key.to_tokens();
+                let v = value.to_tokens();
+                quote! { ::std::collections::BTreeMap<#k, #v> }
             }
             AbiType::KvMap { key, value } => {
                 let k = key.to_tokens();
@@ -246,6 +252,10 @@ pub fn syn_type_to_abi_type(ty: &Type) -> Result<AbiType, std::string::String> {
                         "Vec" if generics.len() == 1 => {
                             Ok(AbiType::Vec(Box::new(generics[0].clone())))
                         }
+                        "BTreeMap" if generics.len() == 2 => Ok(AbiType::BTreeMap {
+                            key: Box::new(generics[0].clone()),
+                            value: Box::new(generics[1].clone()),
+                        }),
                         "KvMap" if generics.len() == 2 => Ok(AbiType::KvMap {
                             key: Box::new(generics[0].clone()),
                             value: Box::new(generics[1].clone()),

@@ -10,10 +10,11 @@ use gix::{
 };
 use std::path::Path;
 use vastrum_git_lib::ContractAbiClient;
-use vastrum_git_lib::universal::utils::{sha1_to_oid, GitContext};
+use vastrum_git_lib::universal::utils::{GitContext, sha1_to_oid};
 
 /// Create and populate a bare repo from on-chain state.
-/// If the repo has no head commit on chain, creates an empty bare repo.
+/// Downloads all branches and writes each as `refs/heads/{branch}`.
+/// Sets HEAD symbolic ref to the default branch.
 pub async fn materialize_bare_repo(
     bare_path: &Path,
     repo_name: &str,
@@ -35,27 +36,43 @@ pub async fn materialize_bare_repo(
     )?
     .to_thread_local();
 
-    // If no head commit on chain, nothing to download
-    let Some(head_hash) = repo_info.head_commit_hash else {
-        return Ok(());
-    };
-    let head = sha1_to_oid(&head_hash);
     let ctx = GitContext::new(state.git_object_store);
 
-    vastrum_git_lib::native::clone::download_commits(&repo, head, &ctx, None).await?;
+    // Download each branch and write its ref
+    for (branch_name, hash) in &repo_info.branches {
+        let oid = sha1_to_oid(hash);
+        vastrum_git_lib::native::clone::download_commits(&repo, oid, &ctx, None).await?;
 
-    // Point refs/heads/main at the on-chain HEAD
+        let ref_name = format!("refs/heads/{}", branch_name);
+        repo.edit_reference(RefEdit {
+            change: Change::Update {
+                log: LogChange {
+                    mode: RefLog::AndReference,
+                    force_create_reflog: false,
+                    message: "materialize from chain".into(),
+                },
+                expected: PreviousValue::Any,
+                new: Target::Object(oid),
+            },
+            name: ref_name.try_into().unwrap(),
+            deref: false,
+        })?;
+    }
+
+    // Set HEAD to default branch (even if the branch doesn't exist yet — unborn HEAD
+    // is fine for git-receive-pack, it creates the branch on first push).
+    let head_target = format!("refs/heads/{}", repo_info.default_branch);
     repo.edit_reference(RefEdit {
         change: Change::Update {
             log: LogChange {
                 mode: RefLog::AndReference,
                 force_create_reflog: false,
-                message: "materialize from chain".into(),
+                message: "set HEAD to default branch".into(),
             },
             expected: PreviousValue::Any,
-            new: Target::Object(head),
+            new: Target::Symbolic(head_target.try_into().unwrap()),
         },
-        name: "refs/heads/main".try_into().unwrap(),
+        name: "HEAD".try_into().unwrap(),
         deref: false,
     })?;
 

@@ -54,7 +54,7 @@ function PullRequest(): React.JSX.Element {
 
     const handleMerge = async (): Promise<void> => {
         if (!pr || !repoId) return;
-        const txHash = await merge_pull_request(repoId, pr.merging_repo, BigInt(pr.id));
+        const txHash = await merge_pull_request(repoId, BigInt(pr.id));
         await await_tx_inclusion(txHash);
         fetchData();
     };
@@ -119,7 +119,7 @@ function PullRequest(): React.JSX.Element {
                     {getStatusBadge()}
                     <span className="text-app-text-secondary text-sm">
                         <span className="text-app-text-primary font-medium">{truncateAddress(pr.from)}</span>
-                        {' '}wants to merge <strong className="text-app-text-primary">{commitCount} commits</strong> from <strong className="text-app-text-primary">{pr.merging_repo}</strong>
+                        {' '}wants to merge <strong className="text-app-text-primary">{commitCount} commits</strong> from <strong className="text-app-text-primary">{pr.head_repo}:{pr.head_branch}</strong> into <strong className="text-app-text-primary">{pr.base_repo}:{pr.base_branch}</strong>
                     </span>
                 </div>
             </div>
@@ -157,7 +157,7 @@ function PullRequest(): React.JSX.Element {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 md:gap-6">
                 <div className="lg:col-span-2">
                     {activeTab === 'conversation' && <ConversationTab pr={pr} prDetail={prDetail} repoId={repoId} onComment={handleComment} onMerge={handleMerge} />}
-                    {activeTab === 'commits' && <CommitsTab commits={prDetail?.commits_to_merge || []} sourceBranch={pr.merging_repo} />}
+                    {activeTab === 'commits' && <CommitsTab commits={prDetail?.commits_to_merge || []} sourceBranch={`${pr.head_repo}:${pr.head_branch}`} />}
                     {activeTab === 'files' && <FilesChangedTab fileChanges={prDetail?.file_changes || []} />}
                 </div>
             </div>

@@ -20,12 +20,14 @@ function Repository(): React.JSX.Element {
     const [showSettingsModal, setShowSettingsModal] = useState(false);
     const [repoData, setRepoData] = useState<GetRepoDetail | null>(null);
     const [loading, setLoading] = useState(true);
+    const [selectedBranch, setSelectedBranch] = useState<string | undefined>(undefined);
 
-    const fetchRepoData = async (): Promise<void> => {
+    const fetchRepoData = async (branch?: string): Promise<void> => {
         if (!repoId) return;
         try {
-            const data = await get_repo_page_data(repoId);
+            const data = await get_repo_page_data(repoId, branch);
             setRepoData(data);
+            setSelectedBranch(data.current_branch);
         } catch (error) {
             console.error('Failed to fetch repository data:', error);
         } finally {
@@ -36,6 +38,10 @@ function Repository(): React.JSX.Element {
     useEffect(() => {
         fetchRepoData();
     }, [repoId]);
+
+    const handleBranchChange = (branch: string): void => {
+        fetchRepoData(branch);
+    };
 
     if (loading) {
         return (
@@ -81,7 +87,7 @@ function Repository(): React.JSX.Element {
             />
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 md:gap-6">
-                {activeTab === 'code' && <CodeTab repoData={repoData} />}
+                {activeTab === 'code' && <CodeTab repoData={repoData} onBranchChange={handleBranchChange} />}
 
                 {/* Issues Tab */}
                 {activeTab === 'issues' && <IssuesTab repoId={git_repo.name} />}

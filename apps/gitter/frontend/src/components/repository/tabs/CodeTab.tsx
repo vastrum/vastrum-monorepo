@@ -4,6 +4,7 @@ import {
     Code,
     FileText,
     Folder,
+    GitBranch,
 } from 'lucide-react';
 import { type GetRepoDetail, type ExplorerEntry } from '../../../../wasm/pkg';
 import CloneModal from '../../common/CloneModal';
@@ -13,11 +14,12 @@ import { generateAvatarGradient } from '../../../utils/avatarGenerator';
 
 interface CodeTabProps {
     repoData: GetRepoDetail;
+    onBranchChange: (branch: string) => void;
 }
 
-const CodeTab = ({ repoData }: CodeTabProps): React.JSX.Element => {
+const CodeTab = ({ repoData, onBranchChange }: CodeTabProps): React.JSX.Element => {
     const [showCloneModal, setShowCloneModal] = useState(false);
-    const { git_repo, head_commit_author_name, head_commit_message, head_commit_hash, readme_contents } = repoData;
+    const { git_repo, head_commit_author_name, head_commit_message, head_commit_hash, readme_contents, branches, current_branch } = repoData;
 
     const topLevelEntries: ExplorerEntry[] = repoData.top_level_files;
     const isEmpty = head_commit_hash === "";
@@ -46,6 +48,19 @@ const CodeTab = ({ repoData }: CodeTabProps): React.JSX.Element => {
                         {/* Branch selector and actions */}
                         <div className="flex items-center justify-between p-4 border-b border-app-border gap-6 md:gap-8">
                             <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
+                                {/* Branch selector */}
+                                <div className="flex items-center gap-2 flex-shrink-0">
+                                    <GitBranch className="w-4 h-4 text-app-text-secondary" />
+                                    <select
+                                        value={current_branch}
+                                        onChange={(e) => onBranchChange(e.target.value)}
+                                        className="bg-app-bg-tertiary border border-app-border rounded-md px-2 py-1 text-sm text-app-text-primary focus:outline-none focus:ring-2 focus:ring-app-accent-blue"
+                                    >
+                                        {branches.map((b) => (
+                                            <option key={b} value={b}>{b}</option>
+                                        ))}
+                                    </select>
+                                </div>
                                 {/* Latest commit info */}
                                 <div className="flex items-baseline gap-3 min-w-0 flex-1">
                                     <div className={`w-5 h-5 rounded-full bg-gradient-to-br ${generateAvatarGradient(head_commit_author_name)} flex-shrink-0 self-center`} />

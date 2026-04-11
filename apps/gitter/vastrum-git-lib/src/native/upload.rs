@@ -5,35 +5,36 @@ pub enum PushOutcome {
     AlreadyUpToDate,
 }
 
+///Always pushes to main branch,
+///TODO remove this and only support git relay and in future custom git remote handler
 pub async fn push_to_repo(
     path: &str,
     repo_name: &str,
     contract: &ContractAbiClient,
     progress: Option<&ProgressBar>,
 ) -> Result<PushOutcome> {
+    const BRANCH: &str = "main";
     let repo = gix::open(path)?;
     let local_head = repo.head_id()?.detach();
 
-    let Some(repo_info) = contract.state().await.repo_store.get(&repo_name.to_string()).await
-    else {
-        return Err(VastrumGitError::RepoNotFound(repo_name.to_string()));
-    };
-    let no_commit_yet = repo_info.head_commit_hash.is_none();
+    let repo_info = get_repo(&contract.state().await.repo_store, repo_name).await?;
+    let on_chain_head = repo_info.branches.get(BRANCH).cloned();
+    let no_commit_yet = on_chain_head.is_none();
 
     if no_commit_yet {
         let objects = collect_all_objects(&repo, local_head, None)?;
         let uploaded = upload_objects_concurrent(&objects, contract, progress).await?;
-        update_vastrum_head(local_head, repo_name, contract).await;
+        update_branch_head_commit(BRANCH, local_head, repo_name, contract).await;
         return Ok(PushOutcome::Pushed { objects_uploaded: uploaded });
     } else {
-        let vastrum_head = sha1_to_oid(&repo_info.head_commit_hash.unwrap());
+        let vastrum_head = sha1_to_oid(&on_chain_head.unwrap());
 
         if local_head == vastrum_head {
             return Ok(PushOutcome::AlreadyUpToDate);
         } else if local_is_ancestor(vastrum_head, local_head, &repo) {
             let objects = collect_all_objects(&repo, local_head, Some(vastrum_head))?;
             let uploaded = upload_objects_concurrent(&objects, contract, progress).await?;
-            update_vastrum_head(local_head, repo_name, contract).await;
+            update_branch_head_commit(BRANCH, local_head, repo_name, contract).await;
             return Ok(PushOutcome::Pushed { objects_uploaded: uploaded });
         } else {
             return Err(VastrumGitError::Diverged);
@@ -74,9 +75,14 @@ fn local_is_ancestor(
     return false;
 }
 
-pub async fn update_vastrum_head(head: ObjectId, repo_name: &str, contract: &ContractAbiClient) {
+pub async fn update_branch_head_commit(
+    branch: &str,
+    head: ObjectId,
+    repo_name: &str,
+    contract: &ContractAbiClient,
+) {
     let hash = oid_to_sha1(head);
-    contract.set_head_commit(repo_name, hash).await.await_confirmation().await;
+    contract.set_branch_head(repo_name, branch, hash).await.await_confirmation().await;
 }
 
 pub fn collect_all_objects(
@@ -223,7 +229,9 @@ pub async fn upload_objects_concurrent(
 use crate::{
     ContractAbiClient,
     error::{Result, VastrumGitError},
-    universal::utils::{calculate_object_hash, oid_to_sha1, serialize_git_object, sha1_to_oid},
+    universal::utils::{
+        calculate_object_hash, get_repo, oid_to_sha1, serialize_git_object, sha1_to_oid,
+    },
 };
 use gix::{
     ObjectId, Repository,
@@ -253,7 +261,7 @@ mod tests {
         let value =
             ctx.contract.state().await.repo_store.get(&repo_name.to_string()).await.unwrap();
         assert_eq!(value.name, repo_name);
-        assert!(value.head_commit_hash.is_none());
+        assert!(value.branches.is_empty());
         assert_eq!(value.owner, ctx.account_key.public_key());
 
         ctx.contract.create_repository(repo_name, "").await.await_confirmation().await;
@@ -261,7 +269,7 @@ mod tests {
         let value =
             ctx.contract.state().await.repo_store.get(&repo_name.to_string()).await.unwrap();
         assert_eq!(value.name, repo_name);
-        assert!(value.head_commit_hash.is_none());
+        assert!(value.branches.is_empty());
         assert_eq!(value.owner, ctx.account_key.public_key());
 
         ctx.contract.create_repository("reponame2", "").await.await_confirmation().await;

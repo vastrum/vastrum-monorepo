@@ -30,7 +30,8 @@ impl Contract {
             name: name.clone(),
             description,
             owner: message_sender(),
-            head_commit_hash: None,
+            branches: BTreeMap::new(),
+            default_branch: "main".to_string(),
             ssh_key_fingerprint: None,
             issues: KvVecBTree::default(),
             pull_requests: KvVecBTree::default(),
@@ -44,14 +45,33 @@ impl Contract {
     }
 
     #[authenticated]
-    pub fn set_head_commit(&mut self, name: String, commit_hash: Sha1Hash) {
+    pub fn set_branch_head(&mut self, name: String, branch: String, commit_hash: Sha1Hash) {
         let mut repo = self.repo_store.get(&name).unwrap();
 
         if repo.owner != message_sender() {
             panic!("not the repo owner");
         }
 
-        repo.head_commit_hash = Some(commit_hash);
+        repo.branches.insert(branch.clone(), commit_hash);
+
+        let no_default_branch_yet = !repo.branches.contains_key(&repo.default_branch);
+        if no_default_branch_yet {
+            repo.default_branch = branch;
+        }
+        self.repo_store.set(&name, repo);
+    }
+
+    #[authenticated]
+    pub fn set_default_branch(&mut self, name: String, branch: String) {
+        let mut repo = self.repo_store.get(&name).unwrap();
+
+        if repo.owner != message_sender() {
+            panic!("not the repo owner");
+        }
+        if !repo.branches.contains_key(&branch) {
+            panic!("branch does not exist");
+        }
+        repo.default_branch = branch;
         self.repo_store.set(&name, repo);
     }
 
@@ -70,7 +90,8 @@ impl Contract {
             name: new_repo_name.clone(),
             description: old_repo.description,
             owner: message_sender(),
-            head_commit_hash: old_repo.head_commit_hash,
+            branches: old_repo.branches.clone(),
+            default_branch: old_repo.default_branch,
             ssh_key_fingerprint: None,
             issues: KvVecBTree::default(),
             pull_requests: KvVecBTree::default(),
@@ -91,15 +112,17 @@ impl Contract {
     #[authenticated]
     pub fn create_pull_request(
         &mut self,
-        to_repo: String,
-        merging_repo: String,
+        base_repo: String,
+        base_branch: String,
+        head_repo: String,
+        head_branch: String,
         title: String,
         description: String,
     ) {
         if title.len() > MAX_TITLE_LEN || description.len() > MAX_CONTENT_LEN {
             return;
         }
-        let repo = self.repo_store.get(&to_repo).unwrap();
+        let repo = self.repo_store.get(&base_repo).unwrap();
 
         let timestamp = block_time();
         let id = repo.pull_requests.next_id();
@@ -107,7 +130,10 @@ impl Contract {
             id,
             title,
             description,
-            merging_repo,
+            base_repo,
+            base_branch,
+            head_repo,
+            head_branch,
             reply_count: 0,
             replies: KvVecBTree::default(),
             is_open: true,
@@ -255,12 +281,32 @@ impl Contract {
     }
 
     #[authenticated]
-    pub fn relay_set_head_commit(&mut self, repo_name: String, commit_hash: Sha1Hash) {
+    pub fn relay_set_branch_head(
+        &mut self,
+        repo_name: String,
+        branch: String,
+        commit_hash: Sha1Hash,
+    ) {
         if message_sender() != self.relay_key.unwrap() {
             panic!("not the relay");
         }
         let mut repo = self.repo_store.get(&repo_name).unwrap();
-        repo.head_commit_hash = Some(commit_hash);
+        repo.branches.insert(branch.clone(), commit_hash);
+
+        let no_default_branch_set_yet = !repo.branches.contains_key(&repo.default_branch);
+        if no_default_branch_set_yet {
+            repo.default_branch = branch;
+        }
+        self.repo_store.set(&repo_name, repo);
+    }
+
+    #[authenticated]
+    pub fn relay_delete_branch(&mut self, repo_name: String, branch: String) {
+        if message_sender() != self.relay_key.unwrap() {
+            panic!("not the relay");
+        }
+        let mut repo = self.repo_store.get(&repo_name).unwrap();
+        repo.branches.remove(&branch);
         self.repo_store.set(&repo_name, repo);
     }
 
@@ -283,7 +329,8 @@ struct GitRepository {
     name: String,
     description: String,
     owner: Ed25519PublicKey,
-    head_commit_hash: Option<Sha1Hash>,
+    branches: BTreeMap<String, Sha1Hash>,
+    default_branch: String,
     ssh_key_fingerprint: Option<SshKeyFingerprint>,
     issues: KvVecBTree<u64, Issue>,
     pull_requests: KvVecBTree<u64, PullRequest>,
@@ -295,7 +342,10 @@ struct PullRequest {
     id: u64,
     title: String,
     description: String,
-    merging_repo: String,
+    base_repo: String,
+    base_branch: String,
+    head_repo: String,
+    head_branch: String,
     reply_count: u64,
     replies: KvVecBTree<u64, PullRequestReply>,
     is_open: bool,
@@ -361,6 +411,7 @@ struct Sha1Hash([u8; 20]);
 struct SshKeyFingerprint([u8; 32]);
 
 use sha1::{Digest, Sha1};
+use std::collections::BTreeMap;
 use vastrum_contract_macros::{
     authenticated, constructor, contract_methods, contract_state, contract_type,
 };
