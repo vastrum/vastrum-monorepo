@@ -232,6 +232,7 @@ setup_user_and_files() {
 set -euo pipefail
 CALLER_HOME=$(eval echo "~$SUDO_USER")
 id -u vastrum &>/dev/null || useradd --system --home-dir /home/vastrum --create-home --shell /usr/sbin/nologin vastrum
+rm -rf /home/vastrum/.local/share/vastrum
 mkdir -p /home/vastrum/.vastrum/bin /home/vastrum/.local/share/vastrum
 cp "$CALLER_HOME/.vastrum/bin/vastrum-cli" /home/vastrum/.vastrum/bin/vastrum-cli
 mv /tmp/vastrum-keystore.bin /home/vastrum/.local/share/vastrum/keystore.bin
@@ -559,6 +560,7 @@ deploy_relay() {
     remote_exec "$user" "$ip" sudo bash <<'RELAY_SETUP_EOF'
 set -euo pipefail
 id -u vastrum &>/dev/null || useradd --system --home-dir /home/vastrum --create-home --shell /usr/sbin/nologin vastrum
+rm -rf /home/vastrum/.local/share/vastrum
 mkdir -p /home/vastrum/.vastrum/bin /etc/vastrum /var/lib/vastrum-relay/relay-data
 chown -R vastrum:vastrum /home/vastrum /var/lib/vastrum-relay
 RELAY_SETUP_EOF
