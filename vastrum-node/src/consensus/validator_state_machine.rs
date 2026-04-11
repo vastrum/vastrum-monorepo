@@ -404,7 +404,11 @@ impl ValidatorStateMachine {
                 let cert = cert.clone();
                 //need to ensure votes on "jumped to justify cert round"
                 self.current_round = cert.round;
-                self.execute_validator_role();
+                //need to vote on block
+                let is_validator = self.has_stake_at_height(self.pub_key, self.current_height);
+                if is_validator {
+                    self.execute_validator_role();
+                }
                 self.current_round = cert.round + 1;
                 self.entered_round_at = Instant::now();
                 self.sync_rounds_to_rpc();
@@ -456,6 +460,7 @@ impl ValidatorStateMachine {
     //https://docs.rs/commonware-consensus/latest/commonware_consensus/simplex/index.html#fetching-missing-certificates
     fn recover_sync(&mut self) {
         let stale = self.entered_round_at.elapsed() > Duration::from_secs(2);
+        let is_validator = self.has_stake_at_height(self.pub_key, self.current_height);
 
         let vote_push_rate_limit = self.last_time_pushed_votes.elapsed() > Duration::from_secs(1);
         if stale && vote_push_rate_limit {
@@ -464,7 +469,9 @@ impl ValidatorStateMachine {
             //  rebroadcast vote
 
             self.last_time_pushed_votes = Instant::now();
-            self.push_votes();
+            if is_validator {
+                self.push_votes();
+            }
             self.push_last_certificate();
         }
 
