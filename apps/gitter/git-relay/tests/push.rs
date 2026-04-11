@@ -384,6 +384,120 @@ async fn test_clone_multi_branch() {
     assert!(branches.contains("origin/feature/y"), "feature/y missing: {}", branches);
 }
 
+#[tokio::test(flavor = "multi_thread")]
+#[serial]
+async fn test_push_no_ssh_key_registered() {
+    let shared = ensure_relay().await;
+    let contract =
+        ContractAbiClient::new(shared.site_id).with_account_key(ed25519::PrivateKey::from_rng());
+
+    let repo_name = "test_no_ssh_key";
+    contract.create_repository(repo_name, "").await.await_confirmation().await;
+    // Intentionally skip set_ssh_key_fingerprint.
+
+    let tmp = TempDir::new().unwrap();
+    let (priv_key, _) = generate_ssh_keypair(tmp.path());
+
+    let local = TempDir::new().unwrap();
+    init_repo(local.path(), "main", "hi");
+    let out = git_ssh_push(local.path(), &priv_key, repo_name, "main");
+
+    assert!(!out.status.success());
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    assert!(
+        stderr.contains("no SSH key registered"),
+        "expected 'no SSH key registered' in stderr, got: {}",
+        stderr
+    );
+
+    let repo = contract.state().await.repo_store.get(&repo_name.to_string()).await.unwrap();
+    assert!(repo.branches.is_empty());
+}
+
+#[tokio::test(flavor = "multi_thread")]
+#[serial]
+async fn test_clone_nonexistent_repo() {
+    let _ = ensure_relay().await;
+
+    let target = TempDir::new().unwrap();
+    let url = "http://127.0.0.1:8080/this_repo_does_not_exist";
+    let out = Command::new("git")
+        .args(["clone", url, target.path().join("x").to_str().unwrap()])
+        .output()
+        .unwrap();
+    assert!(!out.status.success(), "clone of nonexistent repo should fail");
+}
+
+#[tokio::test(flavor = "multi_thread")]
+#[serial]
+async fn test_push_nonexistent_repo() {
+    let _ = ensure_relay().await;
+
+    let tmp = TempDir::new().unwrap();
+    let (priv_key, _) = generate_ssh_keypair(tmp.path());
+
+    let local = TempDir::new().unwrap();
+    init_repo(local.path(), "main", "hi");
+    let out = git_ssh_push(local.path(), &priv_key, "this_repo_does_not_exist", "main");
+
+    assert!(!out.status.success());
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    assert!(
+        stderr.contains("not found"),
+        "expected 'not found' in stderr, got: {}",
+        stderr
+    );
+}
+
+#[tokio::test(flavor = "multi_thread")]
+#[serial]
+async fn test_force_push() {
+    let shared = ensure_relay().await;
+    let contract =
+        ContractAbiClient::new(shared.site_id).with_account_key(ed25519::PrivateKey::from_rng());
+
+    let repo_name = "test_force_push";
+    contract.create_repository(repo_name, "").await.await_confirmation().await;
+
+    let tmp = TempDir::new().unwrap();
+    let (priv_key, pub_key) = generate_ssh_keypair(tmp.path());
+    contract
+        .set_ssh_key_fingerprint(repo_name, parse_ssh_fingerprint(&pub_key))
+        .await
+        .await_confirmation()
+        .await;
+
+    // Push initial commit A.
+    let local = TempDir::new().unwrap();
+    init_repo(local.path(), "main", "v1");
+    let old_head = git_branch_head(local.path(), "main");
+    assert_push_ok(git_ssh_push(local.path(), &priv_key, repo_name, "main"));
+
+    // Rewrite history with an orphan commit (no relation to old_head).
+    run_git(local.path(), &["checkout", "-q", "--orphan", "new-root"]);
+    run_git(local.path(), &["rm", "-qrf", "--cached", "."]);
+    std::fs::write(local.path().join("README.md"), "rewritten").unwrap();
+    run_git(local.path(), &["add", "."]);
+    run_git(
+        local.path(),
+        &["-c", "user.email=t@t", "-c", "user.name=t", "commit", "-q", "-m", "rewrite"],
+    );
+    run_git(local.path(), &["branch", "-q", "-M", "main"]);
+    let new_head = git_branch_head(local.path(), "main");
+    assert_ne!(old_head, new_head);
+
+    // Force push with `+refspec` syntax.
+    assert_push_ok(git_ssh_push(local.path(), &priv_key, repo_name, "+main"));
+
+    // Chain should point to the new commit.
+    let state = contract.state().await;
+    let repo = state.repo_store.get(&repo_name.to_string()).await.unwrap();
+    assert_eq!(repo.branches.get("main").unwrap().0, new_head);
+    assert!(state.git_object_store.get(&vastrum_git_lib::Sha1Hash(new_head)).await.is_some());
+    // Old commit is orphaned but still in the object store (append-only).
+    assert!(state.git_object_store.get(&vastrum_git_lib::Sha1Hash(old_head)).await.is_some());
+}
+
 /// Generate an SSH keypair, return (private_key_file, ssh_pubkey_string).
 fn generate_ssh_keypair(tmp: &Path) -> (PathBuf, String) {
     use ssh_key::{Algorithm, LineEnding, PrivateKey};
