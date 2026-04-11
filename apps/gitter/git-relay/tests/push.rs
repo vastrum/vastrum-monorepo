@@ -189,9 +189,199 @@ async fn test_push_wrong_ssh_key_rejected() {
     let out = git_ssh_push(local.path(), &priv_b, repo_name, "main");
     assert!(!out.status.success(), "push with wrong key should have failed");
 
+    // Verify it failed for the right reason (auth), not some other error.
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    assert!(
+        stderr.contains("not authorized"),
+        "expected auth rejection, got stderr: {}",
+        stderr
+    );
+
     // Chain state should still be empty.
     let repo = contract.state().await.repo_store.get(&repo_name.to_string()).await.unwrap();
     assert!(repo.branches.is_empty());
+}
+
+#[tokio::test(flavor = "multi_thread")]
+#[serial]
+async fn test_push_then_clone() {
+    let shared = ensure_relay().await;
+    let contract =
+        ContractAbiClient::new(shared.site_id).with_account_key(ed25519::PrivateKey::from_rng());
+
+    let repo_name = "test_push_then_clone";
+    contract.create_repository(repo_name, "").await.await_confirmation().await;
+
+    let tmp = TempDir::new().unwrap();
+    let (priv_key, pub_key) = generate_ssh_keypair(tmp.path());
+    contract
+        .set_ssh_key_fingerprint(repo_name, parse_ssh_fingerprint(&pub_key))
+        .await
+        .await_confirmation()
+        .await;
+
+    // SSH push a repo with specific content.
+    let local = TempDir::new().unwrap();
+    run_git(local.path(), &["init", "-q", "-b", "main"]);
+    std::fs::write(local.path().join("README.md"), "pushed via ssh").unwrap();
+    std::fs::create_dir(local.path().join("src")).unwrap();
+    std::fs::write(local.path().join("src/lib.rs"), "// ssh push").unwrap();
+    run_git(local.path(), &["add", "."]);
+    run_git(
+        local.path(),
+        &["-c", "user.email=t@t", "-c", "user.name=t", "commit", "-q", "-m", "init"],
+    );
+    assert_push_ok(git_ssh_push(local.path(), &priv_key, repo_name, "main"));
+
+    // HTTPS clone from the relay and verify contents match.
+    let cloned = TempDir::new().unwrap();
+    let url = format!("http://127.0.0.1:8080/{}", repo_name);
+    let out = Command::new("git")
+        .args(["clone", &url, cloned.path().to_str().unwrap()])
+        .output()
+        .unwrap();
+    assert!(out.status.success(), "clone failed: {}", String::from_utf8_lossy(&out.stderr));
+
+    assert_eq!(
+        std::fs::read_to_string(cloned.path().join("README.md")).unwrap(),
+        "pushed via ssh"
+    );
+    assert_eq!(
+        std::fs::read_to_string(cloned.path().join("src/lib.rs")).unwrap(),
+        "// ssh push"
+    );
+}
+
+#[tokio::test(flavor = "multi_thread")]
+#[serial]
+async fn test_push_incremental() {
+    let shared = ensure_relay().await;
+    let contract =
+        ContractAbiClient::new(shared.site_id).with_account_key(ed25519::PrivateKey::from_rng());
+
+    let repo_name = "test_push_incremental";
+    contract.create_repository(repo_name, "").await.await_confirmation().await;
+
+    let tmp = TempDir::new().unwrap();
+    let (priv_key, pub_key) = generate_ssh_keypair(tmp.path());
+    contract
+        .set_ssh_key_fingerprint(repo_name, parse_ssh_fingerprint(&pub_key))
+        .await
+        .await_confirmation()
+        .await;
+
+    // First push.
+    let local = TempDir::new().unwrap();
+    init_repo(local.path(), "main", "v1");
+    let first_head = git_branch_head(local.path(), "main");
+    assert_push_ok(git_ssh_push(local.path(), &priv_key, repo_name, "main"));
+
+    // Second commit + push (incremental — collect_all_objects with stop_at=first_head).
+    std::fs::write(local.path().join("README.md"), "v2").unwrap();
+    run_git(local.path(), &["add", "."]);
+    run_git(
+        local.path(),
+        &["-c", "user.email=t@t", "-c", "user.name=t", "commit", "-q", "-m", "v2"],
+    );
+    let second_head = git_branch_head(local.path(), "main");
+    assert_ne!(first_head, second_head);
+    assert_push_ok(git_ssh_push(local.path(), &priv_key, repo_name, "main"));
+
+    // Chain should point to second commit. Both commits should be in the object store.
+    let state = contract.state().await;
+    let repo = state.repo_store.get(&repo_name.to_string()).await.unwrap();
+    assert_eq!(repo.branches.get("main").unwrap().0, second_head);
+    assert!(state.git_object_store.get(&vastrum_git_lib::Sha1Hash(first_head)).await.is_some());
+    assert!(state.git_object_store.get(&vastrum_git_lib::Sha1Hash(second_head)).await.is_some());
+}
+
+#[tokio::test(flavor = "multi_thread")]
+#[serial]
+async fn test_push_already_up_to_date() {
+    let shared = ensure_relay().await;
+    let contract =
+        ContractAbiClient::new(shared.site_id).with_account_key(ed25519::PrivateKey::from_rng());
+
+    let repo_name = "test_already_up_to_date";
+    contract.create_repository(repo_name, "").await.await_confirmation().await;
+
+    let tmp = TempDir::new().unwrap();
+    let (priv_key, pub_key) = generate_ssh_keypair(tmp.path());
+    contract
+        .set_ssh_key_fingerprint(repo_name, parse_ssh_fingerprint(&pub_key))
+        .await
+        .await_confirmation()
+        .await;
+
+    let local = TempDir::new().unwrap();
+    init_repo(local.path(), "main", "hi");
+    assert_push_ok(git_ssh_push(local.path(), &priv_key, repo_name, "main"));
+
+    // Second push without any new commits — should succeed (no-op).
+    let out = git_ssh_push(local.path(), &priv_key, repo_name, "main");
+    assert!(
+        out.status.success(),
+        "idempotent push failed: {}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+
+    let head = git_branch_head(local.path(), "main");
+    let repo = contract.state().await.repo_store.get(&repo_name.to_string()).await.unwrap();
+    assert_eq!(repo.branches.len(), 1);
+    assert_eq!(repo.branches.get("main").unwrap().0, head);
+}
+
+#[tokio::test(flavor = "multi_thread")]
+#[serial]
+async fn test_clone_multi_branch() {
+    let shared = ensure_relay().await;
+    let contract =
+        ContractAbiClient::new(shared.site_id).with_account_key(ed25519::PrivateKey::from_rng());
+
+    let repo_name = "test_clone_multi_branch";
+    contract.create_repository(repo_name, "").await.await_confirmation().await;
+
+    let tmp = TempDir::new().unwrap();
+    let (priv_key, pub_key) = generate_ssh_keypair(tmp.path());
+    contract
+        .set_ssh_key_fingerprint(repo_name, parse_ssh_fingerprint(&pub_key))
+        .await
+        .await_confirmation()
+        .await;
+
+    // Push main.
+    let local = TempDir::new().unwrap();
+    init_repo(local.path(), "main", "base");
+    assert_push_ok(git_ssh_push(local.path(), &priv_key, repo_name, "main"));
+
+    // Push feature/y.
+    run_git(local.path(), &["checkout", "-q", "-b", "feature/y"]);
+    std::fs::write(local.path().join("feature.txt"), "feature content").unwrap();
+    run_git(local.path(), &["add", "."]);
+    run_git(
+        local.path(),
+        &["-c", "user.email=t@t", "-c", "user.name=t", "commit", "-q", "-m", "f"],
+    );
+    assert_push_ok(git_ssh_push(local.path(), &priv_key, repo_name, "feature/y"));
+
+    // Clone via HTTPS — should get both branches.
+    let cloned = TempDir::new().unwrap();
+    let url = format!("http://127.0.0.1:8080/{}", repo_name);
+    let out = Command::new("git")
+        .args(["clone", &url, cloned.path().to_str().unwrap()])
+        .output()
+        .unwrap();
+    assert!(out.status.success(), "clone failed: {}", String::from_utf8_lossy(&out.stderr));
+
+    // `git branch -r` should list both remote branches.
+    let out = Command::new("git")
+        .args(["branch", "-r"])
+        .current_dir(cloned.path())
+        .output()
+        .unwrap();
+    let branches = String::from_utf8_lossy(&out.stdout);
+    assert!(branches.contains("origin/main"), "main missing: {}", branches);
+    assert!(branches.contains("origin/feature/y"), "feature/y missing: {}", branches);
 }
 
 /// Generate an SSH keypair, return (private_key_file, ssh_pubkey_string).
