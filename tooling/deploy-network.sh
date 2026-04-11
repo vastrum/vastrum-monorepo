@@ -547,8 +547,10 @@ deploy_relay() {
 
     local user="$RELAY_USER" ip="$RELAY_IP"
     local relay_key="$KEYSTORE_DIR/relay.key"
+    local ssh_host_key="$KEYSTORE_DIR/ssh_host_ed25519_key"
 
     [[ -f "$relay_key" ]] || { err "Relay key not found: $relay_key"; exit 1; }
+    [[ -f "$ssh_host_key" ]] || { err "SSH host key not found: $ssh_host_key"; exit 1; }
 
     harden_server "$user" "$ip"
     install_binary "$user" "$ip"
@@ -577,6 +579,15 @@ mv /tmp/relay.key /etc/vastrum/relay.key
 chown vastrum:vastrum /etc/vastrum/relay.key
 chmod 600 /etc/vastrum/relay.key
 RELAY_KEY_EOF
+
+    # Copy SSH host key (preserves client known_hosts across redeploys)
+    remote_copy "$user" "$ssh_host_key" "$ip" "/tmp/ssh_host_ed25519_key"
+    remote_exec "$user" "$ip" sudo bash <<'RELAY_SSH_KEY_EOF'
+set -euo pipefail
+mv /tmp/ssh_host_ed25519_key /var/lib/vastrum-relay/ssh_host_ed25519_key
+chown vastrum:vastrum /var/lib/vastrum-relay/ssh_host_ed25519_key
+chmod 600 /var/lib/vastrum-relay/ssh_host_ed25519_key
+RELAY_SSH_KEY_EOF
 
     # Install systemd service
     remote_exec "$user" "$ip" sudo bash <<'RELAY_SVC_EOF'

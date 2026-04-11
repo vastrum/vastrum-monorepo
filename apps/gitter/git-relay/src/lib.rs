@@ -2,8 +2,6 @@ const DEFAULT_HTTP_PORT: u16 = 8080;
 const DEFAULT_SSH_PORT: u16 = 2222;
 
 pub async fn run(relay_key_path: PathBuf) -> Result<()> {
-    let ssh_host_key_path = PathBuf::from("./relay-data/ssh_host_ed25519_key");
-
     // Read relay private key from file
     let relay_private_key_str = std::fs::read_to_string(&relay_key_path)
         .with_context(|| format!("failed to read relay key from '{}'", relay_key_path.display()))?;
@@ -13,6 +11,15 @@ pub async fn run(relay_key_path: PathBuf) -> Result<()> {
 
     // for localnet testing check readme
     let is_localnet = std::env::var("VASTRUM_LOCALNET").is_ok();
+
+    // SSH host key path: localnet uses local dir for dev convenience,
+    // production uses absolute path matching deploy-network.sh install location.
+    let ssh_host_key_path = if is_localnet {
+        PathBuf::from("./relay-data/ssh_host_ed25519_key")
+    } else {
+        PathBuf::from("/var/lib/vastrum-relay/ssh_host_ed25519_key")
+    };
+
     if is_localnet {
         tracing::info!("localnet mode: using existing RPC on port {}", HTTP_RPC_PORT);
     } else {

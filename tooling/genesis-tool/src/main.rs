@@ -84,6 +84,13 @@ fn generate_genesis(
     let relay_key_path = output_dir.join("relay.key");
     std::fs::write(&relay_key_path, relay_key.to_string())?;
 
+    // Generate SSH host key for git-relay (OpenSSH format).
+    // Matches what apps/gitter/git-relay/src/ssh_server.rs load_or_generate_host_key expects.
+    let ssh_host_key =
+        ssh_key::PrivateKey::random(&mut rand::thread_rng(), ssh_key::Algorithm::Ed25519)?;
+    let ssh_host_key_path = output_dir.join("ssh_host_ed25519_key");
+    ssh_host_key.write_openssh_file(&ssh_host_key_path, ssh_key::LineEnding::LF)?;
+
     println!("Generated {validators} validator keystores");
     println!("Genesis config: {}", genesis_path.display());
     for i in 0..validators {
@@ -94,6 +101,7 @@ fn generate_genesis(
     }
     println!("Relay key: {}", relay_key_path.display());
     println!("Relay public key: {}", relay_key.public_key());
+    println!("SSH host key: {}", ssh_host_key_path.display());
     let shared_types_genesis = Path::new("shared-types/genesis.json");
     if shared_types_genesis.parent().map(|p| p.exists()).unwrap_or(false) {
         std::fs::copy(&genesis_path, shared_types_genesis)?;
