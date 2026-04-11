@@ -11,36 +11,38 @@ pub async fn run(relay_key_path: PathBuf) -> Result<()> {
         ed25519::PrivateKey::try_from_string(relay_private_key_str.trim().to_string())
             .with_context(|| "invalid relay private key")?;
 
-    // Start embedded Vastrum node
+    // for localnet testing check readme
     let is_localnet = std::env::var("VASTRUM_LOCALNET").is_ok();
-    let mut node = if is_localnet {
-        tracing::info!("starting embedded localnet node...");
-        tokio::spawn(vastrum_node::start_localnet())
+    if is_localnet {
+        tracing::info!("localnet mode: using existing RPC on port {}", HTTP_RPC_PORT);
     } else {
         tracing::info!("starting embedded full node...");
         let tmp = tempfile::tempdir()?;
         let keystore_path = tmp.path().join("keystore.bin");
-        tokio::spawn(async move {
+        let mut node = tokio::spawn(async move {
             let _tmp = tmp;
             vastrum_node::start_node_production(keystore_path, true).await
-        })
-    };
-
-    // Wait for RPC server to be ready
-    tokio::select! {
-        _ = wait_for_rpc_server() => {
-            tracing::info!("embedded node RPC ready on port {}", HTTP_RPC_PORT);
-        }
-        result = &mut node => {
-            match result {
-                Ok(()) => anyhow::bail!("node exited unexpectedly"),
-                Err(e) => anyhow::bail!("node panicked: {}", e),
+        });
+        tokio::select! {
+            _ = wait_for_rpc_server() => {
+                tracing::info!("embedded node RPC ready on port {}", HTTP_RPC_PORT);
+            }
+            result = &mut node => {
+                match result {
+                    Ok(()) => anyhow::bail!("node exited unexpectedly"),
+                    Err(e) => anyhow::bail!("node panicked: {}", e),
+                }
             }
         }
     }
 
     // Point all RPC clients at the local embedded node
-    unsafe { std::env::set_var("RPC_URL_HACK_FOR_GIT_RELAY", format!("http://127.0.0.1:{}", HTTP_RPC_PORT)) };
+    unsafe {
+        std::env::set_var(
+            "RPC_URL_HACK_FOR_GIT_RELAY",
+            format!("http://127.0.0.1:{}", HTTP_RPC_PORT),
+        )
+    };
 
     // Wait for gitter contract to be deployed (retries until available)
     let http = NativeHttpClient::new();

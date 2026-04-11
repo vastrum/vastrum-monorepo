@@ -5,3 +5,4 @@ frontend/wasm/pkg
 frontend/wasm/target
 out
 relay.key
+relay-data/
