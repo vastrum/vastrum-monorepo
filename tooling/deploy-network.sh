@@ -546,8 +546,8 @@ deploy_relay() {
     log "Deploying git-relay to $RELAY_IP..."
 
     local user="$RELAY_USER" ip="$RELAY_IP"
-    local relay_key="$KEYSTORE_DIR/relay.key"
-    local ssh_host_key="$KEYSTORE_DIR/ssh_host_ed25519_key"
+    local relay_key="$KEYSTORE_DIR/git-relay/relay.key"
+    local ssh_host_key="$KEYSTORE_DIR/git-relay/ssh_host_ed25519_key"
 
     [[ -f "$relay_key" ]] || { err "Relay key not found: $relay_key"; exit 1; }
     [[ -f "$ssh_host_key" ]] || { err "SSH host key not found: $ssh_host_key"; exit 1; }

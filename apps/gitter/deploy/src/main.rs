@@ -315,7 +315,7 @@ async fn deploy_example_repos(site_id: Sha256Digest) {
         .await;
 }
 fn load_or_generate_relay_key() -> ed25519::PrivateKey {
-    for path in ["../../genesis/relay.key", "../relay.key"] {
+    for path in ["../../genesis/git-relay/relay.key", "../relay.key"] {
         if let Ok(s) = std::fs::read_to_string(path) {
             if let Some(key) = ed25519::PrivateKey::try_from_string(s.trim().to_string()) {
                 println!("loaded relay key from {path}");

@@ -79,16 +79,19 @@ fn generate_genesis(
     let genesis_path = output_dir.join("genesis.json");
     std::fs::write(&genesis_path, &json)?;
 
-    // Generate relay key for gitter git-relay
+    // Generate gitter git-relay keys into git-relay/ subdirectory
+    let git_relay_dir = output_dir.join("git-relay");
+    std::fs::create_dir_all(&git_relay_dir)?;
+
     let relay_key = ed25519::PrivateKey::from_rng();
-    let relay_key_path = output_dir.join("relay.key");
+    let relay_key_path = git_relay_dir.join("relay.key");
     std::fs::write(&relay_key_path, relay_key.to_string())?;
 
     // Generate SSH host key for git-relay (OpenSSH format).
     // Matches what apps/gitter/git-relay/src/ssh_server.rs load_or_generate_host_key expects.
     let ssh_host_key =
         ssh_key::PrivateKey::random(&mut rand::thread_rng(), ssh_key::Algorithm::Ed25519)?;
-    let ssh_host_key_path = output_dir.join("ssh_host_ed25519_key");
+    let ssh_host_key_path = git_relay_dir.join("ssh_host_ed25519_key");
     ssh_host_key.write_openssh_file(&ssh_host_key_path, ssh_key::LineEnding::LF)?;
 
     println!("Generated {validators} validator keystores");
