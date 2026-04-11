@@ -9,6 +9,7 @@ pub struct GitRepository {
     pub description: String,
     pub owner: String, // Ed25519PublicKey as hex string
     pub head_commit_hash: String,
+    pub ssh_key_fingerprint: Option<String>, // "SHA256:<base64-no-pad>" when set
 }
 
 #[derive(Serialize, Clone, Debug, Tsify)]

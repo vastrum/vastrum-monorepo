@@ -111,6 +111,7 @@ function Repository(): React.JSX.Element {
                 isOpen={showSettingsModal}
                 onClose={() => setShowSettingsModal(false)}
                 repositoryName={git_repo.name}
+                currentFingerprint={git_repo.ssh_key_fingerprint ?? null}
                 onRefresh={fetchRepoData}
             />
         </div>

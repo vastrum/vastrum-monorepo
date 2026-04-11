@@ -9,10 +9,11 @@ interface SSHKeyModalProps {
     isOpen: boolean;
     onClose: () => void;
     repositoryName: string;
+    currentFingerprint: string | null;
     onRefresh: () => void;
 }
 
-function SSHKeyModal({ isOpen, onClose, repositoryName, onRefresh }: SSHKeyModalProps): React.JSX.Element {
+function SSHKeyModal({ isOpen, onClose, repositoryName, currentFingerprint, onRefresh }: SSHKeyModalProps): React.JSX.Element {
     const [sshKey, setSshKey] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
@@ -46,8 +47,20 @@ function SSHKeyModal({ isOpen, onClose, repositoryName, onRefresh }: SSHKeyModal
         <Modal isOpen={isOpen} onClose={handleClose} title="Repository Settings">
             <div className="p-6">
                 <div className="mb-4">
+                    <label className="block text-sm font-medium text-app-text-primary mb-2">
+                        Current SSH key fingerprint
+                    </label>
+                    {currentFingerprint ? (
+                        <div className="mb-4 px-3 py-2 bg-app-bg-secondary border border-app-border rounded-md font-mono text-sm text-app-text-primary break-all">
+                            {currentFingerprint}
+                        </div>
+                    ) : (
+                        <p className="mb-4 text-sm text-app-text-secondary">
+                            No SSH key set for this repository.
+                        </p>
+                    )}
                     <label htmlFor="ssh-key" className="block text-sm font-medium text-app-text-primary mb-2">
-                        SSH Public Key
+                        {currentFingerprint ? 'Replace SSH Public Key' : 'SSH Public Key'}
                     </label>
                     <p className="text-sm text-app-text-secondary mb-3">
                         Paste your SSH public key to enable push access via the git relay.
@@ -93,7 +106,7 @@ function SSHKeyModal({ isOpen, onClose, repositoryName, onRefresh }: SSHKeyModal
                         disabled={!sshKey.trim() || loading}
                     >
                         <Key className="w-4 h-4" />
-                        {loading ? 'Saving...' : 'Save SSH Key'}
+                        {loading ? 'Saving...' : currentFingerprint ? 'Replace SSH Key' : 'Save SSH Key'}
                     </button>
                 </div>
             </div>

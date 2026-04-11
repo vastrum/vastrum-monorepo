@@ -67,10 +67,15 @@ pub fn convert_git_repository(
     repo: &vastrum_git_lib::GitRepository,
     head_commit_hash: &str,
 ) -> GitRepository {
+    use base64::Engine;
+    let ssh_key_fingerprint = repo.ssh_key_fingerprint.as_ref().map(|fp| {
+        format!("SHA256:{}", base64::engine::general_purpose::STANDARD_NO_PAD.encode(&fp.0))
+    });
     GitRepository {
         name: repo.name.clone(),
         description: repo.description.clone(),
         owner: repo.owner.to_string(),
         head_commit_hash: head_commit_hash.to_string(),
+        ssh_key_fingerprint,
     }
 }
