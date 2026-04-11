@@ -47,3 +47,8 @@ ssh-key = "0.6"
 hex = "0.4"
 tempfile = "3"
 rand = "0.8"
+
+[dev-dependencies]
+vastrum-native-lib.workspace = true
+serial_test = "3"
+base64 = "0.22"
