@@ -72,6 +72,7 @@ pub fn calculate_object_hash(object: &Object) -> ObjectId {
     return oid;
 }
 
+#[derive(Clone)]
 pub struct GitContext {
     store: vastrum_abi::__private::vastrum_native_types::KvMap<Sha1Hash, Vec<u8>>,
 }
@@ -87,11 +88,16 @@ impl GitContext {
         Self { store: contract.state().await.git_object_store }
     }
 
-    pub async fn object_read(&self, oid: ObjectId) -> Result<Object> {
+    pub async fn object_raw_bytes(&self, oid: ObjectId) -> Result<Vec<u8>> {
         let key = oid_to_sha1(oid);
         let Some(bytes) = self.store.get(&key).await else {
             return Err(VastrumGitError::ObjectNotFound(oid.to_string()));
         };
+        Ok(bytes)
+    }
+
+    pub async fn object_read(&self, oid: ObjectId) -> Result<Object> {
+        let bytes = self.object_raw_bytes(oid).await?;
         let Ok(obj_ref) = ObjectRef::from_loose(&bytes) else {
             return Err(VastrumGitError::LooseDecode(oid.to_string()));
         };
