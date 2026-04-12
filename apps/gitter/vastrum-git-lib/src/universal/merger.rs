@@ -360,19 +360,19 @@ mod tests {
         push_to_repo(b2.path_str(), "b2", &ctx.contract, None).await.unwrap();
 
         // Fast-forward: result should be b1's HEAD
-        let result = merge_repos("base", "main", "b1", "main", &ctx.contract, MergeMode::Live)
+        let result = merge_repos("base", "master", "b1", "master", &ctx.contract, MergeMode::Live)
             .await
             .unwrap();
         assert_eq!(result, MergeResult::FastForward(b1_commit));
 
         // Already up-to-date
-        let result = merge_repos("base", "main", "b1", "main", &ctx.contract, MergeMode::Live)
+        let result = merge_repos("base", "master", "b1", "master", &ctx.contract, MergeMode::Live)
             .await
             .unwrap();
         assert_eq!(result, MergeResult::AlreadyUpToDate);
 
         // 3-way merge: verify merge commit has correct parents
-        let result = merge_repos("base", "main", "b2", "main", &ctx.contract, MergeMode::Live)
+        let result = merge_repos("base", "master", "b2", "master", &ctx.contract, MergeMode::Live)
             .await
             .unwrap();
         if let MergeResult::Merged(merge_commit_id) = result {
@@ -406,13 +406,13 @@ mod tests {
         push_to_repo(cb2.path_str(), "cb2", &ctx.contract, None).await.unwrap();
 
         // First merge succeeds (fast-forward)
-        let result = merge_repos("cbase", "main", "cb1", "main", &ctx.contract, MergeMode::Live)
+        let result = merge_repos("cbase", "master", "cb1", "master", &ctx.contract, MergeMode::Live)
             .await
             .unwrap();
         assert_eq!(result, MergeResult::FastForward(cb1_commit));
 
         // Second merge should conflict - verify conflict details
-        let result = merge_repos("cbase", "main", "cb2", "main", &ctx.contract, MergeMode::Live)
+        let result = merge_repos("cbase", "master", "cb2", "master", &ctx.contract, MergeMode::Live)
             .await
             .unwrap();
         if let MergeResult::Conflict(conflicts) = result {
@@ -465,13 +465,13 @@ mod tests {
         push_to_repo(nb2.path_str(), "nb2", &ctx.contract, None).await.unwrap();
 
         // Fast-forward
-        let result = merge_repos("nbase", "main", "nb1", "main", &ctx.contract, MergeMode::Live)
+        let result = merge_repos("nbase", "master", "nb1", "master", &ctx.contract, MergeMode::Live)
             .await
             .unwrap();
         assert_eq!(result, MergeResult::FastForward(nb1_commit));
 
         // 3-way merge: verify parents
-        let result = merge_repos("nbase", "main", "nb2", "main", &ctx.contract, MergeMode::Live)
+        let result = merge_repos("nbase", "master", "nb2", "master", &ctx.contract, MergeMode::Live)
             .await
             .unwrap();
         if let MergeResult::Merged(merge_commit_id) = result {
@@ -510,12 +510,12 @@ mod tests {
 
         // Fast-forward (delete branch)
         let result =
-            merge_repos("dm", "main", "dm1", "main", &ctx.contract, MergeMode::Live).await.unwrap();
+            merge_repos("dm", "master", "dm1", "master", &ctx.contract, MergeMode::Live).await.unwrap();
         assert_eq!(result, MergeResult::FastForward(dm1_commit));
 
         // Conflict: delete vs modify
         let result =
-            merge_repos("dm", "main", "dm2", "main", &ctx.contract, MergeMode::Live).await.unwrap();
+            merge_repos("dm", "master", "dm2", "master", &ctx.contract, MergeMode::Live).await.unwrap();
         if let MergeResult::Conflict(conflicts) = result {
             assert_eq!(conflicts.len(), 1);
             assert_eq!(conflicts[0].path, "file.txt");

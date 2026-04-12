@@ -47,6 +47,8 @@ pub async fn clone_repo(
         .ok_or(VastrumGitError::RepoDoesNotHaveHeadCommitYet)?;
     let default_head = sha1_to_oid(default_head_hash);
 
+    let default_ref_name: gix::refs::FullName =
+        format!("refs/heads/{}", repo_info.default_branch).try_into().unwrap();
     new_repo.edit_reference(RefEdit {
         change: Change::Update {
             log: LogChange {
@@ -55,7 +57,7 @@ pub async fn clone_repo(
                 message: "clone".into(),
             },
             expected: PreviousValue::Any,
-            new: Target::Object(default_head),
+            new: Target::Symbolic(default_ref_name),
         },
         name: "HEAD".try_into().unwrap(),
         deref: false,

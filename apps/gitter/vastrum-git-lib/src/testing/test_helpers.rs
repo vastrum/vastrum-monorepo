@@ -140,6 +140,7 @@ impl TestRepo {
     }
 
     fn update_head(&self, commit_id: ObjectId) {
+        let branch_ref: gix::refs::FullName = "refs/heads/master".try_into().unwrap();
         self.repo
             .edit_reference(RefEdit {
                 change: Change::Update {
@@ -150,6 +151,21 @@ impl TestRepo {
                     },
                     expected: PreviousValue::Any,
                     new: Target::Object(commit_id),
+                },
+                name: branch_ref.clone(),
+                deref: false,
+            })
+            .unwrap();
+        self.repo
+            .edit_reference(RefEdit {
+                change: Change::Update {
+                    log: LogChange {
+                        mode: RefLog::AndReference,
+                        force_create_reflog: false,
+                        message: "set HEAD".into(),
+                    },
+                    expected: PreviousValue::Any,
+                    new: Target::Symbolic(branch_ref),
                 },
                 name: "HEAD".try_into().unwrap(),
                 deref: false,

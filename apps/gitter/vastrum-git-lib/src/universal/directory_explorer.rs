@@ -84,7 +84,7 @@ mod tests {
         push_to_repo(test_repo.path_str(), repo_name, contract, None).await.unwrap();
 
         // Test get_top_level_files
-        let top_files = get_top_level_files(repo_name, "main", contract).await.unwrap();
+        let top_files = get_top_level_files(repo_name, "master", contract).await.unwrap();
         assert_eq!(top_files.len(), 4);
 
         let readme = top_files.iter().find(|e| e.name == "README.md").unwrap();

@@ -10,6 +10,8 @@ pub enum VastrumGitError {
     ObjectNotFound(String),
     #[error("repository does not have a head commit yet")]
     RepoDoesNotHaveHeadCommitYet,
+    #[error("local repository has detached HEAD; check out a branch before pushing")]
+    DetachedHead,
     #[error("transaction confirmation failed: {0}")]
     TxConfirmation(String),
     #[error("object {oid} is too large to upload: {size} bytes (max {max} bytes)")]
@@ -52,6 +54,10 @@ pub enum VastrumGitError {
     #[cfg(not(target_arch = "wasm32"))]
     #[error(transparent)]
     GitHeadId(#[from] gix::reference::head_id::Error),
+
+    #[cfg(not(target_arch = "wasm32"))]
+    #[error(transparent)]
+    GitRefFindExisting(#[from] gix::reference::find::existing::Error),
 }
 
 pub type Result<T> = std::result::Result<T, VastrumGitError>;

@@ -344,7 +344,7 @@ mod tests {
         ctx.contract.create_repository(repo2_name, "test").await.await_confirmation().await;
         push_to_repo(repo2.path_str(), repo2_name, &ctx.contract, None).await.unwrap();
 
-        let diff = diff_repos(repo1_name, "main", repo2_name, "main", &ctx.contract).await.unwrap();
+        let diff = diff_repos(repo1_name, "master", repo2_name, "master", &ctx.contract).await.unwrap();
 
         assert_eq!(diff.files.len(), 1);
         assert_eq!(diff.files[0].path, "file2.txt");
@@ -374,7 +374,7 @@ mod tests {
         ctx.contract.create_repository(repo2_name, "test").await.await_confirmation().await;
         push_to_repo(repo2.path_str(), repo2_name, &ctx.contract, None).await.unwrap();
 
-        let diff = diff_repos(repo1_name, "main", repo2_name, "main", &ctx.contract).await.unwrap();
+        let diff = diff_repos(repo1_name, "master", repo2_name, "master", &ctx.contract).await.unwrap();
 
         assert_eq!(diff.files.len(), 1);
         assert_eq!(diff.files[0].path, "file.txt");
@@ -404,7 +404,7 @@ mod tests {
         ctx.contract.create_repository(repo2_name, "test").await.await_confirmation().await;
         push_to_repo(repo2.path_str(), repo2_name, &ctx.contract, None).await.unwrap();
 
-        let diff = diff_repos(repo1_name, "main", repo2_name, "main", &ctx.contract).await.unwrap();
+        let diff = diff_repos(repo1_name, "master", repo2_name, "master", &ctx.contract).await.unwrap();
 
         assert_eq!(diff.files.len(), 1);
         assert_eq!(diff.files[0].path, "file2.txt");
@@ -564,7 +564,7 @@ mod tests {
         ctx.contract.create_repository(repo2_name, "test").await.await_confirmation().await;
         push_to_repo(repo2.path_str(), repo2_name, &ctx.contract, None).await.unwrap();
 
-        let diff = diff_repos(repo1_name, "main", repo2_name, "main", &ctx.contract).await.unwrap();
+        let diff = diff_repos(repo1_name, "master", repo2_name, "master", &ctx.contract).await.unwrap();
 
         assert_eq!(diff.files.len(), 1);
         assert_eq!(diff.files[0].path, "image.png");

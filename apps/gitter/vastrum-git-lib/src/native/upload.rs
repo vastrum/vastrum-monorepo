@@ -5,7 +5,6 @@ pub enum PushOutcome {
     AlreadyUpToDate,
 }
 
-///Always pushes to main branch,
 ///TODO remove this and only support git relay and in future custom git remote handler
 pub async fn push_to_repo(
     path: &str,
@@ -13,18 +12,18 @@ pub async fn push_to_repo(
     contract: &ContractAbiClient,
     progress: Option<&ProgressBar>,
 ) -> Result<PushOutcome> {
-    const BRANCH: &str = "main";
     let repo = gix::open(path)?;
     let local_head = repo.head_id()?.detach();
+    let branch = repo.head_name()?.ok_or(VastrumGitError::DetachedHead)?.shorten().to_string();
 
     let repo_info = get_repo(&contract.state().await.repo_store, repo_name).await?;
-    let on_chain_head = repo_info.branches.get(BRANCH).cloned();
+    let on_chain_head = repo_info.branches.get(&branch).cloned();
     let no_commit_yet = on_chain_head.is_none();
 
     if no_commit_yet {
         let objects = collect_all_objects(&repo, local_head, None)?;
         let uploaded = upload_objects_concurrent(&objects, contract, progress).await?;
-        update_branch_head_commit(BRANCH, local_head, repo_name, contract).await;
+        update_branch_head_commit(&branch, local_head, repo_name, contract).await;
         return Ok(PushOutcome::Pushed { objects_uploaded: uploaded });
     } else {
         let vastrum_head = sha1_to_oid(&on_chain_head.unwrap());
@@ -34,7 +33,7 @@ pub async fn push_to_repo(
         } else if local_is_ancestor(vastrum_head, local_head, &repo) {
             let objects = collect_all_objects(&repo, local_head, Some(vastrum_head))?;
             let uploaded = upload_objects_concurrent(&objects, contract, progress).await?;
-            update_branch_head_commit(BRANCH, local_head, repo_name, contract).await;
+            update_branch_head_commit(&branch, local_head, repo_name, contract).await;
             return Ok(PushOutcome::Pushed { objects_uploaded: uploaded });
         } else {
             return Err(VastrumGitError::Diverged);

@@ -31,14 +31,14 @@ mod tests {
 
         //merge feature branch 1, should give fast forward
         let merge_res =
-            merge_repos("test_repo", "main", "feature-branch-1", "main", &ctx.contract, MergeMode::Live)
+            merge_repos("test_repo", "master", "feature-branch-1", "master", &ctx.contract, MergeMode::Live)
                 .await
                 .unwrap();
         assert!(matches!(merge_res, MergeResult::FastForward(_)));
 
         //merge branch 1 again, should give uptodate
         let merge_res =
-            merge_repos("test_repo", "main", "feature-branch-1", "main", &ctx.contract, MergeMode::Live)
+            merge_repos("test_repo", "master", "feature-branch-1", "master", &ctx.contract, MergeMode::Live)
                 .await
                 .unwrap();
         assert!(matches!(merge_res, MergeResult::AlreadyUpToDate));
@@ -47,7 +47,7 @@ mod tests {
         //,should give ::merged as there is no conflicts
 
         let merge_res =
-            merge_repos("test_repo", "main", "feature-branch-2", "main", &ctx.contract, MergeMode::Live)
+            merge_repos("test_repo", "master", "feature-branch-2", "master", &ctx.contract, MergeMode::Live)
                 .await
                 .unwrap();
         assert!(matches!(merge_res, MergeResult::Merged(_)));
@@ -55,7 +55,7 @@ mod tests {
         //create feature branch 3, should conflict with rest of branch and be unresolvable
         create_and_init_repo("feature-branch-3", &ctx.contract).await;
         let merge_res =
-            merge_repos("test_repo", "main", "feature-branch-3", "main", &ctx.contract, MergeMode::Live)
+            merge_repos("test_repo", "master", "feature-branch-3", "master", &ctx.contract, MergeMode::Live)
                 .await
                 .unwrap();
         assert!(matches!(merge_res, MergeResult::Conflict(_)));

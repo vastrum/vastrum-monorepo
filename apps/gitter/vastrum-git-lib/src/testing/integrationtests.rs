@@ -51,7 +51,7 @@ mod tests {
         ctx.contract.create_repository(merging_repo, "").await.await_confirmation().await;
 
         ctx.contract
-            .create_pull_request(repo_name, "main", merging_repo, "main", "title", "description")
+            .create_pull_request(repo_name, "master", merging_repo, "master", "title", "description")
             .await
             .await_confirmation()
             .await;
