@@ -22,7 +22,7 @@ pub async fn push_to_repo(
 
     if no_commit_yet {
         let objects = collect_all_objects(&repo, local_head, None)?;
-        let uploaded = upload_objects_concurrent(&objects, contract, progress).await?;
+        let uploaded = upload_objects_concurrent(&objects, contract, progress, None).await?;
         update_branch_head_commit(&branch, local_head, repo_name, contract).await;
         return Ok(PushOutcome::Pushed { objects_uploaded: uploaded });
     } else {
@@ -32,7 +32,7 @@ pub async fn push_to_repo(
             return Ok(PushOutcome::AlreadyUpToDate);
         } else if local_is_ancestor(vastrum_head, local_head, &repo) {
             let objects = collect_all_objects(&repo, local_head, Some(vastrum_head))?;
-            let uploaded = upload_objects_concurrent(&objects, contract, progress).await?;
+            let uploaded = upload_objects_concurrent(&objects, contract, progress, None).await?;
             update_branch_head_commit(&branch, local_head, repo_name, contract).await;
             return Ok(PushOutcome::Pushed { objects_uploaded: uploaded });
         } else {
@@ -159,6 +159,7 @@ pub async fn upload_objects_concurrent(
     objects: &[Object],
     contract: &ContractAbiClient,
     progress: Option<&ProgressBar>,
+    uploaded_counter: Option<&AtomicUsize>,
 ) -> Result<usize> {
     // Very complex in order to parallelize uploads and do error reporting + progress reporting
 
@@ -220,6 +221,9 @@ pub async fn upload_objects_concurrent(
             if let Some(progress) = progress {
                 progress.inc(1);
             }
+            if let Some(counter) = uploaded_counter {
+                counter.fetch_add(1, Ordering::Relaxed);
+            }
         }
     }
 
@@ -239,6 +243,7 @@ use gix::{
 };
 use indicatif::ProgressBar;
 use std::collections::HashSet;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use vastrum_rpc_client::SentTxBehavior;
 use vastrum_shared_types::limits::MAX_TRANSACTION_SIZE;
 

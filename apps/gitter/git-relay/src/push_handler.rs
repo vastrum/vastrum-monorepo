@@ -108,10 +108,16 @@ pub async fn collect_push_plan(
 pub async fn upload_objects(
     objects: &[gix_object::Object],
     relay_contract: &ContractAbiClient,
+    uploaded_counter: Option<&std::sync::atomic::AtomicUsize>,
 ) -> Result<usize> {
-    vastrum_git_lib::native::upload::upload_objects_concurrent(objects, relay_contract, None)
-        .await
-        .context("failed to upload objects to chain")
+    vastrum_git_lib::native::upload::upload_objects_concurrent(
+        objects,
+        relay_contract,
+        None,
+        uploaded_counter,
+    )
+    .await
+    .context("failed to upload objects to chain")
 }
 
 /// Apply branch updates and deletions on-chain.

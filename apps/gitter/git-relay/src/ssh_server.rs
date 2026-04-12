@@ -501,10 +501,10 @@ async fn sync_push_to_chain(
     )
     .await;
 
-    let upload_fut = push_handler::upload_objects(&plan.objects, contract);
+    let counter = std::sync::atomic::AtomicUsize::new(0);
+    let upload_fut = push_handler::upload_objects(&plan.objects, contract, Some(&counter));
     tokio::pin!(upload_fut);
     let mut interval = tokio::time::interval(std::time::Duration::from_secs(5));
-    let mut elapsed = 0u32;
 
     let uploaded = loop {
         tokio::select! {
@@ -512,8 +512,8 @@ async fn sync_push_to_chain(
                 break result?;
             }
             _ = interval.tick() => {
-                elapsed += 5;
-                send_remote_msg(channel, &format!("Uploading... ({}s)", elapsed)).await;
+                let done = counter.load(std::sync::atomic::Ordering::Relaxed);
+                send_remote_msg(channel, &format!("Uploading objects: {}/{}...", done, count)).await;
             }
         }
     };
