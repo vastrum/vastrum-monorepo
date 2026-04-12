@@ -358,7 +358,13 @@ impl SshSession {
             writers.insert(channel_id, child_stdin);
         }
 
-        let channel = self.channels.remove(&channel_id).expect("channel not found");
+        let channel = match self.channels.remove(&channel_id) {
+            Some(ch) => ch,
+            None => {
+                send_error_and_close(session, channel_id, "error: no channel for exec\r\n");
+                return Ok(());
+            }
+        };
         let contract = self.contract.clone();
         let ssh_handle = session.handle();
         let stdin_writers = self.stdin_writers.clone();
@@ -369,7 +375,6 @@ impl SshSession {
                 service,
                 &repo_path,
                 &repo_name,
-                channel_id,
                 &channel,
                 &contract,
                 &stdin_writers,
@@ -410,18 +415,17 @@ async fn drive_git_session(
     service: GitService,
     repo_path: &std::path::Path,
     repo_name: &str,
-    channel_id: ChannelId,
     channel: &Channel<Msg>,
     contract: &ContractAbiClient,
     stdin_writers: &Mutex<HashMap<ChannelId, tokio::process::ChildStdin>>,
     _tmp: tempfile::TempDir, // kept alive for the duration
 ) -> Result<()> {
-    drive_git_subprocess(&mut child, service, channel_id, channel, stdin_writers).await?;
+    drive_git_subprocess(&mut child, service, channel, stdin_writers).await?;
 
     match service {
         GitService::UploadPack => Ok(()),
         GitService::ReceivePack => {
-            sync_push_to_chain(repo_path, repo_name, contract, channel, channel_id).await
+            sync_push_to_chain(repo_path, repo_name, contract, channel).await
         }
     }
 }
@@ -432,10 +436,10 @@ async fn drive_git_session(
 async fn drive_git_subprocess(
     child: &mut tokio::process::Child,
     service: GitService,
-    channel_id: ChannelId,
     channel: &Channel<Msg>,
     stdin_writers: &Mutex<HashMap<ChannelId, tokio::process::ChildStdin>>,
 ) -> Result<()> {
+    let channel_id = channel.id();
     let mut stdout = child.stdout.take().unwrap();
     let mut stderr = child.stderr.take().unwrap();
     let mut stdout_writer = channel.make_writer();
@@ -479,7 +483,6 @@ async fn sync_push_to_chain(
     repo_name: &str,
     contract: &ContractAbiClient,
     channel: &Channel<Msg>,
-    _channel_id: ChannelId,
 ) -> Result<()> {
     tracing::info!(repo = repo_name, "receive-pack complete, syncing to chain");
     send_remote_msg(channel, "Collecting objects...").await;
