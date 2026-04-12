@@ -278,17 +278,26 @@ All of these use KvVecBTrees similar to how concourse implemented posts.
 
 ### How to use Gitter
 
-**Install vastrum-cli**
-    
-    curl -sSf https://raw.githubusercontent.com/vastrum/vastrum-monorepo/HEAD/tooling/cli/install.sh | sh
 
-**Go to yts27rvo7ppzq5rrjyavmfwecrbyc5ksldmitiggycetgh6zguoa.vastrum.net**
+**Create a Repository**
 
--   Click "New Repository" button
--   Select name for repository
--   To push to repo
+1. Go to [gitter.vastrum.net](https://gitter.vastrum.net)
+2. Click "New Repository"
+3. Set your SSH key in repository settings
+4. Push your code using normal Git SSH pushes
 
-        vastrum-cli vastrum-git-push <REPO_NAME> <PRIVATE_KEY>
+
+You can also use the vastrum-cli to interact with Gitter. The vastrum-cli directly writes to the blockchain and verifies the cloned Git state against the state hash.
+
+***Install vastrum-cli***
+```
+curl -sSf https://raw.githubusercontent.com/vastrum/vastrum-monorepo/HEAD/tooling/cli/install.sh | sh
+```
+***Push using vastrum-cli***
+```
+vastrum-cli vastrum-git-push <REPO_NAME> <PRIVATE_KEY>
+```
+
 
 -   You can get the private_key from the wallet modal, the video at the top of the page shows how to get your private key.
 
