@@ -501,7 +501,22 @@ async fn sync_push_to_chain(
     )
     .await;
 
-    let uploaded = push_handler::upload_objects(&plan.objects, contract).await?;
+    let upload_fut = push_handler::upload_objects(&plan.objects, contract);
+    tokio::pin!(upload_fut);
+    let mut interval = tokio::time::interval(std::time::Duration::from_secs(5));
+    let mut elapsed = 0u32;
+
+    let uploaded = loop {
+        tokio::select! {
+            result = &mut upload_fut => {
+                break result?;
+            }
+            _ = interval.tick() => {
+                elapsed += 5;
+                send_remote_msg(channel, &format!("Uploading... ({}s)", elapsed)).await;
+            }
+        }
+    };
 
     send_remote_msg(
         channel,

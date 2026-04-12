@@ -610,6 +610,7 @@ ExecStart=/home/vastrum/.vastrum/bin/vastrum-cli start-gitter-http-relay --relay
 Restart=always
 RestartSec=5
 LimitNOFILE=65536
+LimitMEMLOCK=infinity
 ProtectSystem=full
 NoNewPrivileges=true
 PrivateTmp=true
