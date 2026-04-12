@@ -49,7 +49,7 @@ const EmptyRepoGuide = ({ repositoryName }: EmptyRepoGuideProps): React.JSX.Elem
                             <div>git add .</div>
                             <div>git commit -m "first commit"</div>
                             <div>git remote add origin ssh://git@gitrelay.vastrum.org:2222/{repositoryName}</div>
-                            <div>git push origin main</div>
+                            <div>git push origin HEAD</div>
                         </div>
                     </div>
                 </div>
@@ -68,7 +68,7 @@ const EmptyRepoGuide = ({ repositoryName }: EmptyRepoGuideProps): React.JSX.Elem
                         </h3>
                         <div className="bg-app-bg-primary border border-app-border rounded px-3 py-2 font-mono text-xs text-app-accent-green space-y-1">
                             <div>git remote add origin ssh://git@gitrelay.vastrum.org:2222/{repositoryName}</div>
-                            <div>git push origin main</div>
+                            <div>git push origin HEAD</div>
                         </div>
                     </div>
                 </div>

@@ -267,6 +267,14 @@ pub async fn get_discussion_replies(
 }
 
 #[wasm_bindgen]
+pub async fn get_repo_default_branch(repo_name: String) -> String {
+    let gitter = new_client();
+    let state = gitter.state().await;
+    let repo = state.repo_store.get(&repo_name).await.unwrap();
+    repo.default_branch
+}
+
+#[wasm_bindgen]
 pub async fn get_repo_counts(repo_name: String) -> RepoCounts {
     let gitter = new_client();
     let state = gitter.state().await;

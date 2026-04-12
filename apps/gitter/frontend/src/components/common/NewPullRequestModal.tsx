@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { GitPullRequest, ChevronDown } from 'lucide-react';
 import Modal from './Modal';
 import MarkdownEditor from './MarkdownEditor';
-import { get_forks_by_me_of_this_repo, create_pull_request } from '../../../wasm/pkg';
+import { get_forks_by_me_of_this_repo, create_pull_request, get_repo_default_branch } from '../../../wasm/pkg';
 import { await_tx_inclusion } from '@vastrum/react-lib';
 
 interface NewPullRequestModalProps {
@@ -29,12 +29,15 @@ function NewPullRequestModal({ isOpen, onClose, baseRepository, baseOwner, onRef
     }, [isOpen, baseRepository]);
 
     const handleSubmit = async (): Promise<void> => {
-        // Fork-based PR: base branch and head branch default to "main"
+        const [baseBranch, headBranch] = await Promise.all([
+            get_repo_default_branch(baseRepository),
+            get_repo_default_branch(selectedFork),
+        ]);
         const txHash = await create_pull_request(
             baseRepository,
-            "main",
+            baseBranch,
             selectedFork,
-            "main",
+            headBranch,
             title,
             description,
         );
