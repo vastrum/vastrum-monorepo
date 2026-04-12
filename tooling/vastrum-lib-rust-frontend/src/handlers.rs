@@ -24,14 +24,18 @@ pub async fn get_key_value_by_site_id(site_id: Sha256Digest, key: String) -> Get
 
 pub async fn make_call(call_data: Vec<u8>) -> MakeCallResponse {
     let params = MakeCallRequest { call_data };
-    let res = send_request(params, RpcMethod::MakeCall).await.unwrap();
-    return res;
+    match send_request(params, RpcMethod::MakeCall).await {
+        Ok(res) => res,
+        Err(()) => MakeCallResponse { tx_hash: Sha256Digest::default() },
+    }
 }
 
 pub async fn make_authenticated_call(call_data: Vec<u8>) -> MakeAuthCallResponse {
     let params = MakeAuthCallRequest { call_data };
-    let res = send_request(params, RpcMethod::MakeAuthenticatedCall).await.unwrap();
-    return res;
+    match send_request(params, RpcMethod::MakeAuthenticatedCall).await {
+        Ok(res) => res,
+        Err(()) => MakeAuthCallResponse { tx_hash: Sha256Digest::default() },
+    }
 }
 
 pub async fn get_private_salt(namespace: String) -> Sha256Digest {

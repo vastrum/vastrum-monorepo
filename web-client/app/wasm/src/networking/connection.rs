@@ -4,6 +4,8 @@ thread_local! {
 
 const RECONNECT_DELAY_MS: u32 = 2_000;
 const REQUEST_TIMEOUT_MS: u32 = 10_000;
+const RECONNECT_POLL_MS: u32 = 200;
+const RECONNECT_WAIT_MAX_MS: u32 = 15_000;
 
 pub async fn start_webrtc_connection(server_addr: SocketAddr, fingerprint: Fingerprint) {
     let _ = connect(server_addr, fingerprint).await;
@@ -58,6 +60,17 @@ fn spawn_connection_loop(addr: SocketAddr, fp: Fingerprint) {
 }
 
 pub async fn send_request(route: &str, body: &[u8]) -> Result<Vec<u8>> {
+    match send_request_once(route, body).await {
+        Ok(resp) => Ok(resp),
+        Err(WasmErr::RequestTimeout | WasmErr::ChannelClosed | WasmErr::NotConnected) => {
+            await_reconnect().await?;
+            send_request_once(route, body).await
+        }
+        Err(e) => Err(e),
+    }
+}
+
+async fn send_request_once(route: &str, body: &[u8]) -> Result<Vec<u8>> {
     let rx = TRANSPORT.with(|t| {
         let t = t.borrow();
         let transport = t.as_ref().ok_or(WasmErr::NotConnected)?;
@@ -80,13 +93,38 @@ pub async fn send_request(route: &str, body: &[u8]) -> Result<Vec<u8>> {
 
 fn close_transport() {
     TRANSPORT.with(|t| {
-        if let Some(transport) = t.borrow().as_ref() {
+        if let Some(transport) = t.borrow_mut().take() {
             transport.inner.close();
         }
     });
 }
 
+async fn await_reconnect() -> Result<()> {
+    let start = js_sys::Date::now();
+    loop {
+        let connected = TRANSPORT.with(|t| t.borrow().is_some());
+        if connected {
+            return Ok(());
+        }
+        if js_sys::Date::now() - start >= RECONNECT_WAIT_MAX_MS as f64 {
+            return Err(WasmErr::RequestTimeout);
+        }
+        gloo_timers::future::TimeoutFuture::new(RECONNECT_POLL_MS).await;
+    }
+}
+
 pub async fn send_fire_and_forget(route: &str, body: &[u8]) -> Result<()> {
+    match try_fire_and_forget(route, body) {
+        Ok(()) => Ok(()),
+        Err(WasmErr::NotConnected) => {
+            await_reconnect().await?;
+            try_fire_and_forget(route, body)
+        }
+        Err(e) => Err(e),
+    }
+}
+
+fn try_fire_and_forget(route: &str, body: &[u8]) -> Result<()> {
     TRANSPORT.with(|t| {
         let t = t.borrow();
         let transport = t.as_ref().ok_or(WasmErr::NotConnected)?;
