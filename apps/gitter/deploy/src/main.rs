@@ -268,9 +268,9 @@ async fn deploy_example_repos(site_id: Sha256Digest) {
     client
         .create_pull_request(
             "example-repo",
-            "main",
+            "master",
             "example-repo-fork",
-            "main",
+            "master",
             "pull requester",
             "Goodbye world",
         )
