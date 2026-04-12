@@ -556,9 +556,10 @@ deploy_relay() {
     harden_server "$user" "$ip"
     install_binary "$user" "$ip"
 
-    # Create user and directories
+    # Create user and directories, install git (relay spawns `git` to serve push/fetch)
     remote_exec "$user" "$ip" sudo bash <<'RELAY_SETUP_EOF'
 set -euo pipefail
+DEBIAN_FRONTEND=noninteractive apt-get install -y -qq git >/dev/null
 id -u vastrum &>/dev/null || useradd --system --home-dir /home/vastrum --create-home --shell /usr/sbin/nologin vastrum
 rm -rf /home/vastrum/.local/share/vastrum
 mkdir -p /home/vastrum/.vastrum/bin /etc/vastrum /var/lib/vastrum-relay/relay-data
