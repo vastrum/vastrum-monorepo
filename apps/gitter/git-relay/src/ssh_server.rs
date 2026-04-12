@@ -423,7 +423,9 @@ async fn drive_git_subprocess(
             match stdout.read(&mut buf).await {
                 Ok(0) => break,
                 Ok(n) => {
-                    let _ = handle_out.data(channel_id, CryptoVec::from(&buf[..n])).await;
+                    if handle_out.data(channel_id, CryptoVec::from(&buf[..n])).await.is_err() {
+                        break;
+                    }
                 }
                 Err(_) => break,
             }
@@ -439,8 +441,9 @@ async fn drive_git_subprocess(
             match stderr.read(&mut buf).await {
                 Ok(0) => break,
                 Ok(n) => {
-                    let _ =
-                        handle_err.extended_data(channel_id, 1, CryptoVec::from(&buf[..n])).await;
+                    if handle_err.extended_data(channel_id, 1, CryptoVec::from(&buf[..n])).await.is_err() {
+                        break;
+                    }
                 }
                 Err(_) => break,
             }
