@@ -207,9 +207,9 @@ vastrum-cli init <name> --template eth_dapp
     client
         .create_pull_request(
             "vastrum",
-            "main",
+            "master",
             "vastrum-pr-fork",
-            "main",
+            "master",
             "Improve README",
             "Improved readme",
         )
@@ -355,6 +355,7 @@ fn build_fork_commit(
         .unwrap()
         .detach();
 
+    let branch_ref: gix::refs::FullName = "refs/heads/master".try_into().unwrap();
     fork_repo
         .edit_reference(gix::refs::transaction::RefEdit {
             change: gix::refs::transaction::Change::Update {
@@ -365,6 +366,21 @@ fn build_fork_commit(
                 },
                 expected: gix::refs::transaction::PreviousValue::Any,
                 new: gix::refs::Target::Object(new_commit_id),
+            },
+            name: branch_ref.clone(),
+            deref: false,
+        })
+        .unwrap();
+    fork_repo
+        .edit_reference(gix::refs::transaction::RefEdit {
+            change: gix::refs::transaction::Change::Update {
+                log: gix::refs::transaction::LogChange {
+                    mode: gix::refs::transaction::RefLog::AndReference,
+                    force_create_reflog: false,
+                    message: "set HEAD".into(),
+                },
+                expected: gix::refs::transaction::PreviousValue::Any,
+                new: gix::refs::Target::Symbolic(branch_ref),
             },
             name: "HEAD".try_into().unwrap(),
             deref: false,
