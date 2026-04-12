@@ -6,7 +6,7 @@ use russh::{Channel, ChannelId, CryptoVec};
 use ssh_key::{Algorithm, HashAlg, PrivateKey, PublicKey};
 use std::collections::HashMap;
 use std::sync::Arc;
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use tokio::io::AsyncWriteExt;
 use tokio::sync::Mutex;
 use vastrum_git_lib::ContractAbiClient;
 use vastrum_git_lib::SshKeyFingerprint;
@@ -23,7 +23,12 @@ impl SshServer {
     pub async fn run(mut self, port: u16, host_key_path: &std::path::Path) -> Result<()> {
         let key = load_or_generate_host_key(host_key_path)?;
 
-        let config = russh::server::Config { keys: vec![key], ..Default::default() };
+        let config = russh::server::Config {
+            keys: vec![key],
+            keepalive_interval: Some(std::time::Duration::from_secs(15)),
+            keepalive_max: 3,
+            ..Default::default()
+        };
 
         let config = Arc::new(config);
         tracing::info!(port, "SSH server listening");
@@ -41,6 +46,7 @@ impl russh::server::Server for SshServer {
             contract: self.contract.clone(),
             authenticated_fingerprint: None,
             stdin_writers: Arc::new(Mutex::new(HashMap::new())),
+            channels: HashMap::new(),
         }
     }
 }
@@ -50,6 +56,8 @@ pub struct SshSession {
     authenticated_fingerprint: Option<SshKeyFingerprint>,
     /// Stdin writers for active git subprocesses, keyed by channel ID.
     stdin_writers: Arc<Mutex<HashMap<ChannelId, tokio::process::ChildStdin>>>,
+    /// Channels stored from channel_open_session, consumed by exec_request.
+    channels: HashMap<ChannelId, Channel<Msg>>,
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -109,9 +117,10 @@ impl Handler for SshSession {
 
     async fn channel_open_session(
         &mut self,
-        _channel: Channel<Msg>,
+        channel: Channel<Msg>,
         _session: &mut Session,
     ) -> Result<bool, Self::Error> {
+        self.channels.insert(channel.id(), channel);
         Ok(true)
     }
 
@@ -136,6 +145,17 @@ impl Handler for SshSession {
         _session: &mut Session,
     ) -> Result<(), Self::Error> {
         // Client done sending — close stdin so the git subprocess can finish.
+        let mut writers = self.stdin_writers.lock().await;
+        writers.remove(&channel_id);
+        Ok(())
+    }
+
+    async fn channel_close(
+        &mut self,
+        channel_id: ChannelId,
+        _session: &mut Session,
+    ) -> Result<(), Self::Error> {
+        // Client disconnected abruptly — clean up stdin so git subprocess exits.
         let mut writers = self.stdin_writers.lock().await;
         writers.remove(&channel_id);
         Ok(())
@@ -338,6 +358,7 @@ impl SshSession {
             writers.insert(channel_id, child_stdin);
         }
 
+        let channel = self.channels.remove(&channel_id).expect("channel not found");
         let contract = self.contract.clone();
         let ssh_handle = session.handle();
         let stdin_writers = self.stdin_writers.clone();
@@ -349,7 +370,7 @@ impl SshSession {
                 &repo_path,
                 &repo_name,
                 channel_id,
-                &ssh_handle,
+                &channel,
                 &contract,
                 &stdin_writers,
                 tmp,
@@ -362,14 +383,14 @@ impl SshSession {
                     error = %e,
                     "git session failed"
                 );
-                let msg = format!("error: {}\r\n", e);
-                let _ =
-                    ssh_handle.extended_data(channel_id, 1, CryptoVec::from(msg.as_bytes())).await;
+                let _ = channel
+                    .extended_data(1, std::io::Cursor::new(format!("error: {}\r\n", e).into_bytes()))
+                    .await;
             }
             let exit_code = if result.is_ok() { 0 } else { 1 };
             let _ = ssh_handle.exit_status_request(channel_id, exit_code).await;
-            let _ = ssh_handle.eof(channel_id).await;
-            let _ = ssh_handle.close(channel_id).await;
+            let _ = channel.eof().await;
+            let _ = channel.close().await;
         });
 
         Ok(())
@@ -390,63 +411,46 @@ async fn drive_git_session(
     repo_path: &std::path::Path,
     repo_name: &str,
     channel_id: ChannelId,
-    handle: &russh::server::Handle,
+    channel: &Channel<Msg>,
     contract: &ContractAbiClient,
     stdin_writers: &Mutex<HashMap<ChannelId, tokio::process::ChildStdin>>,
     _tmp: tempfile::TempDir, // kept alive for the duration
 ) -> Result<()> {
-    drive_git_subprocess(&mut child, service, channel_id, handle, stdin_writers).await?;
+    drive_git_subprocess(&mut child, service, channel_id, channel, stdin_writers).await?;
 
     match service {
         GitService::UploadPack => Ok(()),
         GitService::ReceivePack => {
-            sync_push_to_chain(repo_path, repo_name, contract, handle, channel_id).await
+            sync_push_to_chain(repo_path, repo_name, contract, channel, channel_id).await
         }
     }
 }
 
 /// Pipe a git subprocess's stdout/stderr to the SSH channel and wait for exit.
-/// Shared by upload-pack and receive-pack.
+/// Uses the Channel API which provides window-aware AsyncWrite — data is only
+/// sent when the client's window has space, avoiding russh's pending_data queue.
 async fn drive_git_subprocess(
     child: &mut tokio::process::Child,
     service: GitService,
     channel_id: ChannelId,
-    handle: &russh::server::Handle,
+    channel: &Channel<Msg>,
     stdin_writers: &Mutex<HashMap<ChannelId, tokio::process::ChildStdin>>,
 ) -> Result<()> {
-    // Pipe stdout to SSH channel
     let mut stdout = child.stdout.take().unwrap();
-    let handle_out = handle.clone();
-    let stdout_task = tokio::spawn(async move {
-        let mut buf = [0u8; 8192];
-        loop {
-            match stdout.read(&mut buf).await {
-                Ok(0) => break,
-                Ok(n) => {
-                    if handle_out.data(channel_id, CryptoVec::from(&buf[..n])).await.is_err() {
-                        break;
-                    }
-                }
-                Err(_) => break,
-            }
-        }
-    });
-
-    // Pipe stderr to SSH channel
     let mut stderr = child.stderr.take().unwrap();
-    let handle_err = handle.clone();
-    let stderr_task = tokio::spawn(async move {
-        let mut buf = [0u8; 8192];
-        loop {
-            match stderr.read(&mut buf).await {
-                Ok(0) => break,
-                Ok(n) => {
-                    if handle_err.extended_data(channel_id, 1, CryptoVec::from(&buf[..n])).await.is_err() {
-                        break;
-                    }
-                }
-                Err(_) => break,
-            }
+    let mut stdout_writer = channel.make_writer();
+    let mut stderr_writer = channel.make_writer_ext(Some(1));
+
+    let pipe_task = tokio::spawn(async move {
+        let (r1, r2) = tokio::join!(
+            tokio::io::copy(&mut stdout, &mut stdout_writer),
+            tokio::io::copy(&mut stderr, &mut stderr_writer),
+        );
+        if let Err(e) = r1 {
+            tracing::debug!("stdout pipe: {}", e);
+        }
+        if let Err(e) = r2 {
+            tracing::debug!("stderr pipe: {}", e);
         }
     });
 
@@ -459,9 +463,8 @@ async fn drive_git_subprocess(
         writers.remove(&channel_id);
     }
 
-    // Wait for stdout/stderr forwarding to finish
-    let _ = stdout_task.await;
-    let _ = stderr_task.await;
+    // Wait for pipe forwarding to finish
+    let _ = pipe_task.await;
 
     if !status.success() {
         anyhow::bail!("git {} exited with {}", service.git_subcommand(), status);
@@ -475,23 +478,22 @@ async fn sync_push_to_chain(
     repo_path: &std::path::Path,
     repo_name: &str,
     contract: &ContractAbiClient,
-    handle: &russh::server::Handle,
-    channel_id: ChannelId,
+    channel: &Channel<Msg>,
+    _channel_id: ChannelId,
 ) -> Result<()> {
     tracing::info!(repo = repo_name, "receive-pack complete, syncing to chain");
-    send_remote_msg(handle, channel_id, "Collecting objects...").await;
+    send_remote_msg(channel, "Collecting objects...").await;
 
     let plan = push_handler::collect_push_plan(repo_path, repo_name, contract).await?;
 
     if plan.updates.is_empty() && plan.deletes.is_empty() {
-        send_remote_msg(handle, channel_id, "Already up to date on chain").await;
+        send_remote_msg(channel, "Already up to date on chain").await;
         return Ok(());
     }
 
     let count = plan.objects.len();
     send_remote_msg(
-        handle,
-        channel_id,
+        channel,
         &format!("Uploading to Vastrum chain... ({} objects)", count),
     )
     .await;
@@ -499,8 +501,7 @@ async fn sync_push_to_chain(
     let uploaded = push_handler::upload_objects(&plan.objects, contract).await?;
 
     send_remote_msg(
-        handle,
-        channel_id,
+        channel,
         &format!("Uploaded {} objects, updating branches...", uploaded),
     )
     .await;
@@ -517,7 +518,7 @@ async fn sync_push_to_chain(
             uploaded
         )
     };
-    send_remote_msg(handle, channel_id, &summary).await;
+    send_remote_msg(channel, &summary).await;
 
     tracing::info!(
         repo = repo_name,
@@ -529,9 +530,11 @@ async fn sync_push_to_chain(
     Ok(())
 }
 
-async fn send_remote_msg(handle: &russh::server::Handle, channel_id: ChannelId, msg: &str) {
+async fn send_remote_msg(channel: &Channel<Msg>, msg: &str) {
     let formatted = format!("remote: {}\r\n", msg);
-    let _ = handle.extended_data(channel_id, 1, CryptoVec::from(formatted.as_bytes())).await;
+    let _ = channel
+        .extended_data(1, std::io::Cursor::new(formatted.into_bytes()))
+        .await;
 }
 
 fn load_or_generate_host_key(path: &std::path::Path) -> Result<PrivateKey> {
