@@ -20,6 +20,9 @@ pub enum WasmErr {
     #[error("request timed out")]
     RequestTimeout,
 
+    #[error("http fetch: {0}")]
+    HttpFetch(String),
+
     #[error("RPC error: {0}")]
     RpcError(String),
 

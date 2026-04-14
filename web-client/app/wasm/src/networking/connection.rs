@@ -4,11 +4,12 @@ thread_local! {
 
 const RECONNECT_DELAY_MS: u32 = 2_000;
 const REQUEST_TIMEOUT_MS: u32 = 10_000;
-const RECONNECT_POLL_MS: u32 = 200;
-const RECONNECT_WAIT_MAX_MS: u32 = 15_000;
+const INITIAL_CONNECT_TIMEOUT_MS: u32 = 10_000;
 
 pub async fn start_webrtc_connection(server_addr: SocketAddr, fingerprint: Fingerprint) {
-    let _ = connect(server_addr, fingerprint).await;
+    let timeout = TimeoutFuture::new(INITIAL_CONNECT_TIMEOUT_MS);
+    let connect_fut = connect(server_addr, fingerprint);
+    let _ = futures::future::select(Box::pin(connect_fut), Box::pin(timeout)).await;
     spawn_connection_loop(server_addr, fingerprint);
 }
 
@@ -43,7 +44,7 @@ async fn recv_until_closed() {
 async fn reconnect(addr: SocketAddr, fp: Fingerprint) {
     TRANSPORT.with(|t| *t.borrow_mut() = None);
     loop {
-        gloo_timers::future::TimeoutFuture::new(RECONNECT_DELAY_MS).await;
+        TimeoutFuture::new(RECONNECT_DELAY_MS).await;
         if connect(addr, fp).await.is_ok() {
             return;
         }
@@ -63,8 +64,8 @@ pub async fn send_request(route: &str, body: &[u8]) -> Result<Vec<u8>> {
     match send_request_once(route, body).await {
         Ok(resp) => Ok(resp),
         Err(WasmErr::RequestTimeout | WasmErr::ChannelClosed | WasmErr::NotConnected) => {
-            await_reconnect().await?;
-            send_request_once(route, body).await
+            //http fallback
+            http_send_request(route, body).await
         }
         Err(e) => Err(e),
     }
@@ -77,7 +78,7 @@ async fn send_request_once(route: &str, body: &[u8]) -> Result<Vec<u8>> {
         transport.send_request(route, body)
     })?;
 
-    let timeout = gloo_timers::future::TimeoutFuture::new(REQUEST_TIMEOUT_MS);
+    let timeout = TimeoutFuture::new(REQUEST_TIMEOUT_MS);
     match futures::future::select(Box::pin(rx), Box::pin(timeout)).await {
         futures::future::Either::Left((Ok(resp), _)) => parse_response(resp),
         futures::future::Either::Left((Err(_), _)) => {
@@ -99,27 +100,10 @@ fn close_transport() {
     });
 }
 
-async fn await_reconnect() -> Result<()> {
-    let start = js_sys::Date::now();
-    loop {
-        let connected = TRANSPORT.with(|t| t.borrow().is_some());
-        if connected {
-            return Ok(());
-        }
-        if js_sys::Date::now() - start >= RECONNECT_WAIT_MAX_MS as f64 {
-            return Err(WasmErr::RequestTimeout);
-        }
-        gloo_timers::future::TimeoutFuture::new(RECONNECT_POLL_MS).await;
-    }
-}
-
 pub async fn send_fire_and_forget(route: &str, body: &[u8]) -> Result<()> {
     match try_fire_and_forget(route, body) {
         Ok(()) => Ok(()),
-        Err(WasmErr::NotConnected) => {
-            await_reconnect().await?;
-            try_fire_and_forget(route, body)
-        }
+        Err(WasmErr::NotConnected) => http_fire_and_forget(route, body).await,
         Err(e) => Err(e),
     }
 }
@@ -139,11 +123,51 @@ fn parse_response(resp: RpcResponse) -> Result<Vec<u8>> {
     }
 }
 
+async fn http_send_request(route: &str, body: &[u8]) -> Result<Vec<u8>> {
+    let url = get_rpc_endpoint("rpchttpfallback");
+    let rpc_request = RpcRequest { id: 0, route: route.to_string(), body: body.to_vec() };
+    let encoded = rpc_request.encode();
+
+    let resp = reqwest::Client::new()
+        .post(&url)
+        .header("Content-Type", "application/octet-stream")
+        .body(encoded)
+        .send()
+        .await
+        .map_err(|e| WasmErr::HttpFetch(e.to_string()))?;
+
+    if !resp.status().is_success() {
+        return Err(WasmErr::HttpFetch(format!("status {}", resp.status())));
+    }
+
+    let bytes = resp.bytes().await.map_err(|e| WasmErr::HttpFetch(e.to_string()))?;
+    let rpc_response: RpcResponse = borsh::from_slice(&bytes)?;
+    parse_response(rpc_response)
+}
+
+async fn http_fire_and_forget(route: &str, body: &[u8]) -> Result<()> {
+    let url = get_rpc_endpoint("rpchttpfallback");
+    let rpc_request = RpcRequest { id: 0, route: route.to_string(), body: body.to_vec() };
+    let encoded = rpc_request.encode();
+
+    reqwest::Client::new()
+        .post(&url)
+        .header("Content-Type", "application/octet-stream")
+        .body(encoded)
+        .send()
+        .await
+        .map_err(|e| WasmErr::HttpFetch(e.to_string()))?;
+    Ok(())
+}
+
+use super::rpc::get_rpc_endpoint;
 use super::transport::RpcTransport;
 use crate::utils::error::{Result, WasmErr};
-use vastrum_shared_types::types::rpc::types::{RpcBody, RpcResponse};
+use gloo_timers::future::TimeoutFuture;
 use std::cell::{Cell, RefCell};
 use std::collections::HashMap;
 use std::net::SocketAddr;
 use std::rc::Rc;
+use vastrum_shared_types::borsh::BorshExt;
+use vastrum_shared_types::types::rpc::types::{RpcBody, RpcRequest, RpcResponse};
 use webrtc_direct_client::{Fingerprint, FramedClient, WebRtcClient};

@@ -19,8 +19,7 @@ impl RPCHttpServer {
         let cors = CorsLayer::new()
             .allow_origin(Any)
             .allow_methods(Any)
-            .allow_headers(Any)
-            .allow_headers([header::CONTENT_TYPE]);
+            .allow_headers(Any);
 
         let frontend = frontend_builder::build_frontend(rpc_nodes, epoch_state).await;
         let state = AppState { networking: self.networking.clone(), db: self.db.clone(), frontend };
@@ -36,6 +35,7 @@ impl RPCHttpServer {
             .route("/ethexecutionrpc/{*path}", any(RPCHttpServer::eth_execution_rpc))
             .route("/ethconsensusrpc", any(RPCHttpServer::eth_consensus_rpc))
             .route("/ethconsensusrpc/{*path}", any(RPCHttpServer::eth_consensus_rpc))
+            .route("/rpchttpfallback/", post(RPCHttpServer::borsh_rpc))
             .route("/health", get(StatusCode::OK))
             .fallback(RPCHttpServer::serve_frontend)
             .layer(DefaultBodyLimit::max(MAX_RPC_BODY_SIZE))
@@ -85,6 +85,26 @@ impl RPCHttpServer {
         axum::Json(input): axum::Json<ResolveDomainRequest>,
     ) -> impl IntoResponse {
         Json(handlers::resolve_domain(&state.db, input))
+    }
+    async fn borsh_rpc(
+        State(state): State<AppState>,
+        body: axum::body::Bytes,
+    ) -> impl IntoResponse {
+        let Ok(request) = borsh::from_slice::<RpcRequest>(&body) else {
+            return StatusCode::BAD_REQUEST.into_response();
+        };
+        let result = route(&request, &state.db, &state.networking).await;
+        match result {
+            Some(rpc_body) => {
+                let response = RpcResponse { id: request.id, body: rpc_body };
+                (
+                    [(axum::http::header::CONTENT_TYPE, "application/octet-stream")],
+                    response.encode(),
+                )
+                    .into_response()
+            }
+            None => StatusCode::OK.into_response(),
+        }
     }
     async fn eth_execution_rpc(method: Method, headers: HeaderMap, request: Request) -> Response {
         super::eth_proxy::eth_execution_rpc(method, headers, request).await
@@ -172,8 +192,10 @@ struct AppState {
 
 use super::frontend_builder;
 use crate::{
-    consensus::validator_state_machine::EpochState, db::Db, p2p::networking::Networking,
-    rpc::handlers,
+    consensus::validator_state_machine::EpochState,
+    db::Db,
+    p2p::networking::Networking,
+    rpc::{handlers, webrtc_direct::router::route},
 };
 use axum::{
     Json, Router,
@@ -183,12 +205,13 @@ use axum::{
     routing::{any, get, post},
 };
 use reqwest::Method;
-use vastrum_shared_types::frontend::frontend_data::RpcNodeEndpoint;
-use vastrum_shared_types::types::rpc::types::{
-    GetKeyValuePayload, GetPagePayload, GetSiteIDIsDeployed, GetTxHashIsIncluded,
-    ResolveDomainRequest, SubmitTransactionPayload,
-};
-use vastrum_shared_types::{limits::MAX_RPC_BODY_SIZE, ports::HTTP_RPC_PORT};
 use std::sync::Arc;
 use tower_http::compression::CompressionLayer;
 use tower_http::cors::{Any, CorsLayer};
+use vastrum_shared_types::borsh::BorshExt;
+use vastrum_shared_types::frontend::frontend_data::RpcNodeEndpoint;
+use vastrum_shared_types::types::rpc::types::{
+    GetKeyValuePayload, GetPagePayload, GetSiteIDIsDeployed, GetTxHashIsIncluded,
+    ResolveDomainRequest, RpcRequest, RpcResponse, SubmitTransactionPayload,
+};
+use vastrum_shared_types::{limits::MAX_RPC_BODY_SIZE, ports::HTTP_RPC_PORT};
