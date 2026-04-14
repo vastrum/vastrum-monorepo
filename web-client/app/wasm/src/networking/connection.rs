@@ -4,7 +4,7 @@ thread_local! {
 
 const RECONNECT_DELAY_MS: u32 = 2_000;
 const REQUEST_TIMEOUT_MS: u32 = 10_000;
-const INITIAL_CONNECT_TIMEOUT_MS: u32 = 10_000;
+const INITIAL_CONNECT_TIMEOUT_MS: u32 = 6_000;
 
 pub async fn start_webrtc_connection(server_addr: SocketAddr, fingerprint: Fingerprint) {
     let timeout = TimeoutFuture::new(INITIAL_CONNECT_TIMEOUT_MS);
