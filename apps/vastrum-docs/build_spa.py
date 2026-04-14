@@ -567,11 +567,11 @@ def build_spa():
         if i > 0:
             prev_id = page_to_id(pages[i - 1])
             prev_title = page_titles.get(pages[i - 1], prev_id)
-            nav_parts.append(f'<a href="#{prev_id}" class="page-nav-prev">\u2190 {prev_title}</a>')
+            nav_parts.append(f'<a href="#{prev_id}" class="page-nav-prev">Previous: {prev_title}</a>')
         if i < len(pages) - 1:
             next_id = page_to_id(pages[i + 1])
             next_title = page_titles.get(pages[i + 1], next_id)
-            nav_parts.append(f'<a href="#{next_id}" class="page-nav-next">{next_title} \u2192</a>')
+            nav_parts.append(f'<a href="#{next_id}" class="page-nav-next">Next: {next_title}</a>')
         nav_html = f'<div class="page-nav">{"".join(nav_parts)}</div>' if nav_parts else ''
 
         section_id = page_to_id(page)
