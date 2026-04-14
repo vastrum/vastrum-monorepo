@@ -21,6 +21,16 @@ def get_pages_from_toc(toc_js):
     return [h for h in hrefs if not h.startswith('http://') and not h.startswith('https://')]
 
 
+def get_page_titles_from_toc(toc_js):
+    """Extract href -> title mapping from toc JS. Strips the <strong> numbering prefix."""
+    titles = {}
+    for m in re.finditer(r'<a href="([^"]+\.html)"><strong[^>]*>[^<]*</strong>\s*([^<]+)</a>', toc_js):
+        href, title = m.group(1), m.group(2).strip()
+        if not href.startswith('http://') and not href.startswith('https://'):
+            titles[href] = title
+    return titles
+
+
 def page_to_id(page):
     """Convert page filename to section ID: 'tech/consensus.html' -> 'tech/consensus'"""
     return page.replace('.html', '')
@@ -539,6 +549,7 @@ def build_spa():
     shell = re.sub(r'<noscript>\s*<iframe[^>]*src="toc\.html"[^>]*></iframe>\s*</noscript>', '', shell)
 
     # --- Build page sections ---
+    page_titles = get_page_titles_from_toc(toc_js_raw)
     sections_html = []
     for i, page in enumerate(pages):
         page_path = os.path.join(BOOK_DIR, page)
@@ -550,11 +561,25 @@ def build_spa():
         main_content = extract_main(page_html)
         main_content = rewrite_content_links(main_content, page)
         main_content = inline_images(main_content, page)
+
+        # Build prev/next nav links
+        nav_parts = []
+        if i > 0:
+            prev_id = page_to_id(pages[i - 1])
+            prev_title = page_titles.get(pages[i - 1], prev_id)
+            nav_parts.append(f'<a href="#{prev_id}" class="page-nav-prev">\u2190 {prev_title}</a>')
+        if i < len(pages) - 1:
+            next_id = page_to_id(pages[i + 1])
+            next_title = page_titles.get(pages[i + 1], next_id)
+            nav_parts.append(f'<a href="#{next_id}" class="page-nav-next">{next_title} \u2192</a>')
+        nav_html = f'<div class="page-nav">{"".join(nav_parts)}</div>' if nav_parts else ''
+
         section_id = page_to_id(page)
         display = 'block' if i == 0 else 'none'
         sections_html.append(
             f'<section id="{section_id}" class="spa-page" style="display:{display}">'
             f'{main_content}'
+            f'{nav_html}'
             f'</section>'
         )
 
@@ -569,10 +594,16 @@ def build_spa():
         flags=re.DOTALL
     )
 
-    # Inject SPA scripts before </body>
+    # Inject page-nav CSS and SPA scripts before </body>
+    page_nav_css = '''<style>
+.page-nav { display: flex; justify-content: space-between; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #404040; }
+.page-nav a { color: #39AFD7; text-decoration: none; }
+.page-nav a:hover { text-decoration: underline; }
+.page-nav-next { margin-left: auto; }
+</style>'''
     page_list_json = str([page_to_id(p) for p in pages])
     spa_script = SPA_SCRIPT.replace('PAGE_LIST_PLACEHOLDER', page_list_json)
-    shell = shell.replace('</body>', f'{spa_script}\n</body>')
+    shell = shell.replace('</body>', f'{page_nav_css}\n{spa_script}\n</body>')
 
     # Update title  strip page-specific prefix (e.g. "Introduction - Vastrum Protocol" → "Vastrum Protocol")
     shell = re.sub(r'<title>.+? - (.+)</title>', r'<title>\1</title>', shell)
