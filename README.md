@@ -2,6 +2,21 @@
 
 Vastrum is an experimental protocol for hosting decentralized websites. See [documentation](https://xpkeuoccopibhnakya3luhrsphalhnqo2ifmxe65murdjft54n3q.vastrum.net) for more info.
 
+
+## Relevant Code
+
+[Consensus Integration Tests](https://github.com/vastrum/vastrum-monorepo/blob/master/vastrum-node/tests/sim_consensus.rs)
+
+[Example Contract For Gitter (Github clone)](https://github.com/vastrum/vastrum-monorepo/blob/master/apps/gitter/contract/src/lib.rs)
+
+[Runtime Integration Tests](https://github.com/vastrum/vastrum-monorepo/blob/master/runtime/runtime-tests/tests/src/tests/kvmap.rs)
+
+[Consensus State Machine](https://github.com/vastrum/vastrum-monorepo/blob/master/vastrum-node/src/consensus/validator_state_machine.rs)
+
+[KvMap implementation](https://github.com/vastrum/vastrum-monorepo/blob/master/runtime/runtime-lib/src/kvmap.rs)
+
+[Client side Git clone implementation for Gitter](https://github.com/vastrum/vastrum-monorepo/blob/master/apps/gitter/vastrum-git-lib/src/native/clone.rs)
+
 ## Setup
 
 1. Install [Rust](https://rustup.rs)
