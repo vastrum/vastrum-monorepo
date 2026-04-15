@@ -178,22 +178,21 @@ export function SwapCard({
                     </div>
                 )}
 
-                <button
-                    onClick={onSwap}
-                    disabled={!hasValidInput || isLoading || !pairInfo}
-                    className={`w-full mt-4 py-4 rounded-2xl font-semibold text-lg transition-all ${hasValidInput && !isLoading && pairInfo
-                        ? 'bg-app-accent-blue hover:bg-app-accent-blue/90 text-white cursor-pointer'
-                        : 'bg-app-bg-tertiary text-app-text-secondary cursor-not-allowed'
-                        }`}
-                >
-                    {isLoading
-                        ? 'Loading... (This might take 10-20s)'
-                        : !pairInfo
-                            ? 'No liquidity pool found'
-                            : hasValidInput
-                                ? 'Swap'
-                                : 'Enter an amount'}
-                </button>
+                <div className="relative group w-full mt-4">
+                    <button
+                        disabled
+                        className="w-full py-4 rounded-2xl font-semibold text-lg bg-app-bg-tertiary text-app-text-secondary cursor-not-allowed flex items-center justify-center gap-2"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                        </svg>
+                        Swap
+                    </button>
+                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-app-bg-tertiary border border-app-border rounded-lg text-sm text-app-text-secondary whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                        Transaction sending is not yet supported
+                    </div>
+                </div>
             </div>
 
             <TokenSelectorModal
