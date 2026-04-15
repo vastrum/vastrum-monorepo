@@ -39,17 +39,17 @@ const EmptyRepoGuide = ({ repositoryName }: EmptyRepoGuideProps): React.JSX.Elem
                     <div className="w-6 h-6 rounded-full bg-app-accent-blue text-white flex items-center justify-center text-sm font-semibold flex-shrink-0">
                         2
                     </div>
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                         <h3 className="font-semibold text-app-text-primary mb-2 flex items-center gap-2">
                             <Terminal className="w-4 h-4" />
                             Push a new repository
                         </h3>
-                        <div className="bg-app-bg-primary border border-app-border rounded px-3 py-2 font-mono text-xs text-app-accent-green space-y-1">
-                            <div>git init</div>
-                            <div>git add .</div>
-                            <div>git commit -m "first commit"</div>
-                            <div>git remote add origin ssh://git@gitrelay.vastrum.org:2222/{repositoryName}</div>
-                            <div>git push origin HEAD</div>
+                        <div className="bg-app-bg-primary border border-app-border rounded px-3 py-2 font-mono text-xs text-app-accent-green space-y-1 overflow-x-auto">
+                            <div className="whitespace-nowrap">git init</div>
+                            <div className="whitespace-nowrap">git add .</div>
+                            <div className="whitespace-nowrap">git commit -m "first commit"</div>
+                            <div className="whitespace-nowrap">git remote add origin ssh://git@gitrelay.vastrum.org:2222/{repositoryName}</div>
+                            <div className="whitespace-nowrap">git push origin HEAD</div>
                         </div>
                     </div>
                 </div>
@@ -61,14 +61,14 @@ const EmptyRepoGuide = ({ repositoryName }: EmptyRepoGuideProps): React.JSX.Elem
                     <div className="w-6 h-6 rounded-full bg-app-accent-blue text-white flex items-center justify-center text-sm font-semibold flex-shrink-0">
                         3
                     </div>
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                         <h3 className="font-semibold text-app-text-primary mb-2 flex items-center gap-2">
                             <Terminal className="w-4 h-4" />
                             Or push an existing repository
                         </h3>
-                        <div className="bg-app-bg-primary border border-app-border rounded px-3 py-2 font-mono text-xs text-app-accent-green space-y-1">
-                            <div>git remote add origin ssh://git@gitrelay.vastrum.org:2222/{repositoryName}</div>
-                            <div>git push origin HEAD</div>
+                        <div className="bg-app-bg-primary border border-app-border rounded px-3 py-2 font-mono text-xs text-app-accent-green space-y-1 overflow-x-auto">
+                            <div className="whitespace-nowrap">git remote add origin ssh://git@gitrelay.vastrum.org:2222/{repositoryName}</div>
+                            <div className="whitespace-nowrap">git push origin HEAD</div>
                         </div>
                     </div>
                 </div>
