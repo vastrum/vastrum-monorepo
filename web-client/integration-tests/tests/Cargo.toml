@@ -6,7 +6,7 @@ edition = "2024"
 [dependencies]
 vastrum-abi.workspace = true
 web-client-integration-tests-abi = { path = "../abi" }
-vastrum-native-lib.workspace = true
+vastrum-native-lib = { workspace = true, features = ["localnet"] }
 vastrum-shared-types.workspace = true
 tokio = { version = "1.49.0", features = ["full", "tracing"] }
 

@@ -10,7 +10,7 @@ path = "src/lib.rs"
 [dependencies]
 vastrum-abi.workspace = true
 runtime-tests-abi = { path = "../abi" }
-vastrum-native-lib.workspace = true
+vastrum-native-lib = { workspace = true, features = ["localnet"] }
 vastrum-shared-types.workspace = true
 vastrum-rpc-client.workspace = true
 tokio = { version = "1.49.0", features = ["full", "tracing"] }
