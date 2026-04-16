@@ -29,6 +29,7 @@ function getSubdomain() {
 export function SiteView({ page_route }: { page_route: string }) {
   const [pageData, setPageData] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [rpcConnected, setRpcConnected] = useState(false);
 
   const fetchPage = useCallback(async () => {
     try {
@@ -42,6 +43,7 @@ export function SiteView({ page_route }: { page_route: string }) {
       const response = await get_page(page_route, subdomain);
 
       if (response.site_id === "" || response.content === "") {
+        setRpcConnected(true);
         setTimeout(fetchPage, 50);
       } else {
         setPageData(response.content);
@@ -71,8 +73,14 @@ export function SiteView({ page_route }: { page_route: string }) {
       {isLoading ? (
         <div className="z-1 w-full flex-1 flex flex-col items-center justify-center text-gray-600 px-6 text-center">
           <div className="w-8 h-8 border-4 border-gray-300 border-t-gray-600 rounded-full animate-spin mb-4"></div>
-          <div className="text-sm sm:text-base mb-2">Connecting to RPC, polling.. (This might take 5-20 seconds)</div>
-          <div className="text-xs sm:text-sm text-gray-400">WebRTC is required to connect to the RPC node, if it is disabled the RPC node connection will fail</div>
+          {rpcConnected ? (
+            <div className="text-sm sm:text-base mb-2">Waiting for site to deploy... (This might take 10-100 seconds) check build progress in your terminal</div>
+          ) : (
+            <>
+              <div className="text-sm sm:text-base mb-2">Connecting to RPC node... (This might take 5-20 seconds)</div>
+              <div className="text-xs sm:text-sm text-gray-400">WebRTC is required to connect to the RPC node, if it is disabled the RPC node connection will fail</div>
+            </>
+          )}
         </div>
       ) : (
         <iframe

@@ -48,6 +48,11 @@ pub fn initialize_new_project(name: String, template: String) {
     println!("Created project '{name}' with template '{template}'");
     println!("\nNext steps:");
     println!("  1. cd {name} && vastrum-cli run-dev");
+    println!();
+    println!("This starts a local node, opens the browser, and deploys");
+    println!("your contract. The site will load once deployment completes.");
+    println!();
+    println!("Docs: docs.vastrum.org");
 }
 
 #[cfg(not(madsim))]
