@@ -37,7 +37,7 @@ With Gitter your Github repo is truly yours, with Concord your Discord server is
 
 **Hosting model**
 - IPFS is a content addressed routing network, it will not host your files for you natively. You need to pay for a centralized pinning service like Pinata or self host it.
-- Vastrum is a full stack decentralized hosting services which will host your website and ensure you can access it forever once it is hosted.
+- Vastrum is a full stack decentralized hosting service which will host your website and ensure you can access it forever once it is hosted.
 
 **Trustless access**
 - All Vastrum clients are light-clients and verifies the retrieved website content hash against consensus using a JMT state hash. Most previous solutions just blindly trust the retrieved data from the gateway.
