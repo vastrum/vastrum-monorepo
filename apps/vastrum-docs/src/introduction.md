@@ -16,6 +16,18 @@ Current prototype apps built and hosted on Vastrum
 
 
 ## FAQ
+### Why?
+
+I think fundamentally in the future all websites will be hosted in a decentralized manner owned by the commons. 
+
+Centralized services get sunset with 3 months notice, old forums go offline, links rot. You have no control over centralized services and no recourse when it suddenly gets shut down. Any data you trusted them to custody is lost.
+
+Any centralized platform will eventually seek new rents and to create new forms of property and ownership, this behaviour will inevitably kill the platform. 
+
+The only way to prevent this is to decentralize everything in such a manner where the public owns and controls everything, with full stack open source forkability.
+
+With Gitter your Github repo is truly yours, with Concord your Discord server is truly yours. You have full control of your data.
+
 
 ### How is Vastrum different from IPFS and other similar decentralized website hosting services?
 
