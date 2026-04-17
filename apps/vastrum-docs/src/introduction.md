@@ -20,7 +20,9 @@ Current prototype apps built and hosted on Vastrum
 
 I think fundamentally in the future all websites will be hosted in a decentralized manner owned by the commons. 
 
-Centralized services get sunset with 3 months notice, old forums go offline, links rot. You have no control over centralized services and no recourse when it suddenly gets shut down. Any data you trusted them to custody is lost.
+Centralized services get sunset with 3 months notice, old forums go offline, links rot. 
+
+You have no control over centralized services and no recourse when it suddenly gets shut down. Any data you trusted them to custody is lost.
 
 Any centralized platform will eventually seek new rents and to create new forms of property and ownership, this behaviour will inevitably kill the platform. 
 
