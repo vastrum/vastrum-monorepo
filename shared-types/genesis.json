@@ -2,63 +2,27 @@
   "validators": [
     {
       "validator_index": 0,
-      "validator_pub_key": "3da1ca0803ca71e3199d46b66e06a5da4a2ac46c028fbe55d9ae8f5e87cda970",
-      "p2p_pub_key": "6651e3faf884a32523bb8681ed39c69969cf7e076e3d07eed0019babadfbc9bc",
+      "validator_pub_key": "c8b298d67f839f8bbe8c2d0bddc2454f9403bfcae01a9e8f71e0ca57179ef09a",
+      "p2p_pub_key": "9ac34cbc4b2d0852a6155ffc627fb248fac5b9fe92c5fec4b55e362f27ec1ffc",
       "stake": 100
     },
     {
       "validator_index": 1,
-      "validator_pub_key": "32c45541320d90c8d95a24f6aa36c22a7f6b6ee6b89ee116277ac589e6c41ffe",
-      "p2p_pub_key": "6b4b5496f0bb2a9ba259e33ec221f25480e2d57c14b4160b5051e7f2aee79c67",
-      "stake": 100
-    },
-    {
-      "validator_index": 2,
-      "validator_pub_key": "9abd2cf45dbe650bcce8ac7e82722d8b6f2f33ca7ded44cbe2ae1c0cd06487e2",
-      "p2p_pub_key": "ef0243ecdbb829d63a422edf2952ce9c9061157f0a6f22f338da721fdf4941d7",
-      "stake": 100
-    },
-    {
-      "validator_index": 3,
-      "validator_pub_key": "87b7af75d2487c0ce9b7ea731d96bdef513c1d0f1c45e1755f8a342f5b4eca1b",
-      "p2p_pub_key": "d22bbbfc513f91c80b71407c105321271cd5bd33bc035810d08023be06e34ca8",
-      "stake": 100
-    },
-    {
-      "validator_index": 4,
-      "validator_pub_key": "f5596bc5da5c799c36be105af30a872ddeb7abc59e8ad2399d9d4f2618339248",
-      "p2p_pub_key": "15a7ac2203c206b72265438696a88012f0a58b5240ea6570c3857412f85e7c96",
-      "stake": 100
-    },
-    {
-      "validator_index": 5,
-      "validator_pub_key": "bd1962c13c0147bd9010abc780b3c733a24e41a6386c7aebbb14749035d548cc",
-      "p2p_pub_key": "f927967e27cef2e628ce8d1625b8bc369a2a100b8c2a2c3a3ca7d005a46cce49",
-      "stake": 100
-    },
-    {
-      "validator_index": 6,
-      "validator_pub_key": "5343f4b88c1a3d521e0a56559838c62de3151c0666566e71001fd7499eb8884a",
-      "p2p_pub_key": "635430cf8848b5140bbff456b0a3b8e3af239049f5fe160e275238d97ebfe042",
-      "stake": 100
-    },
-    {
-      "validator_index": 7,
-      "validator_pub_key": "f1f3312e8bc9f9ddf5291363d132c38ced0fce74dc56ad07d111bf23acff7650",
-      "p2p_pub_key": "4f01a7d760213c7117e6cb88defb2b8321d032d9055892f5326afd4f2d40f497",
+      "validator_pub_key": "f65f9dfd77e10a68b0834da3497d9e90ebe1f0fe972d8210a99fea73b528702a",
+      "p2p_pub_key": "5a1b3b1014958a0159f2f8abed2e7218c9a30137f088c1a68ee4ac850944e9ad",
       "stake": 100
     }
   ],
   "bootstrap_peers": [
     {
-      "p2p_pub_key": "6651e3faf884a32523bb8681ed39c69969cf7e076e3d07eed0019babadfbc9bc",
+      "p2p_pub_key": "9ac34cbc4b2d0852a6155ffc627fb248fac5b9fe92c5fec4b55e362f27ec1ffc",
       "host": "bootstrap.vastrum.org"
     }
   ],
   "rpc_nodes": [
     {
       "host": "rpc.vastrum.org",
-      "fingerprint": "7c9478311b0dd85db4935083a0ec99b25c1704f768efe859b9b2ed05a4b51dad"
+      "fingerprint": "b8b7095fbbd9d5b4d0e3ea13a56d5a4b0970993c0f2dabbfc9785c542f62f395"
     }
   ]
 }
