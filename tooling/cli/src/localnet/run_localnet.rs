@@ -8,7 +8,7 @@ pub async fn start_run_dev() {
         return;
     }
 
-    let mut node = tokio::spawn(start_localnet());
+    let mut node = tokio::spawn(start_localnet(false));
 
     tokio::select! {
         _ = wait_for_rpc_server() => {}

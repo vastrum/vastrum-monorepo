@@ -45,7 +45,7 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
     return (
         <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
             <div className="bg-app-bg-secondary border border-app-border rounded-lg max-w-full md:max-w-2xl lg:max-w-4xl w-full max-h-[90vh] overflow-hidden relative">
-                {/* Modal Header */}
+                {}
                 <div className="flex items-center justify-between px-4 py-3 md:p-6 border-b border-app-border bg-app-bg-secondary">
                     <h2 className="text-lg md:text-xl font-semibold text-app-text-primary">{title}</h2>
                     <button
@@ -57,12 +57,12 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
                     </button>
                 </div>
 
-                {/* Modal Content */}
+                {}
                 <div ref={contentRef} className="overflow-y-auto scrollbar-thin max-h-[calc(90vh-88px)]">
                     {children}
                 </div>
 
-                {/* Scroll Indicator */}
+                {}
                 {showScrollIndicator && (
                     <div className="absolute bottom-0 left-0 right-0 pointer-events-none">
                         <div className="h-20 bg-gradient-to-t from-app-bg-secondary via-app-bg-secondary/60 to-transparent" />

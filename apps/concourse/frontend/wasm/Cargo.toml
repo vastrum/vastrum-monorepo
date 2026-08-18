@@ -22,8 +22,6 @@ vastrum-frontend-lib = { version = "0.1.0", path = "../../../../tooling/vastrum-
 vastrum-abi = { version = "0.1.0", path = "../../../../runtime/vastrum-abi" }
 concourse-abi = { path = "../../abi" }
 
-
-
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 vastrum-native-lib = { version = "0.1.0", path = "../../../../tooling/native-lib" }
 tokio = { version = "1.49.0", features = ["full", "tracing"] }
@@ -48,3 +46,4 @@ features = [
     "History",
     "PopStateEvent",
 ]
+

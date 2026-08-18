@@ -11,7 +11,7 @@ interface CommitsTabProps {
 function CommitsTab({ commits = [], sourceBranch }: CommitsTabProps): React.JSX.Element {
     return (
         <div className="lg:col-span-2">
-            {/* Commits Header */}
+            {}
             <div className="bg-app-bg-secondary border border-app-border rounded-lg overflow-hidden mb-4">
                 <div className="px-4 py-3 border-b border-app-border">
                     <h3 className="font-semibold">
@@ -19,7 +19,7 @@ function CommitsTab({ commits = [], sourceBranch }: CommitsTabProps): React.JSX.
                     </h3>
                 </div>
 
-                {/* Commits List */}
+                {}
                 <div>
                     {commits.map((commit, index) => (
                         <div
@@ -41,17 +41,8 @@ function CommitsTab({ commits = [], sourceBranch }: CommitsTabProps): React.JSX.
                                 </div>
                             </div>
 
-                            {/* Commit details */}
-                            {/*commit.parent_ids.length > 0 && (
-                                <div className="mt-3 ml-13 flex items-center gap-4 text-xs text-app-text-secondary">
-                                    <span className="flex items-center gap-1">
-                                        <svg viewBox="0 0 16 16" className="w-3 h-3 fill-current">
-                                            <path d="M1.5 3.25a2.25 2.25 0 1 1 3 2.122v5.256a2.251 2.251 0 1 1-1.5 0V5.372A2.25 2.25 0 0 1 1.5 3.25Z"></path>
-                                        </svg>
-                                        {commit.parent_ids.length} {commit.parent_ids.length === 1 ? 'parent' : 'parents'}
-                                    </span>
-                                </div>
-                            )*/}
+                            {}
+                            {}
 
                         </div>
                     ))}

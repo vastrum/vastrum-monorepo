@@ -15,7 +15,7 @@ function Header(): React.JSX.Element {
                     Gitter
                 </Link>
 
-                {/* Desktop navigation */}
+                {}
                 <nav className="hidden lg:flex items-center gap-6 ml-auto">
                     <Link
                         to="/"
@@ -29,7 +29,7 @@ function Header(): React.JSX.Element {
                     </Link>
                 </nav>
 
-                {/* Mobile menu button */}
+                {}
                 <button
                     onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                     className="lg:hidden ml-auto p-2 text-app-text-primary hover:bg-app-hover rounded-md transition-colors"
@@ -40,7 +40,7 @@ function Header(): React.JSX.Element {
                 </button>
             </div>
 
-            {/* Mobile menu dropdown */}
+            {}
             {isMobileMenuOpen && (
                 <nav className="lg:hidden mt-3 pt-3 border-t border-app-border">
                     <div className="flex flex-col gap-2">

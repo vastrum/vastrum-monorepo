@@ -149,7 +149,7 @@ use super::ProofVerificationError;
 use crate::borsh::BorshExt;
 use crate::crypto::ed25519;
 use crate::crypto::sha256::Sha256Digest;
-use crate::frontend::frontend_data::ValidatorInfo;
+use crate::webclient::webclient_data::ValidatorInfo;
 use crate::limits::{MAX_PROOF_AGE_SECS, MAX_PROOF_FUTURE_SECS};
 use crate::types::consensus::{ValidatorVoteData, VoteType};
 use crate::types::rpc::types::{GetKeyValueResponse, PageResponse, StateProof};

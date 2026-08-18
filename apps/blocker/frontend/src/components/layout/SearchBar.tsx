@@ -11,15 +11,12 @@ function SearchBar() {
         const q = query.trim();
         if (!q) return;
 
-        // Number = block height
         if (/^\d+$/.test(q)) {
             navigate(`/block/${q}`);
         }
-        // 64 char hex = tx hash or account pubkey (try tx first via UI)
         else if (/^[0-9a-f]{64}$/i.test(q)) {
             navigate(`/tx/${q}`);
         }
-        // base32 = site_id or block hash
         else if (/^[a-z2-7]{52}$/i.test(q)) {
             navigate(`/site/${q}`);
         }

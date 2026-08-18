@@ -417,5 +417,5 @@ use vastrum_contract_macros::{
 };
 use vastrum_runtime_lib::{
     Ed25519PublicKey, KvMap, KvVecBTree,
-    runtime::{block_time, message_sender},
+    runtime::{self, block_time, message_sender},
 };

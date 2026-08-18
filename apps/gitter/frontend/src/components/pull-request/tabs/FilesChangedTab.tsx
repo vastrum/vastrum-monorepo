@@ -17,7 +17,7 @@ function DiffContent({ file }: { file: FileDiff }): React.JSX.Element {
 
     return (
         <div className="inline-block min-w-full">
-            {/* Unified diff header */}
+            {}
             <div className="bg-app-bg-tertiary border-b border-app-border px-3 py-1 text-app-text-secondary w-full">
                 @@ -{(() => {
                     const firstChange = file.diff.findIndex(l => l.line_type !== 'Context');
@@ -85,7 +85,7 @@ function FilesChangedTab({ fileChanges }: FilesChangedTabProps): React.JSX.Eleme
 
     return (
         <div className="lg:col-span-2 space-y-4 md:space-y-5">
-            {/* Files Summary */}
+            {}
             <div className="bg-app-bg-secondary border border-app-border rounded-lg p-4 md:p-5">
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <h3 className="font-semibold text-sm md:text-base">
@@ -100,11 +100,11 @@ function FilesChangedTab({ fileChanges }: FilesChangedTabProps): React.JSX.Eleme
                 </div>
             </div>
 
-            {/* File Changes */}
+            {}
             {files.length > 0 ? (
                 files.map((file, fileIndex) => (
                     <div key={fileIndex} className="bg-app-bg-secondary border border-app-border rounded-lg overflow-hidden text-xs md:text-sm">
-                        {/* File Header */}
+                        {}
                         <div className="px-3 py-2 md:px-4 md:py-3 bg-app-bg-tertiary border-b border-app-border flex items-center justify-between gap-2 md:gap-4">
                             <div className="flex items-center gap-1 md:gap-2 flex-1 min-w-0">
                                 {getFileIcon(file.status)}
@@ -123,7 +123,7 @@ function FilesChangedTab({ fileChanges }: FilesChangedTabProps): React.JSX.Eleme
                             </div>
                         </div>
 
-                        {/* Diff Content */}
+                        {}
                         <div className="font-mono text-xs md:text-sm overflow-x-auto overflow-y-hidden scrollbar-thin">
                             <DiffContent file={file} />
                         </div>

@@ -1,5 +1,3 @@
-//uses http fetch to get data
-//__ORIGIN__ and similar are replaced with actual values by fn build_worker_js()
 
 const origin = '__ORIGIN__';
 const execution_rpc = '__EXECUTION_RPC__';

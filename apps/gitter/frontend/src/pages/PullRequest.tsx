@@ -98,7 +98,7 @@ function PullRequest(): React.JSX.Element {
 
     return (
         <div key={pr.id} className="max-w-7xl mx-auto px-5 py-5 md:px-6 md:py-6">
-            {/* Breadcrumb */}
+            {}
             <div className="flex items-center gap-2 mb-3 md:mb-4 text-xs md:text-sm overflow-x-auto scrollbar-thin pb-1">
                 <Link to={`/repo/${repoId}`} className="text-app-accent-blue hover:underline whitespace-nowrap flex-shrink-0">{repoId}</Link>
                 <span className="text-app-text-secondary flex-shrink-0">/</span>
@@ -107,7 +107,7 @@ function PullRequest(): React.JSX.Element {
                 <span className="text-app-text-secondary whitespace-nowrap flex-shrink-0">#{pr.id}</span>
             </div>
 
-            {/* PR Header */}
+            {}
             <div className="mb-4 md:mb-6">
                 <div className="flex items-start gap-3 md:gap-4 mb-3 md:mb-4">
                     <h1 className="text-xl md:text-2xl lg:text-3xl font-semibold flex-1">
@@ -124,7 +124,7 @@ function PullRequest(): React.JSX.Element {
                 </div>
             </div>
 
-            {/* Tabs */}
+            {}
             <div className="border-b border-app-border mb-4 md:mb-6">
                 <div className="flex gap-0 overflow-x-auto scrollbar-thin">
                     <button
@@ -153,7 +153,7 @@ function PullRequest(): React.JSX.Element {
                 </div>
             </div>
 
-            {/* Main Content */}
+            {}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 md:gap-6">
                 <div className="lg:col-span-2">
                     {activeTab === 'conversation' && <ConversationTab pr={pr} prDetail={prDetail} repoId={repoId} onComment={handleComment} onMerge={handleMerge} />}

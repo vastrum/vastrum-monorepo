@@ -48,5 +48,8 @@ async fn main() {
     println!();
     println!("=== Deploy complete ===");
     println!("site_id: {}", client.site_id());
-    println!("admin_key: {admin_key}");
+    vastrum_native_lib::deployers::keys::write_deploy_keys(
+        "concourse",
+        &format!("site_id: {}\nadmin_key: {admin_key}\n", client.site_id()),
+    );
 }

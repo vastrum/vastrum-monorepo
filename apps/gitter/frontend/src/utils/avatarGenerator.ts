@@ -1,4 +1,3 @@
-// Predefined gradient combinations for avatars
 const gradients = [
     'from-purple-600 to-purple-800',
     'from-blue-400 to-cyan-400',
@@ -12,22 +11,16 @@ const gradients = [
     'from-cyan-400 to-blue-400',
 ];
 
-// Simple hash function to generate consistent index from string
 function hashString(str: string): number {
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
         const char = str.charCodeAt(i);
         hash = ((hash << 5) - hash) + char;
-        hash = hash & hash; // Convert to 32-bit integer
+        hash = hash & hash;
     }
     return Math.abs(hash);
 }
 
-/**
- * Generates a consistent avatar gradient based on author name
- * @param author - The author's username
- * @returns A Tailwind gradient class string
- */
 export function generateAvatarGradient(author: string): string {
     const index = hashString(author) % gradients.length;
     return gradients[index];

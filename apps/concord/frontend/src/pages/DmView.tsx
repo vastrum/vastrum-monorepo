@@ -36,12 +36,10 @@ function DmView(): React.JSX.Element {
 
     useEffect(() => { loadDms(); }, []);
 
-    // Poll DM list (~10s)
     useEffect(() => {
         const poll = async () => {
             const myDms = await get_my_dms(BigInt(200), BigInt(0));
             setDms(myDms);
-            // Keep active DM marked as read
             if (dmKey && otherUser) markDmRead(otherUser);
         };
         const interval = setInterval(poll, 10_000);
@@ -54,7 +52,6 @@ function DmView(): React.JSX.Element {
         setMessages(msgs);
     }, [otherUser]);
 
-    // Resolve other user from dmKey + mark as read
     useEffect(() => {
         if (!dmKey || !myPubkey) return;
         const parts = dmKey.split('_');
@@ -100,7 +97,7 @@ function DmView(): React.JSX.Element {
                 />
             </div>
 
-            {/* Chat area */}
+            {}
             <div className="flex-1 flex flex-col bg-dc-bg-primary min-w-0">
                 <div className="h-12 flex items-center px-4 border-b border-dc-bg-tertiary shadow-sm flex-shrink-0">
                     <button onClick={openSidebar} className="mr-2 text-dc-text-muted hover:text-dc-text md:hidden">

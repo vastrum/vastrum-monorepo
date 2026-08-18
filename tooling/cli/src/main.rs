@@ -13,6 +13,7 @@ enum Commands {
         template: String,
     },
     RunDev {},
+    LocalnetNode {},
     StartNode {
         #[arg(long)]
         keystore: Option<PathBuf>,
@@ -50,6 +51,7 @@ async fn main() -> Result<()> {
             scaffold::initialize_new_project(name, template);
         }
         Commands::RunDev {} => start_run_dev().await,
+        Commands::LocalnetNode {} => vastrum_node::start_localnet(true).await,
         Commands::StartNode { keystore, rpc } => node::start_node(keystore, rpc).await,
         Commands::GenerateKeys { output, wallet_key } => node::generate_keys(output, wallet_key)?,
         Commands::ShowKeys { keystore } => node::show_keys(keystore),

@@ -1,4 +1,4 @@
-use crate::frontend::frontend_data::ValidatorInfo;
+use crate::webclient::webclient_data::ValidatorInfo;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 

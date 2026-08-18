@@ -102,9 +102,15 @@ impl RpcProvider for NativeRpcClient {
             throwaway_private_key,
             recent_block_height,
         );
-        self.http.submit_transaction(transaction.encode()).await.unwrap();
+        let transaction_bytes = transaction.encode();
+        self.http.submit_transaction(transaction_bytes.clone()).await.unwrap();
 
-        let sent_tx = NativeSentTx::new(transaction.calculate_txhash(), self.http.clone());
+        let sent_tx = NativeSentTx::new(
+            transaction.calculate_txhash(),
+            self.http.clone(),
+            transaction_bytes,
+            recent_block_height,
+        );
         return sent_tx;
     }
 
@@ -124,9 +130,15 @@ impl RpcProvider for NativeRpcClient {
             account_private_key,
             recent_block_height,
         );
-        self.http.submit_transaction(transaction.encode()).await.unwrap();
+        let transaction_bytes = transaction.encode();
+        self.http.submit_transaction(transaction_bytes.clone()).await.unwrap();
 
-        let sent_tx = NativeSentTx::new(transaction.calculate_txhash(), self.http.clone());
+        let sent_tx = NativeSentTx::new(
+            transaction.calculate_txhash(),
+            self.http.clone(),
+            transaction_bytes,
+            recent_block_height,
+        );
         return sent_tx;
     }
 }
@@ -134,11 +146,32 @@ impl RpcProvider for NativeRpcClient {
 pub struct NativeSentTx {
     tx_hash: Sha256Digest,
     http: NativeHttpClient,
+    transaction_bytes: Vec<u8>,
+    tx_created_at_block_height: u64,
 }
 
 impl NativeSentTx {
-    pub fn new(tx_hash: Sha256Digest, http: NativeHttpClient) -> Self {
-        Self { tx_hash, http }
+    pub fn new(
+        tx_hash: Sha256Digest,
+        http: NativeHttpClient,
+        transaction_bytes: Vec<u8>,
+        tx_created_at_block_height: u64,
+    ) -> Self {
+        Self { tx_hash, http, transaction_bytes, tx_created_at_block_height }
+    }
+
+    async fn rebroadcast(&self) {
+        let _ = self.http.submit_transaction(self.transaction_bytes.clone()).await;
+    }
+
+    async fn wait_for_next_block(&self) {
+        let Ok(height) = self.http.get_latest_block_height().await else { return };
+        loop {
+            if self.http.get_latest_block_height().await.is_ok_and(|h| h > height) {
+                return;
+            }
+            tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+        }
     }
 }
 
@@ -152,14 +185,31 @@ impl SentTxBehavior for NativeSentTx {
     }
 
     async fn await_confirmation(&self) {
-        NativeTxPoller::new(self.tx_hash).await_confirmation().await;
+        let mut last_rebroadcast_height = self.tx_created_at_block_height;
+        loop {
+            if self.check_if_included().await {
+                self.wait_for_next_block().await;
+                return;
+            }
+            if let Ok(height) = self.http.get_latest_block_height().await {
+                let pow_expired = height > self.tx_created_at_block_height + VALIDITY_WINDOW;
+                if pow_expired {
+                    return;
+                }
+                if height >= last_rebroadcast_height + 4 {
+                    self.rebroadcast().await;
+                    last_rebroadcast_height = height;
+                }
+            }
+            tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+        }
     }
 }
 
 use std::time::SystemTime;
 
 use crate::{RpcError, RpcProvider, SentTxBehavior};
-use vastrum_native_lib::{NativeHttpClient, NativeTxPoller};
+use vastrum_native_lib::NativeHttpClient;
 
 impl From<vastrum_native_lib::error::HttpError> for RpcError {
     fn from(e: vastrum_native_lib::error::HttpError) -> Self {
@@ -170,6 +220,7 @@ use vastrum_shared_types::{
     borsh::BorshExt,
     crypto::{ed25519, sha256::Sha256Digest},
     genesis::genesis_epoch_state,
+    limits::VALIDITY_WINDOW,
     proof_verification::verify_keyvalue_proof,
     transactioning::transaction_generator::build_call_transaction,
     types::rpc::types::GetKeyValueResult,

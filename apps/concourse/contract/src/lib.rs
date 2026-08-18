@@ -125,4 +125,4 @@ struct Category {
 }
 
 use vastrum_contract_macros::{authenticated, constructor, contract_methods, contract_state, contract_type};
-use vastrum_runtime_lib::{Ed25519PublicKey, KvMap, KvVecBTree};
+use vastrum_runtime_lib::{Ed25519PublicKey, KvMap, KvVecBTree, runtime};

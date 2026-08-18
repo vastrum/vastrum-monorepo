@@ -1,5 +1,5 @@
 use vastrum_contract_macros::{constructor, contract_methods, contract_state, contract_type};
-use vastrum_runtime_lib::{KvBTree, KvMap, KvVec, KvVecBTree};
+use vastrum_runtime_lib::{KvBTree, KvMap, KvVec, KvVecBTree, runtime};
 
 #[contract_type]
 struct ForumPost {

@@ -47,18 +47,18 @@ const routes = [
     {
         element: <Layout />,
         children: [
-            { path: '/', element: <DmList /> },
-            { path: '/server/:serverId', element: <ServerView /> },
-            { path: '/server/:serverId/:channelId', element: <ServerView /> },
-            { path: '/join/:serverId/:serverKey', element: <JoinServer /> },
-            { path: '/dms', element: <DmList /> },
-            { path: '/dms/:dmKey', element: <DmView /> },
+            { path: '/', element: <DmList />, handle: { title: 'Direct messages' } },
+            { path: '/server/:serverId', element: <ServerView />, handle: { title: 'Server' } },
+            { path: '/server/:serverId/:channelId', element: <ServerView />, handle: { title: 'Channel' } },
+            { path: '/join/:serverId/:serverKey', element: <JoinServer />, handle: { title: 'Join server' } },
+            { path: '/dms', element: <DmList />, handle: { title: 'Direct messages' } },
+            { path: '/dms/:dmKey', element: <DmView />, handle: { title: 'Direct message' } },
             { path: '*', element: <Navigate to="/" replace /> },
         ],
     },
 ];
 
-export const router = await createVastrumReactRouter(routes, createMemoryRouter);
+export const router = await createVastrumReactRouter(routes, createMemoryRouter, { titleTemplate: '%s - Concord', defaultTitle: 'Concord' });
 
 function App() {
     return <RouterProvider router={router} />;

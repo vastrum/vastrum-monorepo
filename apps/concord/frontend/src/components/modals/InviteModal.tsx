@@ -19,7 +19,6 @@ function InviteModal({ isOpen, onClose, serverId, serverName }: InviteModalProps
         }
     }, [isOpen, serverId]);
 
-    // concord
     const inviteLink = serverKeyHex
         ? `https://x647757zpbejyzxcw7ruqcju32otdmi7vphrg36vhhzglkjccaqq.vastrum.net/join/${serverId}/${serverKeyHex}`
         : `https://x647757zpbejyzxcw7ruqcju32otdmi7vphrg36vhhzglkjccaqq.vastrum.net/join/${serverId}`;

@@ -8,7 +8,7 @@ import { walkTreePath } from '../../utils/fileHelpers';
 
 interface FileExplorerProps {
     repoData: GetRepoDetail;
-    initialPath: string[];  // ["src", "components", "Button.tsx"]
+    initialPath: string[];
 }
 
 function FileExplorer({ repoData, initialPath }: FileExplorerProps): React.JSX.Element {
@@ -19,7 +19,6 @@ function FileExplorer({ repoData, initialPath }: FileExplorerProps): React.JSX.E
 
     const { git_repo, top_level_files } = repoData;
 
-    // Walk the path to find and select the entry (only on initial load or browser back/forward)
     useEffect(() => {
         if (userNavigated.current) {
             userNavigated.current = false;
@@ -54,7 +53,7 @@ function FileExplorer({ repoData, initialPath }: FileExplorerProps): React.JSX.E
 
     return (
         <div className="space-y-3 md:space-y-4">
-            {/* Mobile sidebar toggle button */}
+            {}
             <button
                 onClick={() => setIsSidebarOpen(!isSidebarOpen)}
                 className="md:hidden flex items-center gap-2 px-3 py-2 bg-app-bg-secondary border border-app-border rounded-lg text-app-text-primary hover:bg-app-hover transition-colors"
@@ -66,7 +65,7 @@ function FileExplorer({ repoData, initialPath }: FileExplorerProps): React.JSX.E
             </button>
 
             <div className="flex flex-col lg:flex-row gap-4 md:gap-6 lg:items-start">
-                {/* File tree sidebar */}
+                {}
                 <div className={`${isSidebarOpen ? 'block' : 'hidden'} md:block w-full md:w-64 lg:w-[300px] flex-shrink-0 bg-app-bg-secondary border border-app-border rounded-lg overflow-hidden lg:self-start`}>
                     <FileTree
                         repoName={git_repo.name}
@@ -77,7 +76,7 @@ function FileExplorer({ repoData, initialPath }: FileExplorerProps): React.JSX.E
                     />
                 </div>
 
-                {/* File preview */}
+                {}
                 <div className="flex-1 min-w-0 bg-app-bg-secondary border border-app-border rounded-lg overflow-hidden">
                     <FilePreview entry={selectedEntry} />
                 </div>

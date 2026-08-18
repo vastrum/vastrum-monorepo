@@ -42,7 +42,7 @@ function WelcomeModal({ isOpen, onClose }: WelcomeModalProps): React.JSX.Element
                     </a>
                 </div>
 
-                {/* Close Button */}
+                {}
                 <div className="flex justify-end pt-2">
                     <button onClick={onClose} className="btn-primary">
                         Close

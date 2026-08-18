@@ -69,7 +69,7 @@ function computeKeystoreUrl(): URL | null {
 
   if (parts.length <= 2) return null;
 
-  const root = parts.slice(-2).join(".");
+  const root = parts.slice(1).join(".");
   return new URL(`${protocol}//${root}${portPart}/keystore.html`);
 }
 

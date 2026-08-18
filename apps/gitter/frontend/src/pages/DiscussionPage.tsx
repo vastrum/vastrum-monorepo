@@ -69,7 +69,7 @@ function DiscussionPage(): React.JSX.Element {
 
     return (
         <div key={discussion.id} className="max-w-7xl mx-auto px-5 py-5 md:px-6 md:py-6">
-            {/* Breadcrumb */}
+            {}
             <div className="flex items-center gap-2 mb-3 md:mb-4 text-xs md:text-sm overflow-x-auto scrollbar-thin pb-1">
                 <Link to={`/repo/${repoId}`} className="text-app-accent-blue hover:underline whitespace-nowrap flex-shrink-0">{repoId}</Link>
                 <span className="text-app-text-secondary flex-shrink-0">/</span>
@@ -78,7 +78,7 @@ function DiscussionPage(): React.JSX.Element {
                 <span className="text-app-text-secondary whitespace-nowrap flex-shrink-0">#{discussion.id}</span>
             </div>
 
-            {/* Discussion Header */}
+            {}
             <div className="mb-4 md:mb-6">
                 <div className="flex items-start gap-3 md:gap-4 mb-3 md:mb-4">
                     <h1 className="text-xl md:text-2xl lg:text-3xl font-semibold flex-1">
@@ -94,11 +94,11 @@ function DiscussionPage(): React.JSX.Element {
                 </div>
             </div>
 
-            {/* Main Content */}
+            {}
             <div className="max-w-4xl">
-                {/* Timeline */}
+                {}
                 <div className="space-y-4 md:space-y-6">
-                    {/* Initial Discussion */}
+                    {}
                     <div className="flex gap-3 md:gap-4">
                         <div className={`w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br ${generateAvatarGradient(discussion.from)} flex-shrink-0`} />
                         <div className="flex-1 min-w-0">
@@ -120,7 +120,7 @@ function DiscussionPage(): React.JSX.Element {
                         </div>
                     </div>
 
-                    {/* Replies */}
+                    {}
                     {replies.map((reply, index) => (
                         <div key={index} className="flex gap-3 md:gap-4">
                             <div className={`w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br ${generateAvatarGradient(reply.from)} flex-shrink-0`} />
@@ -142,7 +142,7 @@ function DiscussionPage(): React.JSX.Element {
 
                     <Pagination currentPage={replyPage} totalPages={totalReplyPages} onPageChange={setReplyPage} />
 
-                    {/* Comment Form */}
+                    {}
                     <div className="flex gap-3 md:gap-4">
                         <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-app-accent-purple to-app-accent-blue flex-shrink-0" />
                         <div className="flex-1 min-w-0">

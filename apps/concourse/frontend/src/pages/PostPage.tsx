@@ -149,7 +149,7 @@ function PostPage(): React.JSX.Element {
                 border: '1px solid #e1e3e5',
                 padding: '0 20px 20px',
             }}>
-                {/* Topic title */}
+                {}
                 <h1 style={{
                     fontSize: 24,
                     fontWeight: 400,
@@ -161,9 +161,9 @@ function PostPage(): React.JSX.Element {
                     {post.title}
                 </h1>
 
-                {/* Posts */}
+                {}
                 <div style={{ borderTop: '2px solid #e9e9e9' }}>
-                    {/* Original post */}
+                    {}
                     <PostItem
                         author={post.from}
                         content={post.content}
@@ -174,7 +174,7 @@ function PostPage(): React.JSX.Element {
                         deleteConfirming={confirmDelete === -1}
                     />
 
-                    {/* Replies */}
+                    {}
                     {replies.map((reply, index) => (
                         <PostItem
                             key={reply.id}
@@ -195,7 +195,7 @@ function PostPage(): React.JSX.Element {
                     onPageChange={setReplyPage}
                 />
 
-                {/* Reply button or box */}
+                {}
                 <div style={{ padding: '20px 0 0' }}>
                 {!showReplyBox ? (
                     <button

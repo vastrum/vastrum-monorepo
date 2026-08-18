@@ -52,6 +52,7 @@ impl ValidatorStateMachine {
             };
             let state = self.local_validator_state(self.current_height, self.current_round);
             state.leader_state = LeaderState::HasProposedBlock;
+            self.last_proposal_at = Instant::now();
             self.networking.broadcast_proposal(&block_to_propose);
             self.handle_proposal_received(block_to_propose);
         }
@@ -770,10 +771,16 @@ impl ValidatorStateMachine {
         } else {
             //propose new block
             let previous_block_hash = self.latest_finalized_block.calculate_hash();
+
+            let timestamp = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
+            let mut fuel_packer = self.execution.get_block_fuel_packer(timestamp);
             let mut transactions = Vec::new();
             let mut total_size = 0;
             for tx in self.mempool.values() {
                 if transactions.len() >= MAX_TRANSACTIONS_PER_BLOCK {
+                    break;
+                }
+                if !fuel_packer.has_room_for_another_tx() {
                     break;
                 }
                 if !self.execution.verify_pow(tx) {
@@ -783,11 +790,15 @@ impl ValidatorStateMachine {
                 if total_size + tx_size > MAX_BLOCK_SIZE {
                     continue;
                 }
+                fuel_packer.charge_for_another_tx(tx);
                 total_size += tx_size;
                 transactions.push(tx.clone());
             }
 
-            let timestamp = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
+            let is_heartbeat_due = self.last_proposal_at.elapsed() >= BLOCK_HEARTBEAT_INTERVAL;
+            if transactions.is_empty() && !is_heartbeat_due {
+                return None;
+            }
 
             let previous_block_state_root = self.execution.latest_state_root();
             let block = Block {
@@ -1159,6 +1170,7 @@ impl ValidatorStateMachine {
         ValidatorStateMachine {
             last_sync_time: Instant::now(),
             last_time_pushed_votes: Instant::now(),
+            last_proposal_at: Instant::now(),
             current_height,
             latest_finalized_block: initial_state.block,
             current_round: restored_round,
@@ -1197,6 +1209,8 @@ pub struct ValidatorStateMachine {
     latest_finalized_block: Block,
     entered_round_at: Instant,
     slot_state: HashMap<SlotHeight, SlotState>,
+
+    last_proposal_at: Instant,
 
     last_sync_time: Instant,
     last_time_pushed_votes: Instant,
@@ -1407,9 +1421,9 @@ pub struct NodeConfig {
     pub peers: Vec<KnownPeer>,
     pub run_rpc_node: bool,
     pub genesis_epoch_state: EpochState,
-    pub rpc_nodes: Vec<vastrum_shared_types::frontend::frontend_data::RpcNodeEndpoint>,
+    pub rpc_nodes: Vec<vastrum_shared_types::webclient::webclient_data::RpcNodeEndpoint>,
 }
-use crate::utils::limits::{LONG_ROUND_TIMEOUT, ROUND_TIMEOUT};
+use crate::utils::limits::{BLOCK_HEARTBEAT_INTERVAL, LONG_ROUND_TIMEOUT, ROUND_TIMEOUT};
 use crate::{
     consensus::types::{
         Block, Certificate, FinalizationCertificate, FinalizedBlock, JustifyCertificate, Proposal,

@@ -33,7 +33,6 @@ function Home() {
         const totalTxs = Number(await get_tx_count());
         setTxCount(totalTxs);
 
-        // Fetch latest page of tx hashes, then resolve details
         if (totalTxs > 0) {
             const lastPage = Math.floor((totalTxs - 1) / PAGE_SIZE);
             const hashes = await get_txs_page(BigInt(lastPage));
@@ -53,7 +52,7 @@ function Home() {
 
     return (
         <div>
-            {/* Stats */}
+            {}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
                 <div className="bg-blocker-surface border border-blocker-border rounded-lg p-4">
                     <div className="text-blocker-text-muted text-xs uppercase tracking-wider mb-1">Block Height</div>
@@ -70,7 +69,7 @@ function Home() {
             </div>
 
             <div className="space-y-4">
-                {/* Recent Blocks Table */}
+                {}
                 <div className="bg-blocker-surface border border-blocker-border rounded-lg overflow-x-auto">
                     <div className="px-4 py-3 border-b border-blocker-border flex items-center justify-between">
                         <h2 className="text-sm font-medium text-blocker-text-primary">Latest Blocks</h2>
@@ -107,7 +106,7 @@ function Home() {
                     )}
                 </div>
 
-                {/* Latest Transactions Table */}
+                {}
                 <div className="bg-blocker-surface border border-blocker-border rounded-lg overflow-x-auto">
                     <div className="px-4 py-3 border-b border-blocker-border flex items-center justify-between">
                         <h2 className="text-sm font-medium text-blocker-text-primary">Latest Transactions</h2>

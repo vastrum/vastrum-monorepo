@@ -27,7 +27,6 @@ function AccountPage() {
         const count = Number(await get_account_tx_count(pubkey));
         setTxCount(count);
 
-        // Calculate reverse page (latest txs first)
         const totalPages = Math.ceil(count / PAGE_SIZE);
         const reversePage = Math.max(0, totalPages - 1 - p);
 

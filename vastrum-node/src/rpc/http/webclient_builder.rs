@@ -1,35 +1,35 @@
 #[cfg(not(madsim))]
 #[derive(rust_embed::RustEmbed)]
 #[folder = "../web-client/app/dist/"]
-pub struct FrontendAssets;
+pub struct WebClientAssets;
 
 #[derive(Clone)]
-pub struct Frontend {
+pub struct WebClient {
     pub html: String,
     pub compressed_html: Arc<Vec<u8>>,
     pub compressed_assets: Arc<HashMap<String, (Vec<u8>, String)>>,
 }
 
-/// Build the frontend HTML (with injected frontend data) and pre-compress all assets with brotli.
-pub async fn build_frontend(rpc_nodes: Vec<RpcNodeEndpoint>, epoch_state: &EpochState) -> Frontend {
+/// Build the web-client HTML (with injected web-client data) and pre-compress all assets with brotli.
+pub async fn build_webclient(rpc_nodes: Vec<RpcNodeEndpoint>, epoch_state: &EpochState) -> WebClient {
     let (html, compressed_html) = build_index_html(rpc_nodes, epoch_state).await;
     let compressed_assets = brotli_compress_static_assets();
-    Frontend { html, compressed_html, compressed_assets }
+    WebClient { html, compressed_html, compressed_assets }
 }
 
 async fn build_index_html(
     rpc_nodes: Vec<RpcNodeEndpoint>,
     epoch_state: &EpochState,
 ) -> (String, Arc<Vec<u8>>) {
-    let file = FrontendAssets::get("index.html").unwrap();
+    let file = WebClientAssets::get("index.html").unwrap();
     let raw_html = String::from_utf8_lossy(&file.data);
     let helios_checkpoint = fetch_finalized_checkpoint().await;
-    let html = inject_frontend_data(&raw_html, rpc_nodes, helios_checkpoint, epoch_state);
+    let html = inject_webclient_data(&raw_html, rpc_nodes, helios_checkpoint, epoch_state);
     let compressed_html = Arc::new(brotli_compress(html.as_bytes()));
     (html, compressed_html)
 }
 
-fn inject_frontend_data(
+fn inject_webclient_data(
     html: &str,
     rpc_nodes: Vec<RpcNodeEndpoint>,
     helios_checkpoint: String,
@@ -48,20 +48,20 @@ fn inject_frontend_data(
     }
     let total_validator_stake = epoch_state.total_validator_stake;
 
-    let frontend_data =
-        FrontendData { rpc_nodes, helios_checkpoint, genesis_validators, total_validator_stake };
-    let encoded = serde_json::to_string(&frontend_data).unwrap();
-    html.replace("</head>", &format!(r#"<script type="application/json" id="__frontendData">{encoded}</script></head>"#))
+    let webclient_data =
+        WebClientData { rpc_nodes, helios_checkpoint, genesis_validators, total_validator_stake };
+    let encoded = serde_json::to_string(&webclient_data).unwrap();
+    html.replace("</head>", &format!(r#"<script type="application/json" id="__webclientData">{encoded}</script></head>"#))
 }
 
 fn brotli_compress_static_assets() -> Arc<HashMap<String, (Vec<u8>, String)>> {
     let mut assets: HashMap<String, (Vec<u8>, String)> = HashMap::new();
-    for path in FrontendAssets::iter() {
+    for path in WebClientAssets::iter() {
         let is_index = &*path == "index.html";
         if is_index {
             continue;
         }
-        if let Some(file) = FrontendAssets::get(&path) {
+        if let Some(file) = WebClientAssets::get(&path) {
             let mime = mime_guess::from_path(&*path).first_or_octet_stream().to_string();
             assets.insert(path.to_string(), (brotli_compress(&file.data), mime));
         }
@@ -72,6 +72,6 @@ fn brotli_compress_static_assets() -> Arc<HashMap<String, (Vec<u8>, String)>> {
 use super::helios_checkpoint::fetch_finalized_checkpoint;
 use crate::consensus::validator_state_machine::EpochState;
 use vastrum_shared_types::compression::brotli::brotli_compress;
-use vastrum_shared_types::frontend::frontend_data::{FrontendData, RpcNodeEndpoint, ValidatorInfo};
+use vastrum_shared_types::webclient::webclient_data::{RpcNodeEndpoint, ValidatorInfo, WebClientData};
 use std::collections::HashMap;
 use std::sync::Arc;

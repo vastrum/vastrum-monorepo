@@ -11,9 +11,9 @@ pub struct ValidatorInfo {
     pub stake: u64,
 }
 
-/// Data injected by the node into the served HTML via `window.__frontendData`.
+/// Data injected by the node into the served HTML via `window.__webclientData`.
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct FrontendData {
+pub struct WebClientData {
     pub rpc_nodes: Vec<RpcNodeEndpoint>,
     pub helios_checkpoint: String,
     pub genesis_validators: HashMap<u64, ValidatorInfo>,

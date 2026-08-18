@@ -98,7 +98,6 @@ export const PageBreaks = Extension.create({
                     });
                     resizeObserver.observe(view.dom);
 
-                    // Initial calculation after first render
                     recalculate();
 
                     return {

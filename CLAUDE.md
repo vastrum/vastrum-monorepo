@@ -53,7 +53,7 @@ cd runtime/runtime-benchmark && cargo run --release  # runtime performance bench
 - **`web-client/`** - browser client:
   - `app/` - React+Vite frontend + `wasm/` WASM client crate
   - `helios-worker/` - Helios Ethereum light client WASM worker
-  - `integration-tests/` - iframe RPC and Helios integration tests
+  - `integration-tests/` - iframe RPC and Helios integration tests, all browser integrations such as titles and so on
 - **`webrtc-direct/`** - WebRTC DataChannel transport (server + client + SDP + chunking)
 - **`apps/`** - dApps:
   - `gitter` - git repo hosting (repos, PRs, issues, discussions, SHA1-based object storage)
@@ -99,6 +99,8 @@ Contracts are Rust compiled to WASM. Key macros:
 - **Serialization:** Borsh for all consensus/network types via `BorshExt` trait (`.encode()` / `Type::decode()`)
 - **P2P:** actor model - no mutexes on I/O, separate reader/writer/heartbeat tasks
 - **Madsim determinism:** `tokio::select! { biased; }`
+- **No tuples:** use named structs in signatures, returns, collections, and contract ABIs — self-explaining typed APIs (borsh encodes structs identically to tuples, so ABI cost is zero). Same-typed tuple fields are the worst offenders (silent transposition compiles).
+- **No closures unless absolutely needed:** prefer named functions with doc comments; any multi-line or type-annotated closure should be a free function. One-line iterator lambdas and sort comparators that capture locals are fine.
 
 ## WebRTC-Direct
 

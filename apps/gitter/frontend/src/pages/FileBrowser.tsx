@@ -8,7 +8,6 @@ function FileBrowser(): React.JSX.Element {
     const [repoData, setRepoData] = useState<GetRepoDetail | null>(null);
     const [loading, setLoading] = useState(true);
 
-    // Extract path segments from the URL path
     const pathSegments = filePath ? filePath.split('/').filter(Boolean) : [];
 
     useEffect(() => {
@@ -46,7 +45,7 @@ function FileBrowser(): React.JSX.Element {
 
     return (
         <div className="max-w-7xl mx-auto px-5 py-5 md:px-6 md:py-6">
-            {/* Breadcrumb */}
+            {}
             <div className="flex items-center gap-2 mb-3 md:mb-4 text-xs md:text-sm overflow-x-auto scrollbar-thin pb-1">
                 <Link to={`/repo/${git_repo.name}`} className="text-app-accent-blue hover:underline whitespace-nowrap flex-shrink-0">
                     {git_repo.name}
@@ -68,7 +67,7 @@ function FileBrowser(): React.JSX.Element {
                 ))}
             </div>
 
-            {/* File Explorer */}
+            {}
             <FileExplorer
                 repoData={repoData}
                 initialPath={pathSegments}

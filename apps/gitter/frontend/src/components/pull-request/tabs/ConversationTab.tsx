@@ -106,7 +106,7 @@ function ConversationTab({ pr, prDetail, repoId, onComment, onMerge }: Conversat
 
     return (
         <div className="lg:col-span-2 space-y-5 md:space-y-6">
-            {/* Merge Status Box */}
+            {}
             <div className="bg-app-bg-secondary border border-app-border rounded-lg p-4 md:p-5">
                 <div className={`flex items-center gap-3 md:gap-4 ${mergeStatus.showButton ? 'mb-4' : ''}`}>
                     {mergeStatus.icon}
@@ -128,7 +128,7 @@ function ConversationTab({ pr, prDetail, repoId, onComment, onMerge }: Conversat
                 )}
             </div>
 
-            {/* Initial Description */}
+            {}
             <div className="flex gap-4">
                 <div className={`w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br ${generateAvatarGradient(pr.from)} flex-shrink-0`} />
                 <div className="flex-1 min-w-0">
@@ -141,7 +141,7 @@ function ConversationTab({ pr, prDetail, repoId, onComment, onMerge }: Conversat
                 </div>
             </div>
 
-            {/* Commits Event */}
+            {}
             {commits.length > 0 && (
                 <div className="flex gap-4">
                     <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-app-bg-tertiary border border-app-border flex items-center justify-center flex-shrink-0">
@@ -166,7 +166,7 @@ function ConversationTab({ pr, prDetail, repoId, onComment, onMerge }: Conversat
                 </div>
             )}
 
-            {/* Replies/Comments */}
+            {}
             {replies.map((reply, index) => (
                 <div key={index} className="flex gap-4">
                     <div className={`w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br ${generateAvatarGradient(reply.from)} flex-shrink-0`} />
@@ -183,7 +183,7 @@ function ConversationTab({ pr, prDetail, repoId, onComment, onMerge }: Conversat
 
             <Pagination currentPage={replyPage} totalPages={totalReplyPages} onPageChange={setReplyPage} />
 
-            {/* Comment Form */}
+            {}
             <div className="flex gap-4">
                 <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-app-accent-purple to-app-accent-blue flex-shrink-0" />
                 <div className="flex-1 min-w-0">

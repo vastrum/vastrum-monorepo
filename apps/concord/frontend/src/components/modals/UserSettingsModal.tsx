@@ -34,7 +34,7 @@ function UserSettingsModal({ isOpen, onClose, pubkey, currentDisplayName, onSave
             <div className="px-4 pb-4 flex flex-col items-center gap-4">
                 <Avatar identifier={pubkey} name={currentDisplayName || pubkey} size={80} />
 
-                {/* Display name */}
+                {}
                 <div className="w-full">
                     <label className="text-xs font-semibold text-dc-text-muted uppercase tracking-wide">Display Name</label>
                     <input

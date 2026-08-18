@@ -45,5 +45,5 @@ use vastrum_contract_macros::{
     authenticated, constructor, contract_methods, contract_state, contract_type,
 };
 use vastrum_runtime_lib::{
-    Ed25519PublicKey, Ed25519Signature, Ed25519Verify, KvMap, runtime::message_sender,
+    Ed25519PublicKey, Ed25519Signature, Ed25519Verify, KvMap, runtime::{self, message_sender},
 };

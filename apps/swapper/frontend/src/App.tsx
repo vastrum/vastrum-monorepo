@@ -22,7 +22,6 @@ import type { SwapState, PairInfo, SwapSettings, Trade } from './types';
 import './styles/index.css';
 import { createHeliosProvider } from '@vastrum/react-lib';
 
-
 function App() {
     const [swapState, setSwapState] = useState<SwapState>({
         inputToken: TOKEN_LIST[0],
@@ -39,7 +38,7 @@ function App() {
     const [tradesLoading, setTradesLoading] = useState(false);
     const [settings, setSettings] = useState<SwapSettings>(DEFAULT_SETTINGS);
     const [showWelcome, setShowWelcome] = useState(true);
-    const [showSwapNotImplemented, setShowSwapNotImplemented] = useState(false);
+    const [showWalletNotSupported, setShowWalletNotSupported] = useState(false);
     const lastFetchedBlockRef = useRef<bigint | null>(null);
 
     useEffect(() => {
@@ -228,7 +227,6 @@ function App() {
         };
     }, [swapState.inputToken, swapState.outputToken]);
 
-    // Poll for new blocks to show liveness
     useEffect(() => {
         let mounted = true;
         let intervalId: ReturnType<typeof setInterval>;
@@ -261,8 +259,8 @@ function App() {
         };
     }, []);
 
-    const handleSwap = () => {
-        setShowSwapNotImplemented(true);
+    const handleConnectWallet = () => {
+        setShowWalletNotSupported(true);
     };
 
     return (
@@ -282,8 +280,7 @@ function App() {
                         swapState={swapState}
                         setSwapState={setSwapState}
                         pairInfo={pairInfo}
-                        onSwap={handleSwap}
-                        isLoading={isLoading}
+                        onConnectWallet={handleConnectWallet}
                         settings={settings}
                         setSettings={setSettings}
                     />
@@ -319,14 +316,14 @@ function App() {
 
             <WelcomeModal isOpen={showWelcome} onClose={() => setShowWelcome(false)} />
 
-            <Modal isOpen={showSwapNotImplemented} onClose={() => setShowSwapNotImplemented(false)} title="Not Implemented">
+            <Modal isOpen={showWalletNotSupported} onClose={() => setShowWalletNotSupported(false)} title="Not Supported">
                 <div className="p-6 space-y-4">
                     <p className="text-app-text-secondary">
-                        Submitting transactions to Ethereum is not currently supported. Only reading from Ethereum is currently implemented.
+                        Connecting a wallet is not yet supported. Only reading from Ethereum is currently implemented.
                     </p>
                     <div className="flex justify-end pt-2">
                         <button
-                            onClick={() => setShowSwapNotImplemented(false)}
+                            onClick={() => setShowWalletNotSupported(false)}
                             className="bg-app-accent-green text-white px-4 py-2 rounded-md font-medium hover:bg-[#2ea043] transition-colors"
                         >
                             Close

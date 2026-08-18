@@ -6,10 +6,10 @@ pub async fn main() -> Result<(), String> {
 
     Ok(())
 }
-/// Read __frontendData injected by the node into the frontend, contains rpc endpoints and genesis epoch state
-pub fn read_frontend_data() -> vastrum_shared_types::frontend::frontend_data::FrontendData {
+/// Read __webclientData injected by the node into the web-client, contains rpc endpoints and genesis epoch state
+pub fn read_webclient_data() -> vastrum_shared_types::webclient::webclient_data::WebClientData {
     let document = web_sys::window().unwrap().document().unwrap();
-    let element = document.get_element_by_id("__frontendData").unwrap();
+    let element = document.get_element_by_id("__webclientData").unwrap();
     let json = element.text_content().unwrap();
     serde_json::from_str(&json).unwrap()
 }

@@ -14,3 +14,4 @@ vastrum-shared-types.workspace = true
 vastrum-runtime-shared.workspace = true
 borsh = { version = "1.6.0" }
 rand = "0.9"
+

@@ -144,6 +144,7 @@ pub struct RoundSyncStateExternal {
 
 use crate::consensus::validator_state_machine::ValidatorIndex;
 use borsh::{BorshDeserialize, BorshSerialize};
+use std::collections::{BTreeMap, HashMap};
 #[allow(unused_imports)]
 use vastrum_shared_types::borsh::*;
 use vastrum_shared_types::types::consensus::{BlockHeader, ValidatorVoteData};
@@ -154,4 +155,3 @@ use vastrum_shared_types::{
     },
     types::execution::transaction::Transaction,
 };
-use std::collections::{BTreeMap, HashMap};

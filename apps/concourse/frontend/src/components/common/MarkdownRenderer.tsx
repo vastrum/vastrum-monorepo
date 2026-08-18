@@ -3,13 +3,11 @@ import { marked } from 'marked';
 import hljs from 'highlight.js';
 import DOMPurify from 'dompurify';
 
-// Configure marked with GFM and highlight.js
 marked.setOptions({
     gfm: true,
     breaks: true,
 });
 
-// Custom renderer for code highlighting
 const renderer = new marked.Renderer();
 renderer.code = ({ text, lang }: { text: string; lang?: string }) => {
     const language = lang && hljs.getLanguage(lang) ? lang : 'plaintext';
@@ -19,7 +17,6 @@ renderer.code = ({ text, lang }: { text: string; lang?: string }) => {
 
 marked.use({ renderer });
 
-// DOMPurify configuration with strict allowlist
 const ALLOWED_TAGS = [
     'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
     'p', 'br', 'hr',

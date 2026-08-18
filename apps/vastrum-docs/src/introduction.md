@@ -2,7 +2,7 @@
 
 Vastrum is an experimental protocol for hosting decentralized websites and services.
 
-Current prototype apps built and hosted on Vastrum
+Current dogfooded prototype apps built and hosted on Vastrum
 
 -   [Gitter](https://yts27rvo7ppzq5rrjyavmfwecrbyc5ksldmitiggycetgh6zguoa.vastrum.net)      -   Decentralized alternative to Github - [vastrum-monorepo hosted on Gitter](https://yts27rvo7ppzq5rrjyavmfwecrbyc5ksldmitiggycetgh6zguoa.vastrum.net/repo/vastrum)
 -   [Swapper](https://uy25lxmolovvfrw6dckfnh3qi4pm2ah5lutj6k2ljqburlbjegta.vastrum.net)     -   Decentralized Uniswap V2 frontend using Helios light client for RPC reads
@@ -15,36 +15,57 @@ Current prototype apps built and hosted on Vastrum
 -   Docs - the current website you are on
 
 
-## FAQ
+
 ### Why?
 
-I think fundamentally in the future all websites will be hosted in a decentralized manner owned by the commons. 
+I think the final state of all websites will be websites owned by the "commons" and decentralized in some manner.
 
-Centralized services get sunset with 3 months notice, old forums go offline, links rot. 
+Any centralized platform will eventually seek new rents and to create new forms of property and ownership, this behaviour will inevitably kill all centralized platforms, the so called "enshittification". 
 
-You have no control over centralized services and no recourse when it suddenly gets shut down. Any data you trusted them to custody is lost.
+- This manifests as the massive surveliance based advertising networks that the platforms have created. 
 
-Any centralized platform will eventually seek new rents and to create new forms of property and ownership, this behaviour will inevitably kill the platform. 
+- The algorithms intermediating human connection.
 
-The only way to prevent this is to decentralize everything in such a manner where the public owns and controls everything, with full stack open source forkability.
+- The total control of your data, making you fully dependable on their platform, unable to exit, a permanent serf on their property.
 
-With Gitter your Github repo is truly yours, with Concord your Discord server is truly yours. You have full control of your data.
+The only way to prevent this is to decentralize everything in such a manner where the commons owns and controls everything, with full stack open source forkability.
+
+Focusing on true ownership, not rentership.
+
+Current decentralized websites systems have made significant progress in this, but it still is very hard to develop dynamic websites and services on them, for example
+- Fully decentralized forums
+- Fully decentralized Github
+- Fully decentralized chatting apps.
+
+The goal with Vastrum is to enable these apps to be deployed in a decentralized manner with the equivalent experience of using a centralized platforms app.
+
+Most decentralized systems are very different from the experience of using centralized platforms.
+- Probalistic distribution of data
+- Data is lossy
+- High latency
+- Very bad support for dynamic services such as forums.
+
+The goal with Vastrum is to create decentralized platforms, not a decentralized set of servers.
+
+A decentralized Github not a set of decentralized Git servers.
+
+This is done through a variety of radical architecture decisions. 
 
 
-### How is Vastrum different from IPFS and other similar decentralized website hosting services?
+### What does Vastrum differently from IPFS and other similar decentralized website hosting services?
 
 **Interactivity**
-- Vastrum executes the websites backend onchain which allows for interactivity, IPFS is mostly for static content
-- This means you can implement forums, chat applications, decentralized Github fully onchain, without any external centralized API dependencies
+- Vastrum has native support for dynamic websites, as far is i know no existing decentralized system has this. They are all based on static websites.
+- For Vastrum this means you can implement forums, chat applications, decentralized Github fully onchain, without any external centralized API dependencies
 
 **Hosting model**
 - IPFS is a content addressed routing network, it will not host your files for you natively. You need to pay for a centralized pinning service like Pinata or self host it.
-- Vastrum is a full stack decentralized hosting service which will host your website and ensure you can access it forever once it is hosted.
+- Vastrum is a full stack decentralized hosting system which makes the files part of the blockchain state and thus permanent.
 
 **Trustless access**
 - All Vastrum clients are light-clients and verifies the retrieved website content hash against consensus using a JMT state hash. Most previous solutions just blindly trust the retrieved data from the gateway.
 
-**Connection**
+**Decentralized Robust Connection**
 - Most solutions use centralized HTTP gateways, Vastrum uses WebRTC to directly connect to the RPC node and fetch the data
 
 **Isolation model**
@@ -54,9 +75,6 @@ With Gitter your Github repo is truly yours, with Concord your Discord server is
 **Free write transactions**
 - You do not have to pay to make a post. You also do not need to verify a telephone number or create an account.
 - This works by having the user solve a cryptographic puzzle to burn electricity as a [proof of work of value spent](tech/feasibility-estimates/dos-resistance.md). This means sending each transactions spends some economic value. This helps prevent spam DOS attacks.
-- I estimate it will cost [roughly 10-1000 USD per hour](tech/feasibility-estimates/dos-resistance.md#simple-model-of-a-dos) in electricity/compute costs for an attacker to DOS the network.
-- While this is low, if you want to DOS the network for a long time it quickly becomes a non trivial cost.
-- There are [many potential ways to improve this](tech/feasibility-estimates/dos-resistance.md#further-improvements-to-dos-resistance).
 
 **Comprehensive Development Tooling**
 - Easy to deploy.
@@ -64,18 +82,14 @@ With Gitter your Github repo is truly yours, with Concord your Discord server is
 - ABI contract binding macros for the frontend.
 - Regular React tech for frontend (HTML/CSS/JS)
 
-**Bring your own Web2 domain**
-
-Potentially possible via [threshold TLS](roadmap/treshold-tls.md), which would eliminate the frontend centralization risk of the current vastrum.net gateway by giving the initial web-client load economic security on your own domain.
-
 ### What has been built?
 
 - Fully custom blockchain implementation with Simplex consensus, very compact with just 6K lines of Rust.
     - Current production deployment has 8 validator nodes/servers
-    - [4 blocks per second currently](https://d66m4cniuqbgkeuetyvcbkfqfutt3qd3hdxdby2tlqifbt3otctq.vastrum.net) (will be lower on heavier block load)
+    - [4 blocks per second currently](https://d66m4cniuqbgkeuetyvcbkfqfutt3qd3hdxdby2tlqifbt3otctq.vastrum.net) 
     - [Comprehensive deterministic integration testing of consensus](https://yts27rvo7ppzq5rrjyavmfwecrbyc5ksldmitiggycetgh6zguoa.vastrum.net/repo/vastrum/tree/vastrum-node/tests/sim_consensus.rs)
 - Fully custom Rust WASM based smart contract runtime
-    - 50K TPS execution benchmark (increment_counter() single cached contract)
+    - 50K TPS execution benchmark
 - Rust based web-client that uses WebRTC-direct to directly connect to a RPC node, runs a Vastrum light-client and verifies all queries against consensus.
     - Built in wallet for the web-client
 - Helios integration inside frontend runtime to natively support trustless ETH RPC queries for DeFi frontends (No external centralized ETH RPC provider needed)
@@ -87,8 +101,6 @@ Potentially possible via [threshold TLS](roadmap/treshold-tls.md), which would e
 Vastrum is currently in heavy developement and i regularly restart the blockchain to test new functionality that is not backwards compatible.
 
 However all the apps works currently, you can push your Git repo to Gitter for example.
-
-I will probably stabilize it soon and guarantee data persistency. If you have a specific usecase i can defintively do this sooner.
 
 
 ## Summary 

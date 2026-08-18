@@ -24,17 +24,15 @@ const routes = [
     {
         element: <Layout />,
         children: [
-            { path: '/', element: <CategoryList /> },
-            { path: '/category/:category', element: <ForumHome /> },
-            { path: '/category/:category/topic/:id', element: <PostPage /> },
+            { path: '/', element: <CategoryList />, handle: { title: 'Categories' } },
+            { path: '/category/:category', element: <ForumHome />, handle: { title: ':category' } },
+            { path: '/category/:category/topic/:id', element: <PostPage />, handle: { title: 'Topic - :category' } },
             { path: '*', element: <Navigate to="/" replace /> },
         ],
     },
 ];
 
-
-export const router = await createVastrumReactRouter(routes, createMemoryRouter);
-
+export const router = await createVastrumReactRouter(routes, createMemoryRouter, { titleTemplate: '%s - Concourse', defaultTitle: 'Concourse' });
 
 function App() {
     return <RouterProvider router={router} />;

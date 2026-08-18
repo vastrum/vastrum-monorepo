@@ -29,19 +29,17 @@ pub fn generate_state(item: TokenStream) -> TokenStream2 {
     let struct_name = &input_struct.ident;
 
     quote! {
-        use vastrum_runtime_lib::runtime;
-
         #[derive(borsh::BorshSerialize, borsh::BorshDeserialize, Default)]
         #input_struct
 
         impl #struct_name {
             fn __load() -> Self {
-                let bytes = runtime::kv_get("__state");
+                let bytes = ::vastrum_runtime_lib::runtime::kv_get("__state");
                 borsh::from_slice(&bytes).unwrap()
             }
 
             fn __save(&self) {
-                runtime::kv_insert("__state", &borsh::to_vec(self).unwrap());
+                ::vastrum_runtime_lib::runtime::kv_insert("__state", &borsh::to_vec(self).unwrap());
             }
         }
     }
@@ -275,7 +273,7 @@ pub fn generate_impl(item: TokenStream) -> TokenStream2 {
                     let location = info.location()
                         .map(|l| format!(" at {}:{}:{}", l.file(), l.line(), l.column()))
                         .unwrap_or_default();
-                    runtime::log(&format!("PANIC: {}{}", msg, location));
+                    ::vastrum_runtime_lib::runtime::log(&format!("PANIC: {}{}", msg, location));
                 }));
             });
         }

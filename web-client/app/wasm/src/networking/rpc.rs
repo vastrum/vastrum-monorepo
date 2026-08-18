@@ -15,7 +15,7 @@ pub async fn get_key_value_with_height(
         GetKeyValueResult::Err(e) => return Err(WasmErr::RpcError(format!("{e:?}"))),
     };
 
-    let data = read_frontend_data();
+    let data = read_webclient_data();
     proof_verification::verify_keyvalue_proof(
         &response,
         site_id,
@@ -28,7 +28,39 @@ pub async fn get_key_value_with_height(
     Ok(response)
 }
 
-pub async fn submit_call(site_id: Sha256Digest, call_data: Vec<u8>) -> Result<Sha256Digest> {
+pub struct SubmittedTx {
+    pub tx_hash: Sha256Digest,
+    pub tx_created_at_block_height: u64,
+}
+
+fn rebroadcast_until_settled(
+    transaction_bytes: Vec<u8>,
+    tx_hash: Sha256Digest,
+    tx_created_at_block_height: u64,
+) {
+    spawn_local(async move {
+        let mut last_rebroadcast_height = tx_created_at_block_height;
+        loop {
+            TimeoutFuture::new(500).await;
+            if get_tx_hash_inclusion_state(tx_hash).await.unwrap_or(false) {
+                return;
+            }
+            let Ok(height) = get_latest_block_height().await else { continue };
+            let pow_expired = height > tx_created_at_block_height + VALIDITY_WINDOW;
+            if pow_expired {
+                return;
+            }
+            if height < last_rebroadcast_height + 4 {
+                continue;
+            }
+            let payload = SubmitTransactionPayload { transaction_bytes: transaction_bytes.clone() };
+            let _ = send_fire_and_forget("submit", &payload.encode()).await;
+            last_rebroadcast_height = height;
+        }
+    });
+}
+
+pub async fn submit_call(site_id: Sha256Digest, call_data: Vec<u8>) -> Result<SubmittedTx> {
     let private_key = generate_private_key();
     let recent_block_height = get_latest_block_height().await?;
 
@@ -39,17 +71,19 @@ pub async fn submit_call(site_id: Sha256Digest, call_data: Vec<u8>) -> Result<Sh
         private_key,
         recent_block_height,
     );
-    let payload = SubmitTransactionPayload { transaction_bytes: transaction.encode() };
+    let transaction_bytes = transaction.encode();
+    let payload = SubmitTransactionPayload { transaction_bytes: transaction_bytes.clone() };
     send_fire_and_forget("submit", &payload.encode()).await?;
     let tx_hash = transaction.calculate_txhash();
-    return Ok(tx_hash);
+    rebroadcast_until_settled(transaction_bytes, tx_hash, recent_block_height);
+    return Ok(SubmittedTx { tx_hash, tx_created_at_block_height: recent_block_height });
 }
 
 pub async fn submit_authenticated_call(
     site_id: Sha256Digest,
     call_data: Vec<u8>,
     account_private_key: ed25519::PrivateKey,
-) -> Result<Sha256Digest> {
+) -> Result<SubmittedTx> {
     let recent_block_height = get_latest_block_height().await?;
 
     let transaction = build_call_transaction(
@@ -59,10 +93,12 @@ pub async fn submit_authenticated_call(
         account_private_key,
         recent_block_height,
     );
-    let payload = SubmitTransactionPayload { transaction_bytes: transaction.encode() };
+    let transaction_bytes = transaction.encode();
+    let payload = SubmitTransactionPayload { transaction_bytes: transaction_bytes.clone() };
     send_fire_and_forget("submit", &payload.encode()).await?;
     let tx_hash = transaction.calculate_txhash();
-    return Ok(tx_hash);
+    rebroadcast_until_settled(transaction_bytes, tx_hash, recent_block_height);
+    return Ok(SubmittedTx { tx_hash, tx_created_at_block_height: recent_block_height });
 }
 
 pub async fn get_latest_block_height() -> Result<u64> {
@@ -86,7 +122,7 @@ pub async fn eth_proxy(url: String, method: String, body: Vec<u8>) -> Result<Eth
 }
 
 pub async fn connect_to_rpc() {
-    let data = read_frontend_data();
+    let data = read_webclient_data();
     let selected_node_id = (get_random_u64() as usize) % data.rpc_nodes.len();
     let node = &data.rpc_nodes[selected_node_id];
     start_webrtc_connection(node.addr, node.fingerprint).await;
@@ -107,7 +143,7 @@ pub async fn get_page(page_path: String, site_identifier: String) -> Result<JSPa
         GetPageResult::Err(e) => return Err(WasmErr::RpcError(format!("{e:?}"))),
     };
 
-    let data = read_frontend_data();
+    let data = read_webclient_data();
     proof_verification::verify_page_proof(
         &response,
         &data.genesis_validators,
@@ -139,17 +175,21 @@ pub struct JSPageResponse {
     pub site_id: String,
 }
 
+use super::connection::start_webrtc_connection;
 use crate::{
     crypto::keystore::generate_private_key,
     networking::connection::{send_fire_and_forget, send_request},
-    read_frontend_data,
+    read_webclient_data,
     utils::{
         error::{Result, WasmErr},
         get_random_u64,
         site_id::set_current_site_id,
     },
 };
+use gloo_timers::future::TimeoutFuture;
 use serde::{Deserialize, Serialize};
+use tsify::Tsify;
+use vastrum_shared_types::limits::VALIDITY_WINDOW;
 use vastrum_shared_types::proof_verification;
 use vastrum_shared_types::{
     borsh::BorshExt,
@@ -163,6 +203,4 @@ use vastrum_shared_types::{
         GetTxHashIsIncluded, GetTxHashIsIncludedResponse, SubmitTransactionPayload,
     },
 };
-use tsify::Tsify;
-
-use super::connection::start_webrtc_connection;
+use wasm_bindgen_futures::spawn_local;

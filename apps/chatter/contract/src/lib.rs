@@ -1,5 +1,5 @@
 use vastrum_contract_macros::{constructor, contract_methods, contract_state};
-use vastrum_runtime_lib::KvMap;
+use vastrum_runtime_lib::{KvMap, runtime};
 
 #[contract_state]
 struct Contract {

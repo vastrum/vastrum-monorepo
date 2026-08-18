@@ -1,18 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Vastrum network deployment script
-# Deploys validator nodes to VPS machines via SSH
-#
-# Prerequisites:
-#   1. Run genesis tool and commit genesis.json
-#   2. Tag + push to trigger release workflow (or local build + gh release create)
-#   3. Keystores available locally (genesis/validator-{i}/keystore.bin)
-#   4. Domain DNS A record pointing to the RPC node IP
-
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Defaults
 SSH_KEY=""
 EMAIL=""
 IPS=()
@@ -26,13 +16,9 @@ RELAY_IP=""
 RELAY_USER=""
 RELAY_DOMAIN=""
 
-# --- Logging ---
-
 log() { echo "[$(date +%H:%M:%S)] $*"; }
 err() { echo "[$(date +%H:%M:%S)] ERROR: $*" >&2; }
 warn() { echo "[$(date +%H:%M:%S)] WARN: $*" >&2; }
-
-# --- Usage ---
 
 usage() {
     cat <<'EOF'
@@ -68,8 +54,6 @@ EOF
     exit 0
 }
 
-# --- Argument Parsing ---
-
 parse_args() {
     local raw_ips=()
     while [[ $# -gt 0 ]]; do
@@ -91,7 +75,6 @@ parse_args() {
 
     [[ ${#raw_ips[@]} -gt 0 ]]   || { err "--ips is required"; exit 1; }
 
-    # Parse user@ip entries
     for entry in "${raw_ips[@]}"; do
         if [[ "$entry" != *@* ]]; then
             err "Each --ips entry must be USER@IP, got: $entry"; exit 1
@@ -103,21 +86,17 @@ parse_args() {
     [[ -n "$DOMAIN" ]]       || { err "--domain is required"; exit 1; }
     [[ -n "$VERSION" ]]      || { err "--version is required"; exit 1; }
 
-    # Ensure version has v prefix
     case "$VERSION" in
         v*) ;;
         *)  VERSION="v${VERSION}" ;;
     esac
 
-    # --dns-token required if --site-domain is set
     if [[ -n "$SITE_DOMAIN" ]] && [[ -z "$DNS_TOKEN" ]]; then
         err "--dns-token is required when --site-domain is set"; exit 1
     fi
 
     [[ -n "$EMAIL" ]] || EMAIL="admin@${DOMAIN}"
 }
-
-# --- SSH Helpers ---
 
 remote_exec() {
     local user="$1" ip="$2"; shift 2
@@ -138,19 +117,15 @@ remote_copy() {
         "$src" "${user}@${ip}:${dst}"
 }
 
-# --- Phase 0: Validation ---
-
 validate() {
     log "Phase 0: Validating configuration..."
 
-    # Check keystore files exist
     for i in $(seq 0 $((${#IPS[@]} - 1))); do
         local ks="$KEYSTORE_DIR/validator-${i}/keystore.bin"
         [[ -f "$ks" ]] || { err "Keystore not found: $ks"; exit 1; }
     done
     log "  Keystores: OK (${#IPS[@]} found)"
 
-    # Clear stale host keys and pre-populate fresh ones (avoids race in parallel Phase 2)
     for ip in "${IPS[@]}"; do
         ssh-keygen -f "$HOME/.ssh/known_hosts" -R "$ip" 2>/dev/null || true
     done
@@ -158,7 +133,6 @@ validate() {
         ssh-keyscan -H "$ip" >> "$HOME/.ssh/known_hosts" 2>/dev/null || true
     done
 
-    # Check SSH connectivity
     for i in $(seq 0 $((${#IPS[@]} - 1))); do
         if ! remote_exec "${SSH_USERS[$i]}" "${IPS[$i]}" "exit" 2>/dev/null; then
             err "Cannot SSH to ${SSH_USERS[$i]}@${IPS[$i]}"
@@ -167,7 +141,6 @@ validate() {
     done
     log "  SSH connectivity: OK"
 
-    # DNS check (warning only)
     if command -v dig &>/dev/null; then
         local resolved
         resolved=$(dig +short "$DOMAIN" | head -1)
@@ -179,7 +152,6 @@ validate() {
         fi
     fi
 
-    # Site domain DNS check
     if [[ -n "$SITE_DOMAIN" ]] && command -v dig &>/dev/null; then
         local site_resolved
         site_resolved=$(dig +short "$SITE_DOMAIN" | head -1)
@@ -190,7 +162,6 @@ validate() {
         fi
     fi
 
-    # Bootstrap domain DNS check
     if command -v dig &>/dev/null; then
         local genesis_file="$SCRIPT_DIR/../shared-types/genesis.json"
         if [[ -f "$genesis_file" ]]; then
@@ -212,8 +183,6 @@ validate() {
     log "  Config: ${#IPS[@]} validators, RPC=${IPS[0]}, domain=$DOMAIN${SITE_DOMAIN:+, sites=*.$SITE_DOMAIN}, version=$VERSION"
 }
 
-# --- Shared Deployment Helpers ---
-
 install_binary() {
     local user="$1" ip="$2"
     log "  [$ip] Installing vastrum-cli $VERSION..."
@@ -224,10 +193,8 @@ setup_user_and_files() {
     local user="$1" ip="$2" idx="$3"
     log "  [$ip] Setting up vastrum user and files..."
 
-    # Upload keystore
     remote_copy "$user" "$KEYSTORE_DIR/validator-${idx}/keystore.bin" "$ip" "/tmp/vastrum-keystore.bin"
 
-    # Create user and directory structure, move files
     remote_exec "$user" "$ip" sudo bash <<'SETUP_EOF'
 set -euo pipefail
 CALLER_HOME=$(eval echo "~$SUDO_USER")
@@ -290,12 +257,24 @@ harden_server() {
     remote_exec "$user" "$ip" sudo bash <<'HARDEN_EOF'
 set -euo pipefail
 
-# Disable SSH password authentication (key-only)
+if [ -d /etc/ssh/sshd_config.d ]; then
+    cat > /etc/ssh/sshd_config.d/01-vastrum-hardening.conf <<'SSHD_EOF'
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+SSHD_EOF
+    chmod 644 /etc/ssh/sshd_config.d/01-vastrum-hardening.conf
+fi
 sed -i 's/^#*PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config
 sed -i 's/^#*KbdInteractiveAuthentication.*/KbdInteractiveAuthentication no/' /etc/ssh/sshd_config
-systemctl restart sshd
 
-# Enable automatic security updates
+sshd -t
+systemctl restart ssh 2>/dev/null || systemctl restart sshd
+
+sshd -T | grep -qx 'passwordauthentication no' || {
+    echo "ERROR: password authentication is still enabled after hardening" >&2
+    exit 1
+}
+
 DEBIAN_FRONTEND=noninteractive apt-get install -y -qq unattended-upgrades >/dev/null
 cat > /etc/apt/apt.conf.d/20auto-upgrades <<EOF
 APT::Periodic::Update-Package-Lists "1";
@@ -304,17 +283,13 @@ EOF
 HARDEN_EOF
 }
 
-# --- Phase 0b: Stop all existing services ---
-
 stop_existing_services() {
     log "Stopping any existing services..."
 
-    # Stop relay first to prevent stale state propagation
     if [[ -n "$RELAY_IP" ]]; then
         remote_exec "$RELAY_USER" "$RELAY_IP" "sudo systemctl stop vastrum-relay 2>/dev/null || true"
     fi
 
-    # Stop all validator nodes
     local pids=()
     for i in $(seq 0 $((${#IPS[@]} - 1))); do
         (
@@ -329,8 +304,6 @@ stop_existing_services() {
     log "  All existing services stopped"
 }
 
-# --- Phase 1: Deploy Bootstrap+RPC Node ---
-
 deploy_rpc_node() {
     local user="${SSH_USERS[0]}" ip="${IPS[0]}"
     log "Phase 1: Deploying bootstrap+RPC node ($ip)..."
@@ -340,7 +313,6 @@ deploy_rpc_node() {
     setup_user_and_files "$user" "$ip" 0
     install_systemd_service "$user" "$ip" "--rpc"
 
-    # Firewall
     log "  [$ip] Configuring firewall..."
     remote_exec "$user" "$ip" sudo bash <<'FW_EOF'
 set -euo pipefail
@@ -366,21 +338,17 @@ setup_caddy() {
     remote_exec "$user" "$ip" sudo bash <<'CADDY_INSTALL_EOF'
 set -euo pipefail
 
-# Install Go
 DEBIAN_FRONTEND=noninteractive apt-get update -qq
 apt-get install -y -qq curl golang >/dev/null
 
-# Install xcaddy via go install and build Caddy with deSEC DNS plugin
 GOBIN=/usr/local/bin go install github.com/caddyserver/xcaddy/cmd/xcaddy@latest
 /usr/local/bin/xcaddy build --with github.com/caddy-dns/desec --output /usr/bin/caddy
 
-# Create caddy user and directories
 id -u caddy &>/dev/null || useradd --system --home-dir /var/lib/caddy --create-home --shell /usr/sbin/nologin caddy
 mkdir -p /etc/caddy /var/lib/caddy /var/log/caddy
 chown caddy:caddy /var/lib/caddy /var/log/caddy
 CADDY_INSTALL_EOF
 
-    # Write Caddyfile
     log "  [$ip] Writing Caddyfile..."
     local caddyfile
     if [[ -n "$SITE_DOMAIN" ]]; then
@@ -423,13 +391,11 @@ CADDYEOF
 
     printf '%s\n' "$caddyfile" | remote_exec "$user" "$ip" "sudo tee /etc/caddy/Caddyfile >/dev/null"
 
-    # Write deSEC token to env file (piped via stdin to avoid ps exposure)
     if [[ -n "$DNS_TOKEN" ]]; then
         log "  [$ip] Configuring deSEC token..."
         printf 'DESEC_TOKEN=%s\n' "$DNS_TOKEN" | remote_exec "$user" "$ip" "sudo tee /etc/caddy/env >/dev/null && sudo chmod 600 /etc/caddy/env && sudo chown caddy:caddy /etc/caddy/env"
     fi
 
-    # Install systemd service
     log "  [$ip] Installing Caddy systemd service..."
     remote_exec "$user" "$ip" sudo bash <<'CADDY_SERVICE_EOF'
 set -euo pipefail
@@ -463,7 +429,6 @@ systemctl daemon-reload
 systemctl enable --now caddy
 CADDY_SERVICE_EOF
 
-    # Wait for wildcard cert (don't reload Caddy — reloads cancel in-flight DNS-01 challenges)
     if [[ -n "$SITE_DOMAIN" ]]; then
         log "  [$ip] Waiting for wildcard cert (*.${SITE_DOMAIN})..."
         local max_attempts=10
@@ -484,8 +449,6 @@ CADDY_SERVICE_EOF
 
     log "  [$ip] Caddy configured with HTTPS"
 }
-
-# --- Phase 2: Deploy Validator Nodes ---
 
 deploy_validators() {
     local num_validators=${#IPS[@]}
@@ -526,7 +489,6 @@ deploy_single_validator() {
     setup_user_and_files "$user" "$ip" "$idx"
     install_systemd_service "$user" "$ip" ""
 
-    # Firewall: P2P only
     remote_exec "$user" "$ip" sudo bash <<'FW_EOF'
 set -euo pipefail
 DEBIAN_FRONTEND=noninteractive apt-get install -y -qq ufw >/dev/null
@@ -538,8 +500,6 @@ FW_EOF
     start_node "$user" "$ip"
     log "  [$ip] Validator-$idx deployed"
 }
-
-# --- Deploy Git Relay (optional) ---
 
 deploy_relay() {
     [[ -n "$RELAY_IP" ]] || return 0
@@ -556,7 +516,6 @@ deploy_relay() {
     harden_server "$user" "$ip"
     install_binary "$user" "$ip"
 
-    # Create user and directories, install git (relay spawns `git` to serve push/fetch)
     remote_exec "$user" "$ip" sudo bash <<'RELAY_SETUP_EOF'
 set -euo pipefail
 DEBIAN_FRONTEND=noninteractive apt-get install -y -qq git >/dev/null
@@ -566,7 +525,6 @@ mkdir -p /home/vastrum/.vastrum/bin /etc/vastrum /var/lib/vastrum-relay/relay-da
 chown -R vastrum:vastrum /home/vastrum /var/lib/vastrum-relay
 RELAY_SETUP_EOF
 
-    # Copy binary
     remote_exec "$user" "$ip" sudo bash <<'RELAY_BIN_EOF'
 set -euo pipefail
 CALLER_HOME=$(eval echo "~$SUDO_USER")
@@ -574,7 +532,6 @@ cp "$CALLER_HOME/.vastrum/bin/vastrum-cli" /home/vastrum/.vastrum/bin/vastrum-cl
 chown vastrum:vastrum /home/vastrum/.vastrum/bin/vastrum-cli
 RELAY_BIN_EOF
 
-    # Copy relay key
     remote_copy "$user" "$relay_key" "$ip" "/tmp/relay.key"
     remote_exec "$user" "$ip" sudo bash <<'RELAY_KEY_EOF'
 set -euo pipefail
@@ -583,7 +540,6 @@ chown vastrum:vastrum /etc/vastrum/relay.key
 chmod 600 /etc/vastrum/relay.key
 RELAY_KEY_EOF
 
-    # Copy SSH host key (preserves client known_hosts across redeploys)
     remote_copy "$user" "$ssh_host_key" "$ip" "/tmp/ssh_host_ed25519_key"
     remote_exec "$user" "$ip" sudo bash <<'RELAY_SSH_KEY_EOF'
 set -euo pipefail
@@ -592,7 +548,6 @@ chown vastrum:vastrum /var/lib/vastrum-relay/ssh_host_ed25519_key
 chmod 600 /var/lib/vastrum-relay/ssh_host_ed25519_key
 RELAY_SSH_KEY_EOF
 
-    # Install systemd service
     remote_exec "$user" "$ip" sudo bash <<'RELAY_SVC_EOF'
 set -euo pipefail
 cat > /etc/systemd/system/vastrum-relay.service <<EOF
@@ -622,7 +577,6 @@ systemctl daemon-reload
 systemctl enable vastrum-relay
 RELAY_SVC_EOF
 
-    # Firewall
     remote_exec "$user" "$ip" sudo bash <<'RELAY_FW_EOF'
 set -euo pipefail
 DEBIAN_FRONTEND=noninteractive apt-get install -y -qq ufw >/dev/null
@@ -635,7 +589,6 @@ ufw allow 443/udp comment "HTTPS QUIC/HTTP3" >/dev/null
 ufw --force enable >/dev/null
 RELAY_FW_EOF
 
-    # Setup Caddy for relay domain
     if [[ -n "$RELAY_DOMAIN" ]]; then
         remote_exec "$user" "$ip" sudo bash <<'RELAY_CADDY_INSTALL_EOF'
 set -euo pipefail
@@ -660,19 +613,15 @@ RELAY_CADDY_EOF
         log "  [$ip] Caddy configured for $RELAY_DOMAIN"
     fi
 
-    # Start relay
     remote_exec "$user" "$ip" "sudo systemctl start vastrum-relay"
     log "  [$ip] Git-relay deployed"
 }
-
-# --- Phase 3: Verification ---
 
 verify_network() {
     log "Phase 3: Verifying deployment..."
 
     sleep 10
 
-    # Check systemd status on all nodes
     local all_active=true
     for i in $(seq 0 $((${#IPS[@]} - 1))); do
         if remote_exec "${SSH_USERS[$i]}" "${IPS[$i]}" "sudo systemctl is-active vastrum-node" &>/dev/null; then
@@ -683,14 +632,12 @@ verify_network() {
         fi
     done
 
-    # Check HTTPS health endpoint
     if curl -sf "https://${DOMAIN}/health" &>/dev/null; then
         log "  HTTPS health check: OK"
     else
         warn "  HTTPS health check: failed (node may still be starting)"
     fi
 
-    # Check site domain HTTPS
     if [[ -n "$SITE_DOMAIN" ]]; then
         if curl -sf --max-time 10 "https://${SITE_DOMAIN}" &>/dev/null; then
             log "  HTTPS site domain check: OK (${SITE_DOMAIN})"
@@ -699,7 +646,6 @@ verify_network() {
         fi
     fi
 
-    # Check block height advancing
     local height1 height2
     height1=$(curl -sf "https://${DOMAIN}/getlatestblockheight/" 2>/dev/null || echo "")
     if [[ -n "$height1" ]]; then
@@ -714,8 +660,6 @@ verify_network() {
 
     [[ "$all_active" == true ]] || { err "Some nodes are not active"; exit 1; }
 }
-
-# --- Main ---
 
 main() {
     parse_args "$@"

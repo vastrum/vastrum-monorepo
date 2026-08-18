@@ -86,7 +86,7 @@ fn spawn_helios_worker() -> Worker {
 fn build_worker_js() -> String {
     let base_url = get_rpc_endpoint("");
     let base_url = base_url.trim_end_matches('/');
-    let checkpoint = crate::read_frontend_data().helios_checkpoint;
+    let checkpoint = crate::read_webclient_data().helios_checkpoint;
     let origin = web_sys::window().unwrap().location().origin().unwrap();
 
     #[cfg(feature = "eth-rpc-webrtc")]

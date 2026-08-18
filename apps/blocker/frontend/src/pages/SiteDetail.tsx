@@ -79,7 +79,7 @@ function SiteDetail() {
                 </div>
             </div>
 
-            {/* Transaction list */}
+            {}
             <div className="bg-blocker-surface border border-blocker-border rounded-lg overflow-x-auto">
                 <div className="px-4 py-3 border-b border-blocker-border">
                     <h2 className="text-sm font-medium text-blocker-text-primary">Transactions ({site.tx_count})</h2>

@@ -36,8 +36,11 @@ async fn main() {
 
     println!();
     println!("=== Deploy complete ===");
-    println!("monorepo_key: {monorepo_key}");
-    println!("relay_key: {relay_key}");
+    println!("site_id: {site_id}");
+    vastrum_native_lib::deployers::keys::write_deploy_keys(
+        "gitter",
+        &format!("site_id: {site_id}\nrelay_key: {relay_key}\nmonorepo_key: {monorepo_key}\n"),
+    );
 }
 
 async fn deploy_monorepo(site_id: Sha256Digest, monorepo_key: &ed25519::PrivateKey) {

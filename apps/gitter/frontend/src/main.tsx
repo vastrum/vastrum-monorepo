@@ -2,7 +2,6 @@ import ReactDOM from 'react-dom/client';
 import { StrictMode } from 'react';
 import App from './App';
 
-// Suppress React DevTools message in development
 if (import.meta.env.DEV) {
     const originalLog = console.log;
     console.log = (...args) => {

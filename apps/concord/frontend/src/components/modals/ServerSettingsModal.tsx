@@ -66,7 +66,7 @@ function ServerSettingsModal({ isOpen, onClose, server, myPubkey, onRefresh }: S
     return (
         <Modal isOpen={isOpen} onClose={onClose} title={`${server.name} - Settings`}>
             <div className="p-4">
-                {/* Tabs */}
+                {}
                 <div className="flex gap-2 mb-4 border-b border-dc-border pb-2">
                     <button
                         onClick={() => setTab('members')}
@@ -144,7 +144,7 @@ function ServerSettingsModal({ isOpen, onClose, server, myPubkey, onRefresh }: S
                     </div>
                 )}
 
-                {/* Leave button */}
+                {}
                 {!isOwner && (
                     <div className="mt-4 pt-4 border-t border-dc-border">
                         <button

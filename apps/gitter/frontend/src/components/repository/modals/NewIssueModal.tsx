@@ -26,9 +26,9 @@ function NewIssueModal({ isOpen, onClose, repoId, onRefresh }: NewIssueModalProp
 
     return (
         <Modal isOpen={isOpen} onClose={onClose} title="New Issue">
-            {/* Modal Body */}
+            {}
             <div className="p-6 space-y-4">
-                {/* Title Input */}
+                {}
                 <div>
                     <label htmlFor="issue-title" className="block text-sm font-medium mb-2">
                         Title
@@ -43,7 +43,7 @@ function NewIssueModal({ isOpen, onClose, repoId, onRefresh }: NewIssueModalProp
                     />
                 </div>
 
-                {/* Description */}
+                {}
                 <div>
                     <label className="block text-sm font-medium mb-2">
                         Description
@@ -57,7 +57,7 @@ function NewIssueModal({ isOpen, onClose, repoId, onRefresh }: NewIssueModalProp
                 </div>
             </div>
 
-            {/* Modal Footer */}
+            {}
             <div className="flex items-center justify-end gap-3 p-6 border-t border-app-border">
                 <button
                     type="button"

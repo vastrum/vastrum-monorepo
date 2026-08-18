@@ -30,7 +30,6 @@ function UserContextMenu({ x, y, targetPubkey, myPubkey, onClose }: UserContextM
         };
     }, [onClose]);
 
-    // Clamp position so the menu doesn't overflow the viewport
     const menuWidth = 180;
     const menuHeight = 40;
     const clampedX = Math.min(x, window.innerWidth - menuWidth - 8);

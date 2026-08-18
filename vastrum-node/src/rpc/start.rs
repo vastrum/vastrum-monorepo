@@ -42,6 +42,6 @@ use super::http::server::start_http_server;
 #[cfg(not(madsim))]
 use crate::rpc::webrtc_direct::server::start_webrtc_server;
 use crate::{consensus::validator_state_machine::EpochState, db::Db, p2p::networking::Networking};
-use vastrum_shared_types::frontend::frontend_data::RpcNodeEndpoint;
 use std::sync::Arc;
+use vastrum_shared_types::webclient::webclient_data::RpcNodeEndpoint;
 use vastrum_webrtc_direct_server::DtlsKey;

@@ -1,4 +1,53 @@
+mod tiles;
+
+use mapper_abi::*;
+use vastrum_native_lib::deployers::build::{build_contract, run};
+use vastrum_native_lib::deployers::deploy::register_domain;
+use vastrum_shared_types::crypto::ed25519::PrivateKey;
+use vastrum_shared_types::crypto::sha256::Sha256Digest;
+
+const KEYS_FILE: &str = "mapper-deploy.keys";
 const MAPPER_DOMAIN: &str = "mapper";
+
+const STATIC_SITE_ID: &str = "lzdtxcpp6ivwje55o74dugj7f4vie6qzrsp6kybqyi7ofo3yt75q";
+
+struct Deployment {
+    client: ContractAbiClient,
+    site_id: Sha256Digest,
+    admin_key: PrivateKey,
+}
+
+async fn deploy() -> Deployment {
+    let html =
+        std::fs::read_to_string("../frontend/dist/index.html").expect("Failed to read HTML file");
+    let brotli_html_content =
+        vastrum_shared_types::compression::brotli::brotli_compress_html(&html);
+
+    let admin_key = PrivateKey::from_rng();
+    let client = ContractAbiClient::deploy(
+        "../contract/out/contract.wasm",
+        brotli_html_content,
+        admin_key.public_key(),
+    )
+    .await;
+    let client = client.with_account_key(admin_key.clone());
+    let site_id = client.site_id();
+
+    std::fs::write(KEYS_FILE, format!("{site_id}\n{admin_key}\n"))
+        .expect("failed to write keys file");
+    println!("deploy identity saved to {KEYS_FILE}");
+
+    register_domains(site_id).await;
+    return Deployment { client, site_id, admin_key };
+}
+
+async fn register_domains(site_id: Sha256Digest) {
+    register_domain(site_id, MAPPER_DOMAIN).await.await_confirmation().await;
+    register_domain(site_id, "index").await.await_confirmation().await;
+    register_domain(site_id, site_id.to_string()).await.await_confirmation().await;
+    let static_id = Sha256Digest::from_string(STATIC_SITE_ID).unwrap();
+    register_domain(site_id, static_id.to_string()).await.await_confirmation().await;
+}
 
 fn build_frontend() {
     run("npm install", "../frontend");
@@ -10,52 +59,30 @@ fn build_frontend() {
 async fn main() {
     build_contract("../contract", "../contract/out");
     build_frontend();
-    let html =
-        std::fs::read_to_string("../frontend/dist/index.html").expect("Failed to read HTML file");
-    let brotli_html_content =
-        vastrum_shared_types::compression::brotli::brotli_compress_html(&html);
 
-    let admin_key = vastrum_shared_types::crypto::ed25519::PrivateKey::from_rng();
-    let admin_pub = admin_key.public_key();
+    let deployment = deploy().await;
+    let client = std::sync::Arc::new(deployment.client);
 
-    let client =
-        ContractAbiClient::deploy("../contract/out/contract.wasm", brotli_html_content, admin_pub)
-            .await;
-    let client = client.with_account_key(admin_key.clone());
+    let planet = std::env::args().any(|a| a == "--planet");
+    let mbtiles_path = tiles::ensure_tiles(planet);
 
-    let site_id = client.site_id();
-    register_domain(site_id, MAPPER_DOMAIN).await.await_confirmation().await;
-    register_domain(site_id, "index").await.await_confirmation().await;
-    register_domain(site_id, site_id.to_string()).await.await_confirmation().await;
-    // static testnet site_id registration in case of network redeployment
-    // causing site to have different site_id and causing dead links
-    let static_site_id = vastrum_shared_types::crypto::sha256::Sha256Digest::from_string(
-        "lzdtxcpp6ivwje55o74dugj7f4vie6qzrsp6kybqyi7ofo3yt75q",
-    )
-    .unwrap();
-    register_domain(site_id, static_site_id.to_string()).await.await_confirmation().await;
+    let checkpoint_path = format!("{mbtiles_path}.{}.progress", deployment.site_id);
+    mapper_tile_uploader::upload_tiles(client.clone(), &mbtiles_path, &checkpoint_path)
+        .await
+        .expect("tile upload failed");
 
-    // Always upload monaco tiles
-    let mbtiles_path = "../tiles/output.mbtiles";
-    if !std::path::Path::new(mbtiles_path).exists() {
-        println!("No mbtiles found, generating Monaco tiles...");
-        run("./generate-tiles.sh", "../tiles");
+    if planet {
+        mapper_tile_uploader::places::build_and_upload_search_index(
+            tiles::PLANET_PBF,
+            Some(mbtiles_path.as_str()),
+            client,
+        )
+        .await
+        .expect("search index upload failed");
     }
-    let checkpoint_path = format!("{mbtiles_path}.progress");
-    mapper_tile_uploader::upload_tiles(&client, mbtiles_path, &checkpoint_path).await;
 
     println!();
     println!("=== Deploy complete ===");
-    println!("site_id: {site_id}");
-    println!("admin_key: {admin_key}");
-    println!();
-    println!("To upload tiles from a different mbtiles file:");
-    println!("  cargo run -p mapper-tile-uploader -- {site_id} {admin_key} <mbtiles-path>");
+    println!("site_id: {}", deployment.site_id);
+    println!("admin_key: {}  (also saved in {})", deployment.admin_key, KEYS_FILE);
 }
-
-use mapper_abi::*;
-use vastrum_native_lib::deployers::{
-    build::{build_contract, run},
-    deploy::register_domain,
-};
-use vastrum_shared_types;

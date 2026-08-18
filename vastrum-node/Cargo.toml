@@ -3,7 +3,6 @@ name = "vastrum-node"
 version = "1.0.0"
 edition = "2024"
 
-
 [dependencies]
 bytes = "1.11.1"
 tokio = { version = "0.2", package = "madsim-tokio", features = ["full", "tracing"] }
@@ -46,3 +45,4 @@ madsim_compliant = ["dep:madsim"]
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(madsim)'] }
+

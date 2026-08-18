@@ -60,7 +60,7 @@ const PullRequestsTab = ({ repoId, repoOwner }: PullRequestsTabProps): React.JSX
     return (
         <div className="lg:col-span-2">
             <div className="bg-app-bg-secondary border border-app-border rounded-lg overflow-hidden">
-                {/* Filter/Action Bar */}
+                {}
                 <div className="flex items-center justify-between p-4 border-b border-app-border">
                     <div className="flex items-center gap-2">
                         <button className="text-sm text-app-text-primary hover:text-app-accent-blue">
@@ -70,7 +70,7 @@ const PullRequestsTab = ({ repoId, repoOwner }: PullRequestsTabProps): React.JSX
                     <button onClick={() => setShowModal(true)} className="btn-primary text-sm">New pull request</button>
                 </div>
 
-                {/* Pull Requests List or Empty State */}
+                {}
                 {pullRequests.length > 0 ? (
                     <div>
                         {pullRequests.map((pr) => (

@@ -1,3 +1,4 @@
 frontend/dist
 frontend/node_modules
 contract/out
+abi/src/generated.rs

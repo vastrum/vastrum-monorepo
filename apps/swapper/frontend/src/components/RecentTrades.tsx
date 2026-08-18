@@ -55,7 +55,7 @@ export function RecentTrades({
     return (
         <div className="bg-app-bg-secondary border border-app-border rounded-3xl p-6">
             <h3 className="text-app-text-primary text-lg font-semibold mb-4">Recent Trades</h3>
-            {/* Mobile card layout */}
+            {}
             <div className="md:hidden flex flex-col gap-3">
                 {trades.map((trade, index) => {
                     const isBuy = trade.amount0In > 0n;
@@ -98,7 +98,7 @@ export function RecentTrades({
                 })}
             </div>
 
-            {/* Desktop table layout */}
+            {}
             <div className="hidden md:block overflow-x-auto">
                 <table className="w-full">
                     <thead>

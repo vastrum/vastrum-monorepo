@@ -1,14 +1,14 @@
 const AVATAR_COLORS = [
-    '#5865f2', // blurple
-    '#57f287', // green
-    '#fee75c', // yellow
-    '#eb459e', // fuchsia
-    '#ed4245', // red
-    '#3ba55c', // dark green
-    '#faa61a', // orange
-    '#e67e22', // dark orange
-    '#9b59b6', // purple
-    '#1abc9c', // teal
+    '#5865f2',
+    '#57f287',
+    '#fee75c',
+    '#eb459e',
+    '#ed4245',
+    '#3ba55c',
+    '#faa61a',
+    '#e67e22',
+    '#9b59b6',
+    '#1abc9c',
 ];
 
 function hashString(str: string): number {

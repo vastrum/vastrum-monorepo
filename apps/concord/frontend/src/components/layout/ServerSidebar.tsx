@@ -31,7 +31,7 @@ function ServerSidebar(): React.JSX.Element {
     return (
         <>
             <div className="w-[72px] bg-dc-bg-tertiary flex flex-col items-center py-3 gap-2 overflow-y-auto flex-shrink-0">
-                {/* DMs */}
+                {}
                 <div className="relative">
                     <button
                         onClick={() => navigate('/dms')}
@@ -48,7 +48,7 @@ function ServerSidebar(): React.JSX.Element {
 
                 <div className="w-8 h-[2px] bg-dc-border rounded-full mx-auto" />
 
-                {/* Joined Servers */}
+                {}
                 {servers.map(server => (
                     <div key={server.id} className="relative">
                         <button
@@ -69,7 +69,7 @@ function ServerSidebar(): React.JSX.Element {
                     </div>
                 ))}
 
-                {/* Create Server */}
+                {}
                 <button
                     onClick={() => setShowCreateModal(true)}
                     className="w-12 h-12 rounded-[24px] hover:rounded-[16px] transition-all duration-200 flex items-center justify-center bg-dc-bg-primary hover:bg-dc-green text-dc-green hover:text-white"

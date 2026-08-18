@@ -23,7 +23,6 @@ function DmList(): React.JSX.Element {
 
     useEffect(() => { loadDms(); }, []);
 
-    // Poll DM list (~10s)
     useEffect(() => {
         const poll = async () => {
             const myDms = await get_my_dms(BigInt(200), BigInt(0));
@@ -45,7 +44,7 @@ function DmList(): React.JSX.Element {
                 />
             </div>
 
-            {/* Main area */}
+            {}
             <div className="flex-1 flex flex-col bg-dc-bg-primary">
                 <div className="h-12 flex items-center px-4 border-b border-dc-bg-tertiary shadow-sm flex-shrink-0 md:hidden">
                     <button onClick={openSidebar} className="mr-2 text-dc-text-muted hover:text-dc-text">

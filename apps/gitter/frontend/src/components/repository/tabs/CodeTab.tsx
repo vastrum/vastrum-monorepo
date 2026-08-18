@@ -27,7 +27,6 @@ const CodeTab = ({ repoData, onBranchChange }: CodeTabProps): React.JSX.Element 
     return (
         <div className="lg:col-span-2">
             {isEmpty ? (
-                /* Empty repo: show getting-started guide */
                 <div className="bg-app-bg-secondary border border-app-border rounded-lg overflow-hidden mb-6">
                     <div className="flex items-center justify-between p-4 border-b border-app-border">
                         <h2 className="text-lg font-semibold text-app-text-primary">Quick setup</h2>
@@ -42,13 +41,12 @@ const CodeTab = ({ repoData, onBranchChange }: CodeTabProps): React.JSX.Element 
                     <EmptyRepoGuide repositoryName={git_repo.name} />
                 </div>
             ) : (
-                /* Repo with commits: show file list + README */
                 <>
                     <div className="bg-app-bg-secondary border border-app-border rounded-lg overflow-hidden mb-6">
-                        {/* Branch selector and actions */}
+                        {}
                         <div className="flex items-center justify-between p-4 border-b border-app-border gap-6 md:gap-8">
                             <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
-                                {/* Branch selector */}
+                                {}
                                 <div className="flex items-center gap-2 flex-shrink-0">
                                     <GitBranch className="w-4 h-4 text-app-text-secondary" />
                                     <select
@@ -61,7 +59,7 @@ const CodeTab = ({ repoData, onBranchChange }: CodeTabProps): React.JSX.Element 
                                         ))}
                                     </select>
                                 </div>
-                                {/* Latest commit info */}
+                                {}
                                 <div className="flex items-baseline gap-3 min-w-0 flex-1">
                                     <div className={`w-5 h-5 rounded-full bg-gradient-to-br ${generateAvatarGradient(head_commit_author_name)} flex-shrink-0 self-center`} />
                                     <span className="text-sm font-semibold text-app-text-primary flex-shrink-0">
@@ -85,7 +83,7 @@ const CodeTab = ({ repoData, onBranchChange }: CodeTabProps): React.JSX.Element 
                             </div>
                         </div>
 
-                        {/* File list - flat, no expansion */}
+                        {}
                         <div>
                             {topLevelEntries.map((entry, index) => (
                                 <Link
@@ -104,7 +102,7 @@ const CodeTab = ({ repoData, onBranchChange }: CodeTabProps): React.JSX.Element 
                         </div>
                     </div>
 
-                    {/* README */}
+                    {}
                     <div className="bg-app-bg-secondary border border-app-border rounded-lg overflow-hidden">
                         <div className="flex items-center gap-2 px-4 py-3 border-b border-app-border">
                             <FileText className="w-4 h-4" />
@@ -121,7 +119,7 @@ const CodeTab = ({ repoData, onBranchChange }: CodeTabProps): React.JSX.Element 
                 </>
             )}
 
-            {/* Clone Modal */}
+            {}
             <CloneModal
                 isOpen={showCloneModal}
                 onClose={() => setShowCloneModal(false)}

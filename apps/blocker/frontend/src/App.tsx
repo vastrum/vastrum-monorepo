@@ -34,19 +34,19 @@ const routes = [
         element: <Layout />,
         children: [
             { path: '/', element: <Home /> },
-            { path: '/blocks', element: <BlocksList /> },
-            { path: '/block/:height', element: <BlockDetail /> },
-            { path: '/transactions', element: <TransactionsList /> },
-            { path: '/tx/:hash', element: <TxDetail /> },
-            { path: '/account/:pubkey', element: <AccountPage /> },
-            { path: '/sites', element: <SitesList /> },
-            { path: '/site/:id', element: <SiteDetail /> },
+            { path: '/blocks', element: <BlocksList />, handle: { title: 'Blocks' } },
+            { path: '/block/:height', element: <BlockDetail />, handle: { title: 'Block #:height' } },
+            { path: '/transactions', element: <TransactionsList />, handle: { title: 'Transactions' } },
+            { path: '/tx/:hash', element: <TxDetail />, handle: { title: 'Transaction' } },
+            { path: '/account/:pubkey', element: <AccountPage />, handle: { title: 'Account' } },
+            { path: '/sites', element: <SitesList />, handle: { title: 'Sites' } },
+            { path: '/site/:id', element: <SiteDetail />, handle: { title: 'Site' } },
             { path: '*', element: <Navigate to="/" replace /> },
         ],
     },
 ];
 
-export const router = await createVastrumReactRouter(routes, createMemoryRouter);
+export const router = await createVastrumReactRouter(routes, createMemoryRouter, { titleTemplate: '%s - Blocker', defaultTitle: 'Blocker' });
 
 function App() {
     return <RouterProvider router={router} />;

@@ -3,7 +3,6 @@ name = "vastrum-shared-types"
 version = "0.1.0"
 edition = "2024"
 
-
 [dependencies]
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
@@ -27,3 +26,4 @@ brotli = { version = "8", default-features = false, features = ["std"] }
 thiserror = "2"
 anyhow = "1"
 jmt = { path = "../vendored-jmt-main", default-features = false, features = ["sha2"] }
+

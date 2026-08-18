@@ -3,6 +3,7 @@ import { get_page } from "../wasm/pkg/vastrum_wasm";
 import { CONSOLE_FORWARDER_SCRIPT, handleConsoleForwardMessage } from "./console_forwarder";
 import { CLICK_INTERCEPTOR_SCRIPT, ExternalLinkModal } from "./external_link_modal";
 import { CLIPBOARD_FORWARDER_SCRIPT, handleClipboardCopyMessage } from "./clipboard_forwarder";
+import { TITLE_FORWARDER_SCRIPT, handleTitleSetMessage } from "./title_forwarder";
 
 function getSubdomain() {
   const hostname = window.location.hostname;
@@ -34,7 +35,6 @@ export function SiteView({ page_route }: { page_route: string }) {
   const fetchPage = useCallback(async () => {
     try {
       const subdomain = getSubdomain();
-      //if not a valid subdomain, redirect to docs
       if (subdomain === null) {
         const baseHost = window.location.host.replace(/^www\./, '');
         window.location.href = `${window.location.protocol}//docs.${baseHost}${window.location.pathname}`;
@@ -61,9 +61,11 @@ export function SiteView({ page_route }: { page_route: string }) {
   useEffect(() => {
     window.addEventListener('message', handleConsoleForwardMessage);
     window.addEventListener('message', handleClipboardCopyMessage);
+    window.addEventListener('message', handleTitleSetMessage);
     return () => {
       window.removeEventListener('message', handleConsoleForwardMessage);
       window.removeEventListener('message', handleClipboardCopyMessage);
+      window.removeEventListener('message', handleTitleSetMessage);
     };
   }, []);
 
@@ -92,14 +94,13 @@ export function SiteView({ page_route }: { page_route: string }) {
               ${CLICK_INTERCEPTOR_SCRIPT}
               ${CONSOLE_FORWARDER_SCRIPT}
               ${CLIPBOARD_FORWARDER_SCRIPT}
+              ${TITLE_FORWARDER_SCRIPT}
             </head>
             <body>
             ${pageData}
             </body>
             </html>
           `}
-          //TODO, allowFullscreen to make docs videos work for now, need to remove this in future
-          //as very easy for untrusted code to hijack fullscreen and phish user 
           sandbox="allow-scripts"
           allowFullScreen
           className="w-full flex-1 border-0"

@@ -21,8 +21,8 @@ impl RPCHttpServer {
             .allow_methods(Any)
             .allow_headers(Any);
 
-        let frontend = frontend_builder::build_frontend(rpc_nodes, epoch_state).await;
-        let state = AppState { networking: self.networking.clone(), db: self.db.clone(), frontend };
+        let webclient = webclient_builder::build_webclient(rpc_nodes, epoch_state).await;
+        let state = AppState { networking: self.networking.clone(), db: self.db.clone(), webclient };
         return Router::new()
             .route("/submit/", post(RPCHttpServer::submit_transaction))
             .route("/page/", post(RPCHttpServer::get_page))
@@ -37,7 +37,7 @@ impl RPCHttpServer {
             .route("/ethconsensusrpc/{*path}", any(RPCHttpServer::eth_consensus_rpc))
             .route("/rpchttpfallback/", post(RPCHttpServer::borsh_rpc))
             .route("/health", get(StatusCode::OK))
-            .fallback(RPCHttpServer::serve_frontend)
+            .fallback(RPCHttpServer::serve_webclient)
             .layer(DefaultBodyLimit::max(MAX_RPC_BODY_SIZE))
             .layer(CompressionLayer::new())
             .layer(cors)
@@ -112,7 +112,7 @@ impl RPCHttpServer {
     async fn eth_consensus_rpc(method: Method, headers: HeaderMap, request: Request) -> Response {
         super::eth_proxy::eth_consensus_rpc(method, headers, request).await
     }
-    async fn serve_frontend(
+    async fn serve_webclient(
         State(state): State<AppState>,
         headers: HeaderMap,
         uri: axum::http::Uri,
@@ -148,20 +148,20 @@ fn serve_index_html(state: &AppState, accepts_brotli: bool) -> Response {
                 (header::CONTENT_ENCODING, "br".to_string()),
                 (header::CACHE_CONTROL, "no-store".to_string()),
             ],
-            (*state.frontend.compressed_html).clone(),
+            (*state.webclient.compressed_html).clone(),
         )
             .into_response()
     } else {
         (
             [(header::CACHE_CONTROL, "no-store".to_string())],
-            axum::response::Html(state.frontend.html.clone()),
+            axum::response::Html(state.webclient.html.clone()),
         )
             .into_response()
     }
 }
 
 fn serve_static_asset(state: &AppState, path: &str, accepts_brotli: bool) -> Option<Response> {
-    let (data, mime) = state.frontend.compressed_assets.get(path)?;
+    let (data, mime) = state.webclient.compressed_assets.get(path)?;
     if accepts_brotli {
         Some(
             (
@@ -174,7 +174,7 @@ fn serve_static_asset(state: &AppState, path: &str, accepts_brotli: bool) -> Opt
                 .into_response(),
         )
     } else {
-        let content = frontend_builder::FrontendAssets::get(path)?;
+        let content = webclient_builder::WebClientAssets::get(path)?;
         Some(([(header::CONTENT_TYPE, mime.clone())], content.data.into_owned()).into_response())
     }
 }
@@ -187,10 +187,10 @@ pub struct RPCHttpServer {
 struct AppState {
     networking: Arc<Networking>,
     db: Arc<Db>,
-    frontend: frontend_builder::Frontend,
+    webclient: webclient_builder::WebClient,
 }
 
-use super::frontend_builder;
+use super::webclient_builder;
 use crate::{
     consensus::validator_state_machine::EpochState,
     db::Db,
@@ -209,7 +209,7 @@ use std::sync::Arc;
 use tower_http::compression::CompressionLayer;
 use tower_http::cors::{Any, CorsLayer};
 use vastrum_shared_types::borsh::BorshExt;
-use vastrum_shared_types::frontend::frontend_data::RpcNodeEndpoint;
+use vastrum_shared_types::webclient::webclient_data::RpcNodeEndpoint;
 use vastrum_shared_types::types::rpc::types::{
     GetKeyValuePayload, GetPagePayload, GetSiteIDIsDeployed, GetTxHashIsIncluded,
     ResolveDomainRequest, RpcRequest, RpcResponse, SubmitTransactionPayload,

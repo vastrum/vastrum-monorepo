@@ -9,3 +9,4 @@ sha2 = "0.10"
 ed25519-compact = { version = "2.2.0", default-features = false, features = ["opt_size"] }
 vastrum-bindings-guest.workspace = true
 vastrum-runtime-shared.workspace = true
+

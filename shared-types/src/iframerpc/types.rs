@@ -95,7 +95,6 @@ pub struct GetKeyValueResponse {
     #[serde(with = "crate::types::rpc::serde_base64::base64_vec")]
     pub value: Vec<u8>,
 }
-
 #[derive(Serialize, Deserialize, Debug)]
 pub struct GetKeyValueBySiteIdRequest {
     pub site_id: Sha256Digest,
@@ -110,6 +109,7 @@ pub struct MakeCallRequest {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct MakeCallResponse {
     pub tx_hash: Sha256Digest,
+    pub tx_created_at_block_height: u64,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -120,6 +120,7 @@ pub struct MakeAuthCallRequest {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct MakeAuthCallResponse {
     pub tx_hash: Sha256Digest,
+    pub tx_created_at_block_height: u64,
 }
 
 #[derive(Serialize, Deserialize, Debug)]

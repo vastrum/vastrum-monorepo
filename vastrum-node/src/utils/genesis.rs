@@ -53,6 +53,6 @@ use crate::keystore::{self, keyset::Keystore};
 use crate::p2p::peer_manager::KnownPeer;
 use std::net::{SocketAddr, ToSocketAddrs};
 use vastrum_shared_types::crypto::ed25519;
-use vastrum_shared_types::frontend::frontend_data::{Fingerprint, RpcNodeEndpoint};
+use vastrum_shared_types::webclient::webclient_data::{Fingerprint, RpcNodeEndpoint};
 use vastrum_shared_types::genesis::genesis_config;
 use vastrum_shared_types::ports::{P2P_PORT, WEBRTC_PORT};

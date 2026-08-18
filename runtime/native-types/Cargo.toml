@@ -9,3 +9,4 @@ sha2 = "0.10"
 vastrum-shared-types.workspace = true
 vastrum-rpc-client.workspace = true
 futures = { version = "0.3", default-features = false, features = ["alloc"] }
+

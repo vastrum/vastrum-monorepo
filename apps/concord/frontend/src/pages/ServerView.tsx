@@ -43,7 +43,6 @@ function ServerView(): React.JSX.Element {
         setServer(s);
         setMyPubkey(pk);
 
-        // Navigate to first channel if none selected
         if (!channelId && s && s.channels.length > 0) {
             navigate(`/server/${serverId}/${s.channels[0].id}`, { replace: true });
         }
@@ -52,7 +51,6 @@ function ServerView(): React.JSX.Element {
 
     useEffect(() => { loadServer(); }, [loadServer]);
 
-    // Poll server (~10s)
     useEffect(() => {
         if (sid === null) return;
         const poll = async () => {
@@ -63,7 +61,6 @@ function ServerView(): React.JSX.Element {
         return () => clearInterval(interval);
     }, [sid]);
 
-    // Load messages when channel changes + mark channel as read
     useEffect(() => {
         if (!channelId || sid === null) return;
         const cid = Number(channelId);
@@ -132,9 +129,9 @@ function ServerView(): React.JSX.Element {
                 />
             </div>
 
-            {/* Main chat area */}
+            {}
             <div className="flex-1 flex flex-col bg-dc-bg-primary min-w-0">
-                {/* Channel header */}
+                {}
                 <div className="h-12 flex items-center px-4 border-b border-dc-bg-tertiary shadow-sm flex-shrink-0">
                     <button onClick={openSidebar} className="mr-2 text-dc-text-muted hover:text-dc-text md:hidden">
                         <Menu size={20} />

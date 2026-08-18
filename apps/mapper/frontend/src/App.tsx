@@ -26,7 +26,7 @@ const routes = [
     },
 ];
 
-export const router = await createVastrumReactRouter(routes, createMemoryRouter);
+export const router = await createVastrumReactRouter(routes, createMemoryRouter, { titleTemplate: '%s - Mapper', defaultTitle: 'Mapper' });
 
 function App() {
     return <RouterProvider router={router} />;

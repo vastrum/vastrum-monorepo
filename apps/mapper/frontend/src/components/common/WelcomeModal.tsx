@@ -19,7 +19,7 @@ function WelcomeModal({ isOpen, onClose }: WelcomeModalProps): React.JSX.Element
                     <ul className="list-disc list-inside text-app-text-secondary ml-2 space-y-1">
                         <li>The data comes from the OpenStreetMaps dataset</li>
                         <li>The map tile data is uploaded to Vastrum, the client then reads this data from Vastrum</li>
-                        <li>Currently only Monaco is supported</li>
+                        <li>Search for any place, street or address worldwide</li>
                     </ul>
 
                     <br />
@@ -35,7 +35,7 @@ function WelcomeModal({ isOpen, onClose }: WelcomeModalProps): React.JSX.Element
                     </a>
                 </div>
 
-                {/* Close Button */}
+                {}
                 <div className="flex justify-end pt-2">
                     <button onClick={onClose} className="bg-app-accent text-white px-4 py-2 rounded-md font-medium hover:opacity-80 transition-colors">
                         Close

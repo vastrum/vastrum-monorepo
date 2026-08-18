@@ -21,7 +21,7 @@ export default function PostItem({ author, content, timestamp, index, onQuote, o
             padding: '20px 0',
             borderBottom: '1px solid #e9e9e9',
         }}>
-            {/* Avatar */}
+            {}
             <div style={{
                 width: 45,
                 height: 45,
@@ -41,9 +41,9 @@ export default function PostItem({ author, content, timestamp, index, onQuote, o
                 </span>
             </div>
 
-            {/* Content */}
+            {}
             <div style={{ flex: 1, minWidth: 0 }}>
-                {/* Header */}
+                {}
                 <div style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -110,7 +110,7 @@ export default function PostItem({ author, content, timestamp, index, onQuote, o
                     </span>
                 </div>
 
-                {/* Body */}
+                {}
                 {(() => {
                     const quote = extractQuote(content);
                     if (quote) {

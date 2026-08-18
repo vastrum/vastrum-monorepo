@@ -42,7 +42,7 @@ function BlockDetail() {
                 </div>
             </div>
 
-            {/* Block Info */}
+            {}
             <div className="bg-blocker-surface border border-blocker-border rounded-lg mb-6">
                 <div className="grid grid-cols-1 sm:grid-cols-[160px_1fr] text-sm">
                     <Row label="Block Hash" value={block.block_hash} mono />
@@ -52,7 +52,7 @@ function BlockDetail() {
                 </div>
             </div>
 
-            {/* Transactions */}
+            {}
             <div className="bg-blocker-surface border border-blocker-border rounded-lg overflow-x-auto">
                 <div className="px-4 py-3 border-b border-blocker-border">
                     <h2 className="text-sm font-medium text-blocker-text-primary">Transactions ({txs.length})</h2>

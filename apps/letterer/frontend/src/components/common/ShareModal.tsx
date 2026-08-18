@@ -19,7 +19,6 @@ function ShareModal({ isOpen, onClose, docId }: ShareModalProps): React.JSX.Elem
 
     if (!isOpen) return null;
 
-    // letterer
     const inviteLink = docKeyHex ? `https://yozq5azfm26qi3vceclwz57fg2727yhqi6ccha5khhnp2uepqj7a.vastrum.net/share/${docKeyHex}` : '';
 
     const handleCopy = () => {

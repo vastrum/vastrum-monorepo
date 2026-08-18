@@ -47,24 +47,25 @@ impl RpcProvider for IFrameRpcClient {
 
     async fn make_call(&self, calldata: Vec<u8>) -> IFrameSentTx {
         let res = vastrum_frontend_lib::make_call(calldata).await;
-        let sent_tx = IFrameSentTx::new(res.tx_hash);
+        let sent_tx = IFrameSentTx::new(res.tx_hash, res.tx_created_at_block_height);
         return sent_tx;
     }
 
     async fn make_authenticated_call(&self, calldata: Vec<u8>) -> IFrameSentTx {
         let res = vastrum_frontend_lib::make_authenticated_call(calldata).await;
-        let sent_tx = IFrameSentTx::new(res.tx_hash);
+        let sent_tx = IFrameSentTx::new(res.tx_hash, res.tx_created_at_block_height);
         return sent_tx;
     }
 }
 
 pub struct IFrameSentTx {
     tx_hash: Sha256Digest,
+    tx_created_at_block_height: u64,
 }
 
 impl IFrameSentTx {
-    pub fn new(tx_hash: Sha256Digest) -> Self {
-        Self { tx_hash }
+    pub fn new(tx_hash: Sha256Digest, tx_created_at_block_height: u64) -> Self {
+        Self { tx_hash, tx_created_at_block_height }
     }
 }
 
@@ -79,17 +80,17 @@ impl SentTxBehavior for IFrameSentTx {
     }
 
     async fn await_confirmation(&self) {
-        if self.check_if_included().await {
-            wait_for_next_block().await;
-            return;
-        }
-        TimeoutFuture::new(5).await;
-        for _ in 0..240 {
+        loop {
             if self.check_if_included().await {
                 wait_for_next_block().await;
                 return;
             }
-            TimeoutFuture::new(500).await;
+            let height = vastrum_frontend_lib::get_latest_block_height().await;
+            let pow_expired = height > self.tx_created_at_block_height + VALIDITY_WINDOW;
+            if pow_expired {
+                return;
+            }
+            TimeoutFuture::new(100).await;
         }
     }
 }
@@ -107,3 +108,4 @@ async fn wait_for_next_block() {
 use crate::{RpcError, RpcProvider, SentTxBehavior};
 use gloo_timers::future::TimeoutFuture;
 use vastrum_shared_types::crypto::{ed25519, sha256::Sha256Digest};
+use vastrum_shared_types::limits::VALIDITY_WINDOW;

@@ -2,7 +2,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use vastrum_contract_macros::{
     authenticated, constructor, contract_methods, contract_state, contract_type,
 };
-use vastrum_runtime_lib::{Ed25519PublicKey, KvBTree, KvMap, KvVec, KvVecBTree};
+use vastrum_runtime_lib::{Ed25519PublicKey, KvBTree, KvMap, KvVec, KvVecBTree, runtime};
 
 #[contract_type]
 struct UserData {

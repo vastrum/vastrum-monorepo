@@ -1,0 +1,7 @@
+# The scaffolds are templates, not built projects — but running `npm install` inside one to test it
+# would otherwise flood `git status`. The template's own `dot_gitignore` only covers the project a
+# user scaffolds out, not this directory.
+node_modules
+dist
+**/wasm/pkg
+**/wasm/target

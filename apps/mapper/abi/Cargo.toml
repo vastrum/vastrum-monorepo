@@ -5,6 +5,10 @@ edition = "2024"
 
 [dependencies]
 vastrum-abi = { version = "0.1.0", path = "../../../runtime/vastrum-abi" }
+borsh = { version = "1", features = ["derive"] }
+deunicode = "1.6.2"
+flate2 = { version = "1.1.9", default-features = false, features = ["rust_backend"] }
 
 [build-dependencies]
 vastrum-abi-codegen = { version = "0.1.0", path = "../../../runtime/abi-codegen" }
+

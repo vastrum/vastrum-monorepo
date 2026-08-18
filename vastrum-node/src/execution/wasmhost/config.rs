@@ -7,6 +7,8 @@ pub fn common_config() -> wasmtime::Config {
     //https://github.com/paritytech/substrate/blob/master/client/executor/wasmtime/src/runtime.rs
     //more recent https://github.com/paritytech/polkadot-sdk/blob/master/substrate/client/executor/wasmtime/src/runtime.rs
 
+    config.consume_fuel(true);
+
     config.cranelift_opt_level(wasmtime::OptLevel::SpeedAndSize);
 
     //https://docs.wasmtime.dev/examples-deterministic-wasm-execution.html

@@ -1,4 +1,4 @@
-/* IBM Plex Sans Font */
+
 @font-face {
     font-family: 'IBM Plex Sans';
     font-style: normal;
@@ -28,7 +28,6 @@
     src: url('../fonts/IBMPlexSans-Bold.woff2') format('woff2');
 }
 
-/* JetBrains Mono Font */
 @font-face {
     font-family: 'JetBrains Mono';
     font-style: normal;
@@ -147,7 +146,6 @@
         @apply flex items-center gap-2 text-app-text-secondary text-sm;
     }
 
-    /* Syntax highlighting */
     .syntax-keyword {
         @apply text-[#ff7b72] font-medium;
     }
@@ -193,7 +191,6 @@
     }
 }
 
-/* Markdown content styles (dark theme) */
 .markdown-content {
     color: #e6edf3;
     font-size: 15px;
@@ -208,7 +205,6 @@
     margin-bottom: 0;
 }
 
-/* Headings */
 .markdown-content h1,
 .markdown-content h2,
 .markdown-content h3,
@@ -228,12 +224,10 @@
 .markdown-content h5 { font-size: 0.9em; }
 .markdown-content h6 { font-size: 0.85em; color: #8b949e; }
 
-/* Paragraphs */
 .markdown-content p {
     margin: 0.75em 0;
 }
 
-/* Links */
 .markdown-content a {
     color: #1f6feb;
     text-decoration: none;
@@ -243,7 +237,6 @@
     text-decoration: underline;
 }
 
-/* Bold and italic */
 .markdown-content strong {
     font-weight: 600;
 }
@@ -252,14 +245,12 @@
     font-style: italic;
 }
 
-/* Strikethrough */
 .markdown-content del,
 .markdown-content s {
     text-decoration: line-through;
     color: #8b949e;
 }
 
-/* Inline code */
 .markdown-content code {
     background-color: #21262d;
     padding: 0.2em 0.4em;
@@ -269,7 +260,6 @@
     color: #e6edf3;
 }
 
-/* Code blocks */
 .markdown-content pre {
     background-color: #161b22;
     border: 1px solid #30363d;
@@ -287,7 +277,6 @@
     line-height: 1.5;
 }
 
-/* Highlight.js theme (GitHub Dark style) */
 .markdown-content .hljs-keyword { color: #ff7b72; }
 .markdown-content .hljs-string { color: #a5d6ff; }
 .markdown-content .hljs-number { color: #79c0ff; }
@@ -313,7 +302,6 @@
 .markdown-content .hljs-selector-id { color: #ffa657; }
 .markdown-content .hljs-selector-class { color: #ffa657; }
 
-/* Lists */
 .markdown-content ul,
 .markdown-content ol {
     margin: 0.75em 0;
@@ -329,7 +317,6 @@
     margin: 0.25em 0;
 }
 
-/* Blockquotes */
 .markdown-content blockquote {
     margin: 1em 0;
     padding: 0.5em 1em;
@@ -346,7 +333,6 @@
     margin-bottom: 0;
 }
 
-/* Tables */
 .markdown-content table {
     border-collapse: collapse;
     width: 100%;
@@ -373,14 +359,12 @@
     background-color: #21262d;
 }
 
-/* Horizontal rule */
 .markdown-content hr {
     border: none;
     border-top: 1px solid #30363d;
     margin: 1.5em 0;
 }
 
-/* Images */
 .markdown-content img {
     max-width: 100%;
     height: auto;

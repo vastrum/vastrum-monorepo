@@ -11,8 +11,7 @@ interface SwapCardProps {
     swapState: SwapState;
     setSwapState: React.Dispatch<React.SetStateAction<SwapState>>;
     pairInfo: PairInfo | null;
-    onSwap: () => void;
-    isLoading: boolean;
+    onConnectWallet: () => void;
     settings: SwapSettings;
     setSettings: React.Dispatch<React.SetStateAction<SwapSettings>>;
 }
@@ -21,8 +20,7 @@ export function SwapCard({
     swapState,
     setSwapState,
     pairInfo,
-    onSwap,
-    isLoading,
+    onConnectWallet,
     settings,
     setSettings,
 }: SwapCardProps) {
@@ -111,8 +109,6 @@ export function SwapCard({
         }
     }, [selectorOpen, setSwapState]);
 
-    const hasValidInput = swapState.inputAmount && parseFloat(swapState.inputAmount) > 0;
-
     return (
         <>
             <div className="bg-app-bg-secondary border border-app-border rounded-3xl p-4 w-full max-w-[480px]">
@@ -178,21 +174,12 @@ export function SwapCard({
                     </div>
                 )}
 
-                <div className="relative group w-full mt-4">
-                    <button
-                        disabled
-                        className="w-full py-4 rounded-2xl font-semibold text-lg bg-app-bg-tertiary text-app-text-secondary cursor-not-allowed flex items-center justify-center gap-2"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                        </svg>
-                        Swap
-                    </button>
-                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-app-bg-tertiary border border-app-border rounded-lg text-sm text-app-text-secondary whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                        Transaction sending is not yet supported
-                    </div>
-                </div>
+                <button
+                    onClick={onConnectWallet}
+                    className="w-full py-4 mt-4 rounded-2xl font-semibold text-lg bg-app-accent-blue text-white hover:bg-[#388bfd] transition-colors"
+                >
+                    Connect Wallet
+                </button>
             </div>
 
             <TokenSelectorModal

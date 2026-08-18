@@ -1,4 +1,6 @@
 target
 target-wasm
 .claude
-genesis
+/genesis
+/deploy
+*.keys

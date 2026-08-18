@@ -1,4 +1,3 @@
-// Re-exports from split font files (kept under 4MB each for git object limits)
 import { FONT_DATA_REGULAR } from './font-data-regular';
 import { FONT_DATA_BOLD } from './font-data-bold';
 import { FONT_DATA_ITALIC } from './font-data-italic';

@@ -1,14 +1,16 @@
 //please dont dos 🙏
 const EXECUTION_URLS: &[&str] = &[
-    "https://wild-floral-model.quiknode.pro/fa5c46935beb34252e1246c4fdf2799152b14df4",
     "https://eth.drpc.org",
     "https://ethereum-rpc.publicnode.com",
+    "https://patient-skilled-tab.ethereum-mainnet.quiknode.pro/6589adaf3f888941b47d8648a23d787ba0b01aab",
+    "https://ethereum-mainnet.gateway.tatum.io",
 ];
 
 pub const CONSENSUS_URLS: &[&str] = &[
-    "https://wild-floral-model.quiknode.pro/fa5c46935beb34252e1246c4fdf2799152b14df4",
     "https://ethereum-beacon-api.publicnode.com",
     "https://lodestar-mainnet.chainsafe.io",
+    "https://patient-skilled-tab.ethereum-mainnet.quiknode.pro/6589adaf3f888941b47d8648a23d787ba0b01aab",
+    "https://ethereum-mainnet.gateway.tatum.io",
 ];
 //https://drpc.org/chainlist
 //https://ethereum.publicnode.com/

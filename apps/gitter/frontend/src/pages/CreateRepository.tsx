@@ -31,18 +31,18 @@ function CreateRepository(): React.JSX.Element {
 
     return (
         <div className="max-w-5xl mx-auto px-5 py-5 md:px-6 md:py-6 lg:py-8">
-            {/* Breadcrumb */}
+            {}
             <div className="flex items-center gap-2 mb-4 md:mb-6 text-xs md:text-sm overflow-x-auto scrollbar-thin pb-1">
                 <Link to="/" className="text-app-accent-blue hover:underline whitespace-nowrap flex-shrink-0">Repositories</Link>
                 <span className="text-app-text-secondary flex-shrink-0">/</span>
                 <span className="text-app-text-secondary whitespace-nowrap flex-shrink-0">Create a new repository</span>
             </div>
 
-            {/* Header */}
+            {}
             <h1 className="text-xl md:text-2xl font-semibold mb-2">Create a new repository</h1>
 
             <div className="space-y-4 md:space-y-6">
-                {/* Repository name */}
+                {}
                 <div>
                     <label htmlFor="repo-name" className="block text-sm font-semibold mb-2">
                         Repository name
@@ -56,7 +56,7 @@ function CreateRepository(): React.JSX.Element {
                     />
                 </div>
 
-                {/* Description */}
+                {}
                 <div>
                     <label htmlFor="description" className="block text-sm font-semibold mb-2">
                         Description <span className="text-app-text-secondary font-normal">(optional)</span>
@@ -71,7 +71,7 @@ function CreateRepository(): React.JSX.Element {
                     />
                 </div>
 
-                {/* SSH Key (optional) */}
+                {}
                 <div>
                     <label htmlFor="ssh-key" className="block text-sm font-semibold mb-2">
                         SSH Public Key <span className="text-app-text-secondary font-normal">(optional)</span>
@@ -92,7 +92,7 @@ function CreateRepository(): React.JSX.Element {
                     )}
                 </div>
 
-                {/* Action buttons */}
+                {}
                 <div className="flex items-center gap-3 pt-4 border-t border-app-border">
                     <button
                         type="button"

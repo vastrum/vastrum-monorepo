@@ -1,10 +1,12 @@
 import { get_current_path, update_current_path } from '../wasm/pkg';
+import { applyDocumentTitle, type DocumentTitleOptions } from './document_title';
 
 type RouterCreator<TRouter> = (routes: any[], opts?: { initialEntries?: string[] }) => TRouter;
 
-export async function createVastrumReactRouter<TRouter extends { subscribe: Function; navigate: Function }>(
+export async function createVastrumReactRouter<TRouter extends { subscribe: Function; navigate: Function; state?: any }>(
     routes: any[],
     createRouterFn: RouterCreator<TRouter>,
+    titleOptions: DocumentTitleOptions = {},
 ): Promise<TRouter> {
     let initialPath = await get_current_path();
     initialPath = initialPath || '/';
@@ -14,8 +16,9 @@ export async function createVastrumReactRouter<TRouter extends { subscribe: Func
         initialEntries: [initialPath],
     });
 
-    // Handle in app/react navigation
     router.subscribe((state: any) => {
+        applyDocumentTitle(state, titleOptions);
+
         const currentPath = state.location.pathname;
         if (state.location.state?.fromWasm) {
             lastSyncedPath = currentPath;
@@ -28,7 +31,10 @@ export async function createVastrumReactRouter<TRouter extends { subscribe: Func
         }
     });
 
-    // Handle browser navigation (forward, backward)
+    if (router.state !== undefined) {
+        applyDocumentTitle(router.state, titleOptions);
+    }
+
     window.addEventListener('wasm-navigate', ((event: CustomEvent<string>) => {
         router.navigate(event.detail, { state: { fromWasm: true } });
     }) as EventListener);

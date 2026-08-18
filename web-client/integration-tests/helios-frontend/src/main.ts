@@ -183,7 +183,7 @@ async function testCreateAccessList(client: Client): Promise<void> {
         const result = await client.createAccessList({
             account: VITALIK_ADDRESS,
             to: USDC_CONTRACT,
-            data: '0x18160ddd', // totalSupply()
+            data: '0x18160ddd',
         });
         assertExists(result, 'Access list result should exist');
         assertExists(result.accessList, 'Should have accessList');

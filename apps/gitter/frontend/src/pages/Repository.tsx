@@ -51,18 +51,16 @@ function Repository(): React.JSX.Element {
         );
     }
 
-    // If repository not found, redirect to all repositories
     if (!repoData) {
         return (<p>Repo not found</p>);
     }
 
-    // Determine active tab from URL path
     const getActiveTab = (): TabType => {
         const path = location.pathname;
         if (path.includes('/issues')) return 'issues';
         if (path.includes('/pulls')) return 'pulls';
         if (path.includes('/discussions')) return 'discussions';
-        return 'code'; // Default for '/repo/:id' and '/repo/:id/code'
+        return 'code';
     };
 
     const activeTab = getActiveTab();
@@ -89,13 +87,13 @@ function Repository(): React.JSX.Element {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 md:gap-6">
                 {activeTab === 'code' && <CodeTab repoData={repoData} onBranchChange={handleBranchChange} />}
 
-                {/* Issues Tab */}
+                {}
                 {activeTab === 'issues' && <IssuesTab repoId={git_repo.name} />}
 
-                {/* Pull Requests Tab */}
+                {}
                 {activeTab === 'pulls' && <PullRequestsTab repoId={git_repo.name} repoOwner={git_repo.owner} />}
 
-                {/* Discussions Tab */}
+                {}
                 {activeTab === 'discussions' && <DiscussionsTab repoId={git_repo.name} />}
 
                 <RepositorySidebar repository={git_repo} />

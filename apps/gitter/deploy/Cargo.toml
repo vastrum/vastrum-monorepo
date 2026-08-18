@@ -12,3 +12,4 @@ vastrum-git-lib = { path = "../vastrum-git-lib" }
 tokio = { version = "1.49.0", features = ["full", "tracing"] }
 tempfile = "3"
 gix = { version = "0.80.0", default-features = false, features = ["parallel", "worktree-mutation", "index", "serde"] }
+

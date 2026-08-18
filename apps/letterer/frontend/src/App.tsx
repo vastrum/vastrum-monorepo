@@ -24,15 +24,15 @@ const routes = [
     {
         element: <Layout />,
         children: [
-            { path: '/', element: <DocumentList /> },
-            { path: '/doc/:id', element: <DocumentEditor /> },
-            { path: '/share/:docKey', element: <JoinDocument /> },
+            { path: '/', element: <DocumentList />, handle: { title: 'Documents' } },
+            { path: '/doc/:id', element: <DocumentEditor />, handle: { title: 'Document' } },
+            { path: '/share/:docKey', element: <JoinDocument />, handle: { title: 'Shared document' } },
             { path: '*', element: <Navigate to="/" replace /> },
         ],
     },
 ];
 
-export const router = await createVastrumReactRouter(routes, createMemoryRouter);
+export const router = await createVastrumReactRouter(routes, createMemoryRouter, { titleTemplate: '%s - Letterer', defaultTitle: 'Letterer' });
 
 function App() {
     return <RouterProvider router={router} />;

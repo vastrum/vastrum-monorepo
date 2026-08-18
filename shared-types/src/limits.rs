@@ -15,3 +15,11 @@ pub const MAX_RPC_BODY_SIZE: usize = 4 * 1024 * 1024; //4mb
 
 pub const MAX_PROOF_AGE_SECS: u64 = 120;
 pub const MAX_PROOF_FUTURE_SECS: u64 = 30;
+
+pub const FUEL_KV_WRITE_BASE: u64 = 1_000_000;
+pub const FUEL_KV_WRITE_PER_BYTE: u64 = 100;
+pub const FUEL_KV_READ_BASE: u64 = 100_000;
+pub const FUEL_KV_READ_PER_BYTE: u64 = 20;
+
+pub const TX_FUEL_CAP: u64 = 500_000_000;
+pub const BLOCK_FUEL_LIMIT: u64 = 1_000_000_000; //each fuel represesnts 1 nanosecond, block time compute target is 1s

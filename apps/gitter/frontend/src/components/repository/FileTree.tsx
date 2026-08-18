@@ -97,7 +97,7 @@ const FileTreeNode = ({
                 <span className="flex-1 text-sm text-app-text-primary truncate">{entry.name}</span>
             </div>
 
-            {/* Render children recursively when folder is expanded */}
+            {}
             {isDirectory && isExpanded && children && children.length > 0 && (
                 <div>
                     {children.map((child, index) => (
@@ -123,7 +123,7 @@ interface FileTreeProps {
     repoName: string;
     topLevelEntries: ExplorerEntry[];
     selectedOid: string | null;
-    initialPath: string[];  // Path to expand
+    initialPath: string[];
     onSelect: (entry: ExplorerEntry, parentPath: string[]) => void;
 }
 
@@ -137,7 +137,6 @@ function FileTree({
     const [directories, setDirectories] = useState<DirectoryState>({});
     const hasExpandedInitialPath = useRef(false);
 
-    // Expand directories along the initial path
     useEffect(() => {
         const expandPath = async () => {
             if (initialPath.length === 0) return;
@@ -162,7 +161,6 @@ function FileTree({
     const handleDirectoryToggle = async (entry: ExplorerEntry) => {
         if (!entry.is_directory) return;
 
-        // Validate OID before making WASM call
         if (!entry.oid || entry.oid.length === 0) {
             console.error('Invalid OID: empty string');
             return;
@@ -171,18 +169,15 @@ function FileTree({
         const current = directories[entry.oid];
 
         if (current?.expanded) {
-            // Collapse
             setDirectories(d => ({ ...d, [entry.oid]: { ...current, expanded: false } }));
             return;
         }
 
         if (current?.children) {
-            // Already loaded, just expand
             setDirectories(d => ({ ...d, [entry.oid]: { ...current, expanded: true } }));
             return;
         }
 
-        // Fetch children
         setDirectories(d => ({ ...d, [entry.oid]: { expanded: true, children: null, loading: true } }));
 
         try {

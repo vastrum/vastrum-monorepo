@@ -60,7 +60,7 @@ function NewPullRequestModal({ isOpen, onClose, baseRepository, baseOwner, onRef
         <Modal isOpen={isOpen} onClose={handleClose} title="Create a new pull request">
             <div className="p-6">
                 <div className="space-y-5">
-                    {/* Base Repository Info */}
+                    {}
                     <div className="bg-app-bg-tertiary border border-app-border rounded-lg p-4">
                         <div className="flex items-center gap-3 text-sm">
                             <GitPullRequest className="w-5 h-5 text-app-text-secondary" />
@@ -73,7 +73,7 @@ function NewPullRequestModal({ isOpen, onClose, baseRepository, baseOwner, onRef
                         </div>
                     </div>
 
-                    {/* Fork Selection */}
+                    {}
                     <div>
                         <label htmlFor="fork-select" className="block text-sm font-medium text-app-text-primary mb-2">
                             From your fork <span className="text-app-accent-red">*</span>
@@ -99,7 +99,7 @@ function NewPullRequestModal({ isOpen, onClose, baseRepository, baseOwner, onRef
                         </p>
                     </div>
 
-                    {/* Pull Request Title */}
+                    {}
                     <div>
                         <label htmlFor="pr-title" className="block text-sm font-medium text-app-text-primary mb-2">
                             Title <span className="text-app-accent-red">*</span>
@@ -114,7 +114,7 @@ function NewPullRequestModal({ isOpen, onClose, baseRepository, baseOwner, onRef
                         />
                     </div>
 
-                    {/* Pull Request Description */}
+                    {}
                     <div>
                         <label className="block text-sm font-medium text-app-text-primary mb-2">
                             Description
@@ -128,7 +128,7 @@ function NewPullRequestModal({ isOpen, onClose, baseRepository, baseOwner, onRef
                     </div>
                 </div>
 
-                {/* Action Buttons */}
+                {}
                 <div className="flex justify-end gap-3 mt-6">
                     <button
                         type="button"

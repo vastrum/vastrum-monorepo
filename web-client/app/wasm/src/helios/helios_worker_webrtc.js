@@ -1,6 +1,3 @@
-//uses webrtc to get rpc data, this is achieved by monkey patching self.fetch and hijacking the request and sending it through webrtc
-//instead of regular fetch
-//__ORIGIN__ and similar are replaced with actual values by fn build_worker_js()
 
 const origin = '__ORIGIN__';
 const execution_rpc = '__EXECUTION_RPC__';
@@ -14,8 +11,6 @@ try {
 
     const _pending_fetches = new Map();
     let _next_fetch_id = 1;
-    //monkeypatch of self.fetch, takes requests, encodes it and using postmessages sends it to main web-client "thread" from helios-worker
-    //web-client then handled webrtc communication
     self.fetch = (input, init) => {
         const req = new Request(input, init);
         const url = req.url;
@@ -27,8 +22,6 @@ try {
         }));
     };
 
-    //web-client posts responses to hijacked fetch calls through the FetchResponse message
-    //however web-client also sends regular rpc requests using this path, which is handled by else branch
     self.onmessage = async (e) => {
         if (e.data.type === 'FetchResponse') {
             const pending_req = _pending_fetches.get(e.data.id);
@@ -49,8 +42,6 @@ try {
     };
 
     mod.init_helios(JSON.stringify({ execution_rpc, consensus_rpc, checkpoint, network }));
-
-
 
     self.postMessage({ type: 'Ready' });
 } catch (e) {

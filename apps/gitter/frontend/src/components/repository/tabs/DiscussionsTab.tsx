@@ -57,7 +57,7 @@ const DiscussionsTab = ({ repoId }: DiscussionsTabProps): React.JSX.Element => {
     return (
         <div className="lg:col-span-2">
             <div className="bg-app-bg-secondary border border-app-border rounded-lg overflow-hidden">
-                {/* Filter/Action Bar */}
+                {}
                 <div className="flex items-center justify-between p-4 border-b border-app-border">
                     <div className="flex items-center gap-2">
                         <button className="text-sm text-app-text-primary hover:text-app-accent-blue">
@@ -67,7 +67,7 @@ const DiscussionsTab = ({ repoId }: DiscussionsTabProps): React.JSX.Element => {
                     <button onClick={() => setShowModal(true)} className="btn-primary text-sm">New discussion</button>
                 </div>
 
-                {/* Discussions List or Empty State */}
+                {}
                 {discussions.length > 0 ? (
                     <div>
                         {discussions.map((discussion) => (

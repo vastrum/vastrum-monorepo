@@ -45,10 +45,14 @@ deploy-all-localnet:
 
 
 deploy-all-production:
-	(cd apps/blocker/deploy && cargo run); \
-	until curl -sf -X POST https://rpc.vastrum.org/resolvedomain/ \
-		-H 'Content-Type: application/json' \
-		-d '{"domain":"blocker"}' 2>/dev/null | grep -qv '"site_id":null'; do sleep 1; done; \
+	(cd apps/blocker/deploy && cargo run) || { echo "blocker deploy failed"; exit 1; }; \
+	for i in $$(seq 1 180); do \
+		curl -sf -X POST https://rpc.vastrum.org/resolvedomain/ \
+			-H 'Content-Type: application/json' \
+			-d '{"domain":"blocker"}' 2>/dev/null | grep -qv '"site_id":null' && break; \
+		if [ $$i = 180 ]; then echo "blocker domain never registered after 180s"; exit 1; fi; \
+		sleep 1; \
+	done; \
 	(cd apps/chatter/deploy && cargo run) & \
 	(cd apps/concord/deploy && cargo run) & \
 	(cd apps/concourse/deploy && cargo run) & \

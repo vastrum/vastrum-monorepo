@@ -227,14 +227,38 @@ fn test_pow_replay_rejected_at_boundary() {
     );
 }
 
+#[test]
+fn test_fuel_packing_stops_at_block_fuel_limit() {
+    let db = Arc::new(Db::open_fresh(
+        std::env::temp_dir().join("vastrum-test-packing-stops-at-fuel-limit"),
+    ));
+    let execution = Execution::new(db);
+
+    let candidates: Vec<Transaction> = (0..8).map(|i| make_tx(0xf00 + i, i, 1)).collect();
+
+    let mut packer = execution.get_block_fuel_packer(0);
+    let mut packed = 0;
+    for tx in &candidates {
+        if !packer.has_room_for_another_tx() {
+            break;
+        }
+        packer.charge_for_another_tx(tx);
+        packed += 1;
+    }
+
+    let fits_per_block = (BLOCK_FUEL_LIMIT / TX_FUEL_CAP) as usize;
+    assert_eq!(packed, fits_per_block);
+}
 use crate::{
     consensus::types::{Block, FinalizedBlock},
     db::{BatchDb, Db},
     execution::execution::Execution,
 };
+use std::{collections::BTreeMap, sync::Arc};
 use vastrum_shared_types::{
     borsh::BorshExt,
     crypto::{ed25519, sha256, sha256::Sha256Digest},
+    limits::{BLOCK_FUEL_LIMIT, TX_FUEL_CAP},
     transactioning::compression::compress_calldata,
     types::{
         application::{
@@ -244,4 +268,3 @@ use vastrum_shared_types::{
         execution::transaction::Transaction,
     },
 };
-use std::{collections::BTreeMap, sync::Arc};

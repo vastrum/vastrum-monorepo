@@ -1,5 +1,5 @@
 impl Execution {
-    pub fn execute_call_tx(&self, calldata: Vec<u8>, module_cache: &HashMap<PathBuf, Module>) {
+    pub fn execute_call_tx(&mut self, calldata: Vec<u8>, module_cache: &HashMap<PathBuf, Module>) {
         let Ok(site_call) = borsh::from_slice::<SiteCall>(&calldata) else {
             tracing::warn!("failed to decode SiteCall");
             return;
@@ -8,7 +8,7 @@ impl Execution {
     }
 
     fn call_site(
-        &self,
+        &mut self,
         site_id: Sha256Digest,
         calldata: Vec<u8>,
         module_cache: &HashMap<PathBuf, Module>,
@@ -23,7 +23,7 @@ impl Execution {
         };
         //incase tx fails revert state changes writen to db by this tx
         self.db.begin_revertable();
-        let result = self.vastrum_host.execute_call(
+        let outcome = self.vastrum_host.run_call(
             &module,
             calldata,
             site_id,
@@ -31,12 +31,13 @@ impl Execution {
             self.block_timestamp,
             self.db.clone(),
         );
-        if let Err(e) = result {
+        if let Err(e) = outcome.execution_result {
             self.db.rollback_revertable();
             tracing::warn!("execute_call failed: {e:?}");
         } else {
             self.db.commit_revertable();
         }
+        self.block_fuel_remaining = self.block_fuel_remaining.saturating_sub(outcome.fuel);
     }
 
     fn load_module(

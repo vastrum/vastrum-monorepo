@@ -15,7 +15,7 @@ const EmptyRepoGuide = ({ repositoryName }: EmptyRepoGuideProps): React.JSX.Elem
                 You must first register your SSH public key in the repository settings (click the Settings button above).
             </p>
 
-            {/* Step 1: Push a new repo */}
+            {}
             <div className="border border-app-border rounded-lg p-4 bg-app-bg-tertiary">
                 <div className="flex items-start gap-3">
                     <div className="w-6 h-6 rounded-full bg-app-accent-blue text-white flex items-center justify-center text-sm font-semibold flex-shrink-0">
@@ -33,7 +33,7 @@ const EmptyRepoGuide = ({ repositoryName }: EmptyRepoGuideProps): React.JSX.Elem
                 </div>
             </div>
 
-            {/* Step 2: Push a new repo */}
+            {}
             <div className="border border-app-border rounded-lg p-4 bg-app-bg-tertiary">
                 <div className="flex items-start gap-3">
                     <div className="w-6 h-6 rounded-full bg-app-accent-blue text-white flex items-center justify-center text-sm font-semibold flex-shrink-0">
@@ -55,7 +55,7 @@ const EmptyRepoGuide = ({ repositoryName }: EmptyRepoGuideProps): React.JSX.Elem
                 </div>
             </div>
 
-            {/* Step 3: Push existing repo */}
+            {}
             <div className="border border-app-border rounded-lg p-4 bg-app-bg-tertiary">
                 <div className="flex items-start gap-3">
                     <div className="w-6 h-6 rounded-full bg-app-accent-blue text-white flex items-center justify-center text-sm font-semibold flex-shrink-0">

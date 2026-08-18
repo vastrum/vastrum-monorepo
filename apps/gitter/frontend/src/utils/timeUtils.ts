@@ -1,8 +1,5 @@
-/**
- * Convert Unix timestamp (seconds) to relative time string (e.g., "2 hours ago")
- */
 export function formatRelativeTime(timestamp: number): string {
-    const now = Math.floor(Date.now() / 1000); // Current time in seconds
+    const now = Math.floor(Date.now() / 1000);
     const secondsAgo = now - timestamp;
 
     if (secondsAgo < 0) {
@@ -28,10 +25,6 @@ export function formatRelativeTime(timestamp: number): string {
     return 'just now';
 }
 
-/**
- * Convert Unix timestamp (seconds) to formatted date string
- * Format: "Jan 15, 2024" or custom format
- */
 export function formatDate(timestamp: number, includeTime: boolean = false): string {
     const date = new Date(timestamp * 1000);
 
@@ -49,17 +42,10 @@ export function formatDate(timestamp: number, includeTime: boolean = false): str
     return date.toLocaleDateString('en-US', options);
 }
 
-/**
- * Get current Unix timestamp in seconds
- */
 export function getCurrentTimestamp(): number {
     return Math.floor(Date.now() / 1000);
 }
 
-/**
- * Create timestamp for relative time (e.g., "2 hours ago" -> timestamp)
- * Useful for generating test data
- */
 export function getTimestampFromRelative(value: number, unit: 'seconds' | 'minutes' | 'hours' | 'days' | 'weeks' | 'months'): number {
     const now = getCurrentTimestamp();
     const multipliers = {

@@ -62,7 +62,7 @@ function ForumHome(): React.JSX.Element {
                 { label: categoryName },
             ]} />
 
-            {/* Category header + New Topic */}
+            {}
             <div style={{
                 display: 'flex',
                 justifyContent: 'space-between',
@@ -96,7 +96,7 @@ function ForumHome(): React.JSX.Element {
                 border: '1px solid #e1e3e5',
                 padding: '0 20px',
             }}>
-                {/* Table header */}
+                {}
                 <div style={{
                     display: 'flex',
                     justifyContent: 'space-between',
@@ -118,7 +118,7 @@ function ForumHome(): React.JSX.Element {
                     </div>
                 </div>
 
-                {/* Topics list */}
+                {}
                 <div>
                     {posts.length === 0 ? (
                         <div style={{
@@ -153,7 +153,7 @@ function ForumHome(): React.JSX.Element {
                                         minWidth: 0,
                                     }}>
                                         <div style={{ flex: 1, minWidth: 0 }}>
-                                            {/* Title */}
+                                            {}
                                             <div style={{
                                                 display: 'flex',
                                                 alignItems: 'center',
@@ -175,7 +175,7 @@ function ForumHome(): React.JSX.Element {
                                                 </Link>
                                             </div>
 
-                                            {/* Author */}
+                                            {}
                                             <div style={{
                                                 display: 'flex',
                                                 alignItems: 'center',
@@ -190,7 +190,7 @@ function ForumHome(): React.JSX.Element {
                                             </div>
                                         </div>
 
-                                        {/* OP Avatar */}
+                                        {}
                                         <div style={{
                                             display: 'flex',
                                             alignItems: 'center',
@@ -220,7 +220,7 @@ function ForumHome(): React.JSX.Element {
                                         </div>
                                     </div>
 
-                                    {/* Stats */}
+                                    {}
                                     <div style={{
                                         display: 'flex',
                                         gap: 40,

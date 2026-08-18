@@ -22,9 +22,13 @@ pub async fn fetch_finalized_checkpoint() -> String {
     );
 }
 
+fn http_get(url: &str) -> reqwest::RequestBuilder {
+    reqwest::Client::new().get(url).timeout(std::time::Duration::from_secs(10))
+}
+
 async fn fetch_latest_finalized_slot(provider: &str) -> Option<u64> {
     let url = format!("{provider}/eth/v1/beacon/light_client/finality_update");
-    let resp = reqwest::get(&url).await.ok()?;
+    let resp = http_get(&url).send().await.ok()?;
     let update: FinalityUpdate = resp.json().await.ok()?;
     let slot: u64 = update.data.finalized_header.beacon.slot.parse().ok()?;
     Some(slot)
@@ -32,12 +36,12 @@ async fn fetch_latest_finalized_slot(provider: &str) -> Option<u64> {
 
 async fn try_bootstrap_for_slot(provider: &str, slot: u64) -> Option<String> {
     let url = format!("{provider}/eth/v1/beacon/headers/{slot}");
-    let resp = reqwest::get(&url).await.ok()?;
+    let resp = http_get(&url).send().await.ok()?;
     let header: BeaconHeaderResponse = resp.json().await.ok()?;
     let checkpoint = header.data.root;
 
     let url = format!("{provider}/eth/v1/beacon/light_client/bootstrap/{checkpoint}");
-    let resp = reqwest::get(&url).await.ok()?;
+    let resp = http_get(&url).send().await.ok()?;
     if resp.status().is_success() { Some(checkpoint) } else { None }
 }
 

@@ -36,7 +36,7 @@ function ChannelSidebar({ server, activeChannelId, myPubkey, onRefresh, onNaviga
     return (
         <>
             <div className="w-60 bg-dc-bg-secondary flex flex-col flex-shrink-0">
-                {/* Server header */}
+                {}
                 <button
                     onClick={() => setShowSettings(true)}
                     className="h-12 px-4 flex items-center justify-between border-b border-dc-bg-tertiary hover:bg-dc-channel-hover transition-colors shadow-sm"
@@ -45,7 +45,7 @@ function ChannelSidebar({ server, activeChannelId, myPubkey, onRefresh, onNaviga
                     <ChevronDown size={16} className="text-dc-text-muted flex-shrink-0" />
                 </button>
 
-                {/* Channels */}
+                {}
                 <div className="flex-1 overflow-y-auto pt-4 px-2">
                     <div className="flex items-center justify-between px-1 mb-1">
                         <span className="text-xs font-semibold text-dc-text-muted uppercase tracking-wide">Text Channels</span>
@@ -86,7 +86,7 @@ function ChannelSidebar({ server, activeChannelId, myPubkey, onRefresh, onNaviga
                     })}
                 </div>
 
-                {/* Invite button */}
+                {}
                 <div className="p-2 border-t border-dc-bg-tertiary">
                     <button
                         onClick={() => setShowInvite(true)}

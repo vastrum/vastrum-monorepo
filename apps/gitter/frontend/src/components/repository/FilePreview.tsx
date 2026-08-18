@@ -22,7 +22,6 @@ function FilePreview({ entry }: FilePreviewProps): React.JSX.Element {
                 return;
             }
 
-            // Validate OID before making WASM call
             if (!entry.oid || entry.oid.length === 0) {
                 console.error('Invalid OID: empty string');
                 setContent(null);
@@ -86,7 +85,7 @@ function FilePreview({ entry }: FilePreviewProps): React.JSX.Element {
 
     return (
         <div className="flex-1 flex flex-col bg-app-bg-secondary">
-            {/* Header */}
+            {}
             <div className="px-4 py-3 bg-app-bg-tertiary border-b border-app-border flex items-center justify-between flex-shrink-0">
                 <div className="flex items-center gap-2 flex-1 min-w-0">
                     <FileText className="w-4 h-4 text-app-text-secondary flex-shrink-0" />
@@ -109,7 +108,7 @@ function FilePreview({ entry }: FilePreviewProps): React.JSX.Element {
                 )}
             </div>
 
-            {/* Content */}
+            {}
             <div className="flex-1">
                 {loading ? (
                     <div className="flex items-center justify-center h-full min-h-[300px]">

@@ -13,7 +13,7 @@ function WelcomeModal({ isOpen, onClose }: WelcomeModalProps): React.JSX.Element
     return (
         <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
             <div className="bg-app-bg-secondary border border-app-border rounded-lg max-w-full md:max-w-2xl lg:max-w-4xl w-full max-h-[90vh] overflow-hidden relative">
-                {/* Modal Header */}
+                {}
                 <div className="flex items-center justify-between px-4 py-3 md:p-6 border-b border-app-border bg-app-bg-secondary">
                     <h2 className="text-lg md:text-xl font-semibold text-app-text-primary">Concord</h2>
                     <button
@@ -27,7 +27,7 @@ function WelcomeModal({ isOpen, onClose }: WelcomeModalProps): React.JSX.Element
                     </button>
                 </div>
 
-                {/* Modal Content */}
+                {}
                 <div className="overflow-y-auto scrollbar-thin max-h-[calc(90vh-88px)]">
                     <div className="p-6 space-y-6">
                         <div>
@@ -56,17 +56,17 @@ function WelcomeModal({ isOpen, onClose }: WelcomeModalProps): React.JSX.Element
                         </div>
 
                         <div className="flex flex-col gap-1 text-sm">
-                            {/* docs */}
+                            {}
                             <a href="https://xpkeuoccopibhnakya3luhrsphalhnqo2ifmxe65murdjft54n3q.vastrum.net/apps/concord" target="_blank" rel="noopener noreferrer" className="text-app-accent hover:underline">
                                 Concord docs
                             </a>
-                            {/* docs */}
+                            {}
                             <a href="https://xpkeuoccopibhnakya3luhrsphalhnqo2ifmxe65murdjft54n3q.vastrum.net/" target="_blank" rel="noopener noreferrer" className="text-app-accent hover:underline">
                                 Vastrum docs
                             </a>
                         </div>
 
-                        {/* Close Button */}
+                        {}
                         <div className="flex justify-end pt-2">
                             <button onClick={onClose} className="bg-app-accent text-white px-4 py-2 rounded-md font-medium hover:opacity-80 transition-colors">
                                 Close

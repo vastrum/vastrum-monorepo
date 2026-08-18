@@ -80,7 +80,6 @@ function DocumentEditor(): React.JSX.Element {
         await save();
     }, [meta, title, docId, save]);
 
-
     if (loading || !editor) {
         return (
             <div style={{ display: 'flex', justifyContent: 'center', padding: 60 }}>

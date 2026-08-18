@@ -39,24 +39,28 @@ impl Db {
 
     pub fn open(path: impl Into<PathBuf>) -> Db {
         use rocksdb::{
-            BlockBasedOptions, Cache, ColumnFamilyDescriptor, DB, DBCompressionType,
-            DataBlockIndexType, Options,
+            Cache, ColumnFamilyDescriptor, DB, DBCompressionType, Options,
         };
 
         let path = path.into();
-        let cache = Cache::new_lru_cache(256 * 1024 * 1024);
+        let cache = Cache::new_hyper_clock_cache(512 * 1024 * 1024, 0);
 
-        let mut block_opts = BlockBasedOptions::default();
-        block_opts.set_block_cache(&cache);
-        block_opts.set_bloom_filter(10.0, false);
-        block_opts.set_cache_index_and_filter_blocks(true);
-        block_opts.set_pin_l0_filter_and_index_blocks_in_cache(true);
-        block_opts.set_data_block_index_type(DataBlockIndexType::BinaryAndHash);
-        block_opts.set_data_block_hash_ratio(0.75);
+        let block_opts = block_table_options(&cache, 16 * 1024);
 
         let mut cf_opts = Options::default();
         cf_opts.set_block_based_table_factory(&block_opts);
         cf_opts.set_compression_type(DBCompressionType::Lz4);
+      
+        cf_opts.set_soft_pending_compaction_bytes_limit(0);
+        cf_opts.set_hard_pending_compaction_bytes_limit(0);
+        cf_opts.set_level_zero_slowdown_writes_trigger(512);
+        cf_opts.set_level_zero_stop_writes_trigger(1024);
+
+        let mut precompressed_cf_opts = cf_opts.clone();
+        precompressed_cf_opts.set_compression_type(DBCompressionType::None);
+
+        let mut jmt_cf_opts = precompressed_cf_opts.clone();
+        jmt_cf_opts.set_optimize_filters_for_hits(true);
 
         let mut db_opts = Options::default();
         db_opts.create_if_missing(true);
@@ -74,22 +78,20 @@ impl Db {
             ColumnFamilyDescriptor::new(cf::DOMAIN, cf_opts.clone()),
             ColumnFamilyDescriptor::new(cf::MODULE, cf_opts.clone()),
             ColumnFamilyDescriptor::new(cf::SITE_KV, cf_opts.clone()),
-            ColumnFamilyDescriptor::new(cf::BLOCKCHAIN, cf_opts.clone()),
+            ColumnFamilyDescriptor::new(cf::BLOCKCHAIN, precompressed_cf_opts.clone()),
             ColumnFamilyDescriptor::new(cf::INCLUDED_TXS, cf_opts.clone()),
-            ColumnFamilyDescriptor::new(cf::PAGE, cf_opts.clone()),
+            ColumnFamilyDescriptor::new(cf::PAGE, precompressed_cf_opts.clone()),
             ColumnFamilyDescriptor::new(cf::META, cf_opts.clone()),
             ColumnFamilyDescriptor::new(cf::VOTE_STATE, cf_opts.clone()),
-            ColumnFamilyDescriptor::new(cf::JMT_NODES, cf_opts.clone()),
-            ColumnFamilyDescriptor::new(cf::JMT_VALUES, cf_opts.clone()),
-            ColumnFamilyDescriptor::new(cf::JMT_STALE, cf_opts.clone()),
+            ColumnFamilyDescriptor::new(cf::JMT_NODES, jmt_cf_opts.clone()),
+            ColumnFamilyDescriptor::new(cf::JMT_VALUES, jmt_cf_opts.clone()),
+            ColumnFamilyDescriptor::new(cf::JMT_STALE, jmt_cf_opts),
             ColumnFamilyDescriptor::new(cf::KV_HISTORY, cf_opts.clone()),
             ColumnFamilyDescriptor::new(cf::KV_HISTORY_PRUNE_INDEX, cf_opts),
         ];
 
-        Db {
-            rocks: Arc::new(DB::open_cf_descriptors(&db_opts, &path, cfs).unwrap()),
-            data_path: path,
-        }
+        let rocks = Arc::new(DB::open_cf_descriptors(&db_opts, &path, cfs).unwrap());
+        Db { rocks, data_path: path }
     }
 
     pub fn open_fresh(path: impl Into<PathBuf>) -> Db {
@@ -220,6 +222,25 @@ impl Db {
         self.data_path.join("compiled_modules")
     }
 }
+
+#[cfg(not(madsim))]
+fn block_table_options(cache: &rocksdb::Cache, block_size_bytes: usize) -> rocksdb::BlockBasedOptions {
+    use rocksdb::{BlockBasedIndexType, BlockBasedOptions, DataBlockIndexType};
+
+    let mut block_opts = BlockBasedOptions::default();
+    block_opts.set_block_cache(cache);
+    block_opts.set_block_size(block_size_bytes);
+    block_opts.set_bloom_filter(10.0, false);
+    block_opts.set_cache_index_and_filter_blocks(true);
+    block_opts.set_pin_l0_filter_and_index_blocks_in_cache(true);
+    block_opts.set_index_type(BlockBasedIndexType::TwoLevelIndexSearch);
+    block_opts.set_partition_filters(true);
+    block_opts.set_pin_top_level_index_and_filter(true);
+    block_opts.set_data_block_index_type(DataBlockIndexType::BinaryAndHash);
+    block_opts.set_data_block_hash_ratio(0.75);
+    return block_opts;
+}
+
 
 pub struct DbEntry {
     pub key: Vec<u8>,
@@ -373,6 +394,13 @@ impl BatchDb {
 
     pub fn inner_db(&self) -> &Db {
         &self.db
+    }
+
+    /// The underlying store, for building a second overlay over the same data.
+    /// Used when packing a block to dry-run transactions without their writes
+    /// reaching the real pending set.
+    pub fn inner_db_arc(&self) -> Arc<Db> {
+        return self.db.clone();
     }
 }
 mod domain;

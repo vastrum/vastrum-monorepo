@@ -7,12 +7,14 @@ pub struct Execution {
     pub message_sender: ed25519::PublicKey,
     pub db: Arc<BatchDb>,
     state_tree: StateTree,
+    pub block_fuel_remaining: u64,
 }
 impl Execution {
     #[cfg(not(madsim))]
     pub fn execute_block(&mut self, finalized: FinalizedBlock) {
         self.current_block_height = finalized.block.height;
         self.block_timestamp = finalized.block.timestamp;
+        self.block_fuel_remaining = BLOCK_FUEL_LIMIT;
 
         let txs = &finalized.block.transactions;
 
@@ -24,12 +26,18 @@ impl Execution {
         //as honest leader should ensure all pow hash and sigs are ok
         //if any invalid signature or pow, then skip executing block
         if !all_txs_valid_in_block {
-            tracing::warn!("one or more transactions in block failed verification, rejecting block");
+            tracing::warn!(
+                "one or more transactions in block failed verification, rejecting block"
+            );
         } else {
             let decoded_txs = decompress_and_decode_transactions(txs);
             //cache of contracts transactions in this block touches
             let module_cache = self.preload_modules(&decoded_txs);
             for decoded_tx in decoded_txs {
+                let not_enough_gas_for_another_tx = self.block_fuel_remaining < TX_FUEL_CAP;
+                if not_enough_gas_for_another_tx {
+                    break;
+                }
                 self.mark_pow_as_spent(decoded_tx.pow_hash);
                 let Some(transaction_data) = decoded_tx.transaction_data else {
                     tracing::warn!("failed to decompress transaction calldata");
@@ -133,7 +141,11 @@ impl Execution {
 
     fn verify_pow_threshold(&self, transaction: &Transaction) -> bool {
         let pow_hash = transaction.calculate_pow_hash();
-        return pow_hash < self.pow_threshold();
+        return pow_hash < Self::pow_threshold();
+    }
+
+    fn pow_threshold() -> Sha256Digest {
+        Sha256Digest::from([255u8; 32])
     }
 
     fn verify_pow_not_spent(&self, transaction: &Transaction) -> bool {
@@ -167,13 +179,6 @@ impl Execution {
         self.seen_pow_hash_by_height.retain(|&height, _| height >= expired_height);
     }
 
-    fn pow_threshold(&self) -> Sha256Digest {
-        return Sha256Digest::from([
-            255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-            255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-        ]);
-    }
-
     pub fn new(db: Arc<Db>) -> Execution {
         return Execution {
             seen_pow_hash: HashSet::new(),
@@ -184,6 +189,7 @@ impl Execution {
             message_sender: ed25519::PublicKey::default(),
             db: BatchDb::new(db),
             state_tree: StateTree::new(),
+            block_fuel_remaining: BLOCK_FUEL_LIMIT,
         };
     }
 
@@ -233,7 +239,121 @@ impl Execution {
             message_sender: ed25519::PublicKey::default(),
             state_tree,
             db: BatchDb::new(db),
+            block_fuel_remaining: BLOCK_FUEL_LIMIT,
         }
+    }
+
+    #[cfg(not(madsim))]
+    pub fn get_block_fuel_packer(&self, block_timestamp: u64) -> BlockPacker {
+        return BlockPacker {
+            host: VastrumHost::new(),
+            scratch: BatchDb::new(self.db.inner_db_arc()),
+            module_cache: HashMap::new(),
+            block_timestamp,
+            fuel_remaining: BLOCK_FUEL_LIMIT,
+        };
+    }
+
+    #[cfg(madsim)]
+    pub fn get_block_fuel_packer(&self, _block_timestamp: u64) -> BlockPacker {
+        return BlockPacker { fuel_remaining: BLOCK_FUEL_LIMIT };
+    }
+}
+#[cfg(not(madsim))]
+pub struct BlockPacker {
+    host: VastrumHost,
+    scratch: Arc<BatchDb>,
+    module_cache: HashMap<PathBuf, Module>,
+    block_timestamp: u64,
+    fuel_remaining: u64,
+}
+
+const UNMEASURABLE_TX_FUEL: u64 = TX_FUEL_CAP;
+
+#[cfg(not(madsim))]
+impl BlockPacker {
+    pub fn has_room_for_another_tx(&self) -> bool {
+        return self.fuel_remaining >= TX_FUEL_CAP;
+    }
+
+    pub fn charge_for_another_tx(&mut self, transaction: &Transaction) {
+        let fuel = self.dry_run_fuel(transaction);
+        self.fuel_remaining = self.fuel_remaining.saturating_sub(fuel);
+    }
+
+    fn dry_run_fuel(&mut self, transaction: &Transaction) -> u64 {
+        let Ok(decompressed) = decompress_calldata(&transaction.calldata) else {
+            return UNMEASURABLE_TX_FUEL;
+        };
+        let Ok(transaction_data) = borsh::from_slice::<TransactionData>(&decompressed) else {
+            return UNMEASURABLE_TX_FUEL;
+        };
+        if transaction_data.transaction_type != TransactionType::Call {
+            return UNMEASURABLE_TX_FUEL;
+        }
+        let Ok(site_call) = borsh::from_slice::<SiteCall>(&transaction_data.calldata) else {
+            return UNMEASURABLE_TX_FUEL;
+        };
+        let Some(site_data) = self.scratch.read_site(site_call.site_id) else {
+            return UNMEASURABLE_TX_FUEL;
+        };
+        let module_file_path = self.scratch.calculate_module_file_path(site_data.module_id);
+        let Some(module) = self.load_module(&module_file_path) else {
+            return UNMEASURABLE_TX_FUEL;
+        };
+
+        self.scratch.begin_revertable();
+        let outcome = self.host.run_call(
+            &module,
+            site_call.calldata,
+            site_call.site_id,
+            transaction.pub_key,
+            self.block_timestamp,
+            self.scratch.clone(),
+        );
+        if outcome.execution_result.is_err() {
+            self.scratch.rollback_revertable();
+        } else {
+            self.scratch.commit_revertable();
+        }
+        return outcome.fuel;
+    }
+
+    //deduplicated so a block touching one contract repeatedly deserializes once
+    fn load_module(&mut self, path: &PathBuf) -> Option<Module> {
+        if let Some(module) = self.module_cache.get(path) {
+            return Some(module.clone());
+        }
+        if !path.exists() {
+            tracing::warn!("module file not found while packing: {path:?}");
+            return None;
+        }
+        let loaded = unsafe { Module::deserialize_file(self.host.engine(), path) };
+        match loaded {
+            Ok(module) => {
+                self.module_cache.insert(path.clone(), module.clone());
+                return Some(module);
+            }
+            Err(e) => {
+                tracing::warn!("failed to load module while packing: {e:?}");
+                return None;
+            }
+        }
+    }
+}
+#[cfg(madsim)]
+pub struct BlockPacker {
+    fuel_remaining: u64,
+}
+
+#[cfg(madsim)]
+impl BlockPacker {
+    pub fn has_room_for_another_tx(&self) -> bool {
+        return self.fuel_remaining >= TX_FUEL_CAP;
+    }
+
+    pub fn charge_for_another_tx(&mut self, _transaction: &Transaction) {
+        self.fuel_remaining = self.fuel_remaining.saturating_sub(UNMEASURABLE_TX_FUEL);
     }
 }
 
@@ -274,19 +394,20 @@ use crate::{
     db::{BatchDb, Db},
     execution::wasmhost::host::VastrumHost,
 };
-use vastrum_shared_types::{
-    crypto::{ed25519, sha256::Sha256Digest},
-    limits::{KV_RETENTION_WINDOW, VALIDITY_WINDOW},
-    types::execution::transaction::Transaction,
-};
 use std::{
     collections::{HashMap, HashSet},
     sync::Arc,
+};
+use vastrum_shared_types::{
+    crypto::{ed25519, sha256::Sha256Digest},
+    limits::{BLOCK_FUEL_LIMIT, KV_RETENTION_WINDOW, TX_FUEL_CAP, VALIDITY_WINDOW},
+    types::execution::transaction::Transaction,
 };
 #[cfg(not(madsim))]
 use {
     super::parallel_batch_verifier,
     rayon::prelude::*,
+    std::path::PathBuf,
     vastrum_shared_types::{
         transactioning::compression::decompress_calldata,
         types::application::{
@@ -294,7 +415,6 @@ use {
             transactiondata::{TransactionData, TransactionType},
         },
     },
-    std::path::PathBuf,
     wasmtime::Module,
 };
 

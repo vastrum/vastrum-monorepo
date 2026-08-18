@@ -11,16 +11,22 @@ pub async fn handle_get_latest_block_height() -> Result<GetLatestBlockHeightResp
 
 pub async fn make_call(params: MakeCallRequest) -> Result<MakeCallResponse> {
     let site_id = get_current_site_id()?;
-    let tx_hash = submit_call(site_id, params.call_data).await?;
-    return Ok(MakeCallResponse { tx_hash });
+    let sent = submit_call(site_id, params.call_data).await?;
+    return Ok(MakeCallResponse {
+        tx_hash: sent.tx_hash,
+        tx_created_at_block_height: sent.tx_created_at_block_height,
+    });
 }
 
 pub async fn make_authenticated_call(params: MakeAuthCallRequest) -> Result<MakeAuthCallResponse> {
     let site_id = get_current_site_id()?;
-    let tx_hash =
+    let sent =
         submit_authenticated_call(site_id, params.call_data, keystore::get_site_private_key()?)
             .await?;
-    return Ok(MakeAuthCallResponse { tx_hash });
+    return Ok(MakeAuthCallResponse {
+        tx_hash: sent.tx_hash,
+        tx_created_at_block_height: sent.tx_created_at_block_height,
+    });
 }
 
 pub async fn get_private_salt_for_site_id(

@@ -6,3 +6,4 @@ edition = "2024"
 [dependencies]
 wasmtime = "42"
 vastrum-shared-types.workspace = true
+

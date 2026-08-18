@@ -35,17 +35,17 @@ export function WelcomeModal({ isOpen, onClose }: WelcomeModalProps) {
                 </div>
 
                 <div className="flex flex-col gap-1 text-sm">
-                    {/* docs */}
+                    {}
                     <a href="https://xpkeuoccopibhnakya3luhrsphalhnqo2ifmxe65murdjft54n3q.vastrum.net/apps/swapper" target="_blank" rel="noopener noreferrer" className="text-app-accent hover:underline">
                         Swapper docs
                     </a>
-                    {/* docs */}
+                    {}
                     <a href="https://xpkeuoccopibhnakya3luhrsphalhnqo2ifmxe65murdjft54n3q.vastrum.net/" target="_blank" rel="noopener noreferrer" className="text-app-accent hover:underline">
                         Vastrum docs
                     </a>
                 </div>
 
-                {/* Close Button */}
+                {}
                 <div className="flex justify-end pt-2">
                     <button onClick={onClose} className="bg-app-accent-green text-white px-4 py-2 rounded-md font-medium hover:bg-[#2ea043] transition-colors">
                         Close

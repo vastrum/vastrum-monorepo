@@ -37,7 +37,6 @@ function MessageFeed({ messages, memberNames, myPubkey, ownerPubkey, onDeleteMes
         if (idx === 0) return true;
         const prev = messages[idx - 1];
         if (prev.author !== msg.author) return true;
-        // Show header if more than 5 minutes apart
         if (Number(msg.timestamp) - Number(prev.timestamp) > 300) return true;
         return false;
     };

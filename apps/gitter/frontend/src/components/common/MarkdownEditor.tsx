@@ -20,7 +20,7 @@ function MarkdownEditor({
 
     return (
         <div>
-            {/* Write/Preview Tab Buttons */}
+            {}
             <div className="flex gap-1 mb-2">
                 <button
                     type="button"
@@ -46,7 +46,7 @@ function MarkdownEditor({
                 </button>
             </div>
 
-            {/* Textarea or Preview */}
+            {}
             {!showPreview ? (
                 <textarea
                     id={id}

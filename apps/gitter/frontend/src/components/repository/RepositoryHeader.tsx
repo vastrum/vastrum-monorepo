@@ -27,7 +27,7 @@ function RepositoryHeader({ repository, isOwner, onFork, onSettings }: Repositor
                     </span>
                 </div>
 
-                {/* Action Buttons */}
+                {}
                 <div className="flex items-center gap-2">
                     {isOwner && (
                         <button

@@ -1,7 +1,7 @@
 pub mod borsh;
 pub mod compression;
 pub mod crypto;
-pub mod frontend;
+pub mod webclient;
 pub mod genesis;
 pub mod iframerpc;
 pub mod indexer;

@@ -1,4 +1,7 @@
-use vastrum_shared_types::limits::MAX_WASM_HOST_BUFFER_SIZE;
+use vastrum_shared_types::limits::{
+    FUEL_KV_READ_BASE, FUEL_KV_READ_PER_BYTE, FUEL_KV_WRITE_BASE, FUEL_KV_WRITE_PER_BYTE,
+    MAX_WASM_HOST_BUFFER_SIZE,
+};
 use wasmtime::{AsContext, AsContextMut, Caller, Linker, Module, Store, TypedFunc};
 
 pub fn call_contract<T: HostRuntime + 'static>(
@@ -17,6 +20,16 @@ pub fn construct_contract<T: HostRuntime + 'static>(
     constructor_params: &[u8],
 ) -> wasmtime::Result<()> {
     invoke_entry_point(linker, store, module, "construct", constructor_params)
+}
+
+fn charge_fuel<T>(caller: &mut Caller<'_, T>, cost: u64) -> Result<(), wasmtime::Error> {
+    let remaining = caller.get_fuel()?;
+    if remaining < cost {
+        caller.set_fuel(0)?;
+        return Err(wasmtime::Error::msg("out of gas"));
+    }
+    caller.set_fuel(remaining - cost)?;
+    Ok(())
 }
 
 pub trait HostRuntime {
@@ -50,6 +63,10 @@ pub fn add_to_linker<T: HostRuntime + 'static>(linker: &mut Linker<T>) -> wasmti
         "kv_insert",
         |mut caller: Caller<'_, T>, ptr: u32, len: u32| -> Result<(), wasmtime::Error> {
             let buf = read_bytes_from_guest_memory(&mut caller, ptr, len)?;
+            charge_fuel(
+                &mut caller,
+                FUEL_KV_WRITE_BASE + buf.len() as u64 * FUEL_KV_WRITE_PER_BYTE,
+            )?;
             caller.data_mut().kv_insert(&buf);
             Ok(())
         },
@@ -66,6 +83,10 @@ pub fn add_to_linker<T: HostRuntime + 'static>(linker: &mut Linker<T>) -> wasmti
          -> Result<(), wasmtime::Error> {
             let args = read_bytes_from_guest_memory(&mut caller, ptr, len)?;
             let value = caller.data().kv_get(&args);
+            charge_fuel(
+                &mut caller,
+                FUEL_KV_READ_BASE + value.len() as u64 * FUEL_KV_READ_PER_BYTE,
+            )?;
             return_bytes_to_guest(&mut caller, &value, out_ptr_ptr, out_len_ptr)
         },
     )?;
@@ -75,6 +96,7 @@ pub fn add_to_linker<T: HostRuntime + 'static>(linker: &mut Linker<T>) -> wasmti
         "log",
         |mut caller: Caller<'_, T>, ptr: u32, len: u32| -> Result<(), wasmtime::Error> {
             let buf = read_bytes_from_guest_memory(&mut caller, ptr, len)?;
+            charge_fuel(&mut caller, FUEL_KV_READ_BASE + buf.len() as u64 * FUEL_KV_READ_PER_BYTE)?;
             caller.data_mut().log(&buf);
             Ok(())
         },
@@ -85,6 +107,10 @@ pub fn add_to_linker<T: HostRuntime + 'static>(linker: &mut Linker<T>) -> wasmti
         "register_static_route",
         |mut caller: Caller<'_, T>, ptr: u32, len: u32| -> Result<(), wasmtime::Error> {
             let buf = read_bytes_from_guest_memory(&mut caller, ptr, len)?;
+            charge_fuel(
+                &mut caller,
+                FUEL_KV_WRITE_BASE + buf.len() as u64 * FUEL_KV_WRITE_PER_BYTE,
+            )?;
             caller.data_mut().register_static_route(&buf);
             Ok(())
         },

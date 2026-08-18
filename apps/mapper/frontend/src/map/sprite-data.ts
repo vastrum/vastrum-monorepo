@@ -3,7 +3,6 @@ import sprite2xJson from './sprites/sprite@2x.json';
 import spritePngUrl from './sprites/sprite.png';
 import sprite2xPngUrl from './sprites/sprite@2x.png';
 
-// Cache decoded sprite images
 let spriteImageCache: Record<string, ArrayBuffer> = {};
 
 function dataUrlToArrayBuffer(dataUrl: string): ArrayBuffer {
@@ -16,10 +15,6 @@ function dataUrlToArrayBuffer(dataUrl: string): ArrayBuffer {
     return bytes.buffer;
 }
 
-/**
- * Returns sprite data for the given filename.
- * MapLibre requests:  sprite.json, sprite.png, sprite@2x.json, sprite@2x.png
- */
 export async function getSpriteData(filename: string): Promise<object | ArrayBuffer> {
     if (filename.endsWith('.json')) {
         return filename.includes('@2x') ? sprite2xJson : spriteJson;

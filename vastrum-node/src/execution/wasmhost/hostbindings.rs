@@ -71,6 +71,8 @@ impl HostRuntime for HostState {
     }
 }
 use crate::db::BatchDb;
+use std::sync::Arc;
+use vastrum_bindings_host::HostRuntime;
 use vastrum_runtime_shared::{
     Ed25519PublicKey, GetMessageSenderResponse, KeyValueInsertCall, KeyValueReadCall,
     KeyValueReadResponse, LogCall, RegisterStaticRouteCall,
@@ -78,6 +80,4 @@ use vastrum_runtime_shared::{
 use vastrum_shared_types::borsh::BorshExt;
 use vastrum_shared_types::crypto::{ed25519, sha256::Sha256Digest};
 use vastrum_shared_types::types::storage::Page;
-use std::sync::Arc;
-use vastrum_bindings_host::HostRuntime;
 use wasmtime::StoreLimits;

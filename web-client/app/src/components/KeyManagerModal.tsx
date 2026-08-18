@@ -11,7 +11,6 @@ export default function KeyManager() {
 
     const [newKey, setNewKey] = useState("");
 
-
     const handleImportKey = () => {
         if (newKey.trim() !== "") {
             set_private_key(newKey.trim());
@@ -28,7 +27,7 @@ export default function KeyManager() {
                 setIsOpen={() => setIsOpen(true)}
             />
 
-            {/* Modal */}
+            {}
             {
                 isOpen && (
                     <div

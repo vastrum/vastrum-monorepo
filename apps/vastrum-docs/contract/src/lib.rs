@@ -1,5 +1,5 @@
 use vastrum_contract_macros::{authenticated, constructor, contract_methods, contract_state};
-use vastrum_runtime_lib::{Ed25519PublicKey, runtime::message_sender};
+use vastrum_runtime_lib::{Ed25519PublicKey, runtime::{self, message_sender}};
 
 #[contract_state]
 struct Contract {
