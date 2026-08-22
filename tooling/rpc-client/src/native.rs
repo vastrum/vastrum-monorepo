@@ -23,7 +23,7 @@ impl RpcProvider for NativeRpcClient {
 
     async fn get_key_value(&self, key: String) -> Option<Vec<u8>> {
         let result =
-            self.http.get_key_value_response(self.site_id, key.clone(), None).await.ok()?;
+            self.http.get_key_value_response(self.site_id, key.clone()).await.ok()?;
         let response = match result {
             GetKeyValueResult::Ok(r) => r,
             GetKeyValueResult::Err(e) => {
@@ -42,35 +42,6 @@ impl RpcProvider for NativeRpcClient {
             now,
         ) {
             eprintln!("proof verification failed for key {key}: {e}");
-            return None;
-        }
-        if response.value.is_empty() {
-            return None;
-        }
-        return Some(response.value);
-    }
-
-    async fn get_key_value_at_height(&self, key: String, height: u64) -> Option<Vec<u8>> {
-        let result =
-            self.http.get_key_value_response(self.site_id, key.clone(), Some(height)).await.ok()?;
-        let response = match result {
-            GetKeyValueResult::Ok(r) => r,
-            GetKeyValueResult::Err(e) => {
-                eprintln!("get_key_value failed for key {key} at height {height}: {e:?}");
-                return None;
-            }
-        };
-        let genesis = genesis_epoch_state();
-        let now = SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs();
-        if let Err(e) = verify_keyvalue_proof(
-            &response,
-            self.site_id,
-            &key,
-            &genesis.validators,
-            genesis.total_stake,
-            now,
-        ) {
-            eprintln!("proof verification failed for key {key} at height {height}: {e}");
             return None;
         }
         if response.value.is_empty() {

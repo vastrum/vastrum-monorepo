@@ -9,27 +9,22 @@ gix-hash =  "0.22.1"
 gix-object =  "0.57.0"
 gix-actor =  "0.40.0"
 gix-date =  "0.15.0"
-tsify = "0.5.6"
+vastrum-ts-macros.workspace = true
+serde-wasm-bindgen = "0.6"
 wasm-bindgen = "0.2"
 serde = { version = "1", features = ["derive"] }
-anyhow = "1.0"
 vastrum-shared-types = { version = "0.1.0", path = "../../../shared-types" }
-vastrum-frontend-lib = { version = "0.1.0", path = "../../../tooling/vastrum-lib-rust-frontend" }
-hex = "0.4"
 vastrum-abi = { version = "0.1.0", path = "../../../runtime/vastrum-abi" }
 vastrum-rpc-client = { version = "0.1.0", path = "../../../tooling/rpc-client" }
 gitter-abi = { path = "../abi" }
-vastrum-runtime-shared = { version = "0.1.0", path = "../../../runtime/runtime-shared" }
 futures = "0.3"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 vastrum-native-lib = { version = "0.1.0", path = "../../../tooling/native-lib", features = ["localnet"] }
-gix = { version ="0.80.0", default-features = false, features = ["parallel", "worktree-mutation", "index", "serde"] }
+gix = { version ="0.80.0", default-features = false, features = ["parallel", "worktree-mutation", "index"] }
 tokio = { version = "1.49.0", features = ["full", "tracing"] }
-indicatif = "0.18"
 tempfile = "3"
 
 [dev-dependencies]
-gix = { version ="0.80.0", default-features = false, features = ["parallel", "worktree-mutation", "index", "serde"] }
-serial_test = "3"
+gix = { version ="0.80.0", default-features = false, features = ["parallel", "worktree-mutation", "index"] }
 

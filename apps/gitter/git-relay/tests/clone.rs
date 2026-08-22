@@ -1,7 +1,6 @@
 mod common;
 
 use common::*;
-use serial_test::serial;
 use std::process::Command;
 use tempfile::TempDir;
 use vastrum_git_lib::ContractAbiClient;
@@ -11,7 +10,6 @@ use vastrum_rpc_client::SentTxBehavior;
 use vastrum_shared_types::crypto::ed25519;
 
 #[tokio::test(flavor = "multi_thread")]
-#[serial]
 async fn test_http_clone_basic() {
     let shared = ensure_relay().await;
     let contract =
@@ -50,7 +48,6 @@ async fn test_http_clone_basic() {
 
 /// Clone over SSH using an unregistered key. Upload-pack must be anonymous.
 #[tokio::test(flavor = "multi_thread")]
-#[serial]
 async fn test_ssh_clone_anonymous() {
     let shared = ensure_relay().await;
     let contract =
@@ -90,7 +87,6 @@ async fn test_ssh_clone_anonymous() {
 
 /// SSH clone of a nonexistent repo must fail (not hang, not silently 0-exit).
 #[tokio::test(flavor = "multi_thread")]
-#[serial]
 async fn test_ssh_clone_nonexistent_repo() {
     let _ = ensure_relay().await;
 
@@ -116,7 +112,6 @@ async fn test_ssh_clone_nonexistent_repo() {
 /// registered key, then clone back via SSH with a different, UNREGISTERED key.
 /// Symmetric to test_push_then_clone but both legs use SSH.
 #[tokio::test(flavor = "multi_thread")]
-#[serial]
 async fn test_ssh_clone_push_then_ssh_clone() {
     let shared = ensure_relay().await;
     let contract =

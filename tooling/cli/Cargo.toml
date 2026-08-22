@@ -8,15 +8,15 @@ anyhow = "1.0.102"
 clap = { version = "4.5.60", features = ["derive"] }
 vastrum-node.workspace = true
 tokio = { version = "1.49.0", features = ["full", "tracing"] }
-webbrowser = "1.1.0"
 vastrum-git-lib = { path = "../../apps/gitter/vastrum-git-lib" }
 vastrum-git-relay = { path = "../../apps/gitter/git-relay" }
 vastrum-shared-types.workspace = true
 vastrum-native-lib = { workspace = true, features = ["localnet"] }
-indicatif = "0.18"
-rust-embed = "8"
 dirs = "6.0.0"
+vastrum-asset-embed.workspace = true
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(madsim)'] }
 
+[build-dependencies]
+vastrum-asset-embed.workspace = true

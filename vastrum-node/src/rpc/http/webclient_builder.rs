@@ -1,8 +1,3 @@
-#[cfg(not(madsim))]
-#[derive(rust_embed::RustEmbed)]
-#[folder = "../web-client/app/dist/"]
-pub struct WebClientAssets;
-
 #[derive(Clone)]
 pub struct WebClient {
     pub html: String,
@@ -21,8 +16,8 @@ async fn build_index_html(
     rpc_nodes: Vec<RpcNodeEndpoint>,
     epoch_state: &EpochState,
 ) -> (String, Arc<Vec<u8>>) {
-    let file = WebClientAssets::get("index.html").unwrap();
-    let raw_html = String::from_utf8_lossy(&file.data);
+    let file = embedded_asset("index.html").unwrap();
+    let raw_html = String::from_utf8_lossy(file.data);
     let helios_checkpoint = fetch_finalized_checkpoint().await;
     let html = inject_webclient_data(&raw_html, rpc_nodes, helios_checkpoint, epoch_state);
     let compressed_html = Arc::new(brotli_compress(html.as_bytes()));
@@ -56,19 +51,18 @@ fn inject_webclient_data(
 
 fn brotli_compress_static_assets() -> Arc<HashMap<String, (Vec<u8>, String)>> {
     let mut assets: HashMap<String, (Vec<u8>, String)> = HashMap::new();
-    for path in WebClientAssets::iter() {
-        let is_index = &*path == "index.html";
+    for asset in WEB_CLIENT_ASSETS {
+        let is_index = asset.path == "index.html";
         if is_index {
             continue;
         }
-        if let Some(file) = WebClientAssets::get(&path) {
-            let mime = mime_guess::from_path(&*path).first_or_octet_stream().to_string();
-            assets.insert(path.to_string(), (brotli_compress(&file.data), mime));
-        }
+        let mime = mime_guess::from_path(asset.path).first_or_octet_stream().to_string();
+        assets.insert(asset.path.to_string(), (brotli_compress(asset.data), mime));
     }
     Arc::new(assets)
 }
 
+use super::embedded_assets::{WEB_CLIENT_ASSETS, embedded_asset};
 use super::helios_checkpoint::fetch_finalized_checkpoint;
 use crate::consensus::validator_state_machine::EpochState;
 use vastrum_shared_types::compression::brotli::brotli_compress;

@@ -3,7 +3,6 @@ use std::time::Duration;
 use tokio::time::sleep;
 
 #[tokio::test]
-#[serial]
 async fn test_nested_kvmap_basic() {
     let ctx = TestContext::new().await;
 
@@ -19,7 +18,6 @@ async fn test_nested_kvmap_basic() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_nested_kvmap_set_and_get() {
     let ctx = TestContext::new().await;
 
@@ -36,7 +34,6 @@ async fn test_nested_kvmap_set_and_get() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_nested_kvmap_overwrite() {
     let ctx = TestContext::new().await;
 
@@ -51,7 +48,6 @@ async fn test_nested_kvmap_overwrite() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_nested_kvmap_remove() {
     let ctx = TestContext::new().await;
 
@@ -69,7 +65,6 @@ async fn test_nested_kvmap_remove() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_nested_kvmap_multiple_outers() {
     let ctx = TestContext::new().await;
 
@@ -97,7 +92,6 @@ async fn test_nested_kvmap_multiple_outers() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_nested_kvvec_basic() {
     let ctx = TestContext::new().await;
 
@@ -111,7 +105,6 @@ async fn test_nested_kvvec_basic() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_nested_kvvec_push_and_get() {
     let ctx = TestContext::new().await;
 
@@ -130,7 +123,6 @@ async fn test_nested_kvvec_push_and_get() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_nested_kvvec_multiple_outers() {
     let ctx = TestContext::new().await;
 
@@ -154,7 +146,6 @@ async fn test_nested_kvvec_multiple_outers() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_nested_kvbtree_basic() {
     let ctx = TestContext::new().await;
 
@@ -172,7 +163,6 @@ async fn test_nested_kvbtree_basic() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_nested_kvbtree_insert_and_get() {
     let ctx = TestContext::new().await;
 
@@ -194,7 +184,6 @@ async fn test_nested_kvbtree_insert_and_get() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_nested_kvbtree_range_and_last_n() {
     let ctx = TestContext::new().await;
 
@@ -225,7 +214,6 @@ async fn test_nested_kvbtree_range_and_last_n() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_nested_kvbtree_remove() {
     let ctx = TestContext::new().await;
 
@@ -243,7 +231,6 @@ async fn test_nested_kvbtree_remove() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_nested_kvbtree_multiple_outers() {
     let ctx = TestContext::new().await;
 
@@ -267,7 +254,6 @@ async fn test_nested_kvbtree_multiple_outers() {
 }
 
 #[tokio::test]
-#[serial]
 #[ignore]
 async fn test_nested_kvbtree_large_offset_pagination() {
     let ctx = TestContext::new().await;
@@ -312,7 +298,6 @@ async fn test_nested_kvbtree_large_offset_pagination() {
 }
 
 #[tokio::test]
-#[serial]
 #[ignore]
 async fn test_nested_kvbtree_counts_after_remove() {
     let ctx = TestContext::new().await;
@@ -369,7 +354,6 @@ async fn test_nested_kvbtree_counts_after_remove() {
 }
 
 #[tokio::test]
-#[serial]
 #[ignore]
 async fn test_nested_kvbtree_ascending_entries() {
     let ctx = TestContext::new().await;
@@ -419,7 +403,6 @@ async fn test_nested_kvbtree_ascending_entries() {
 }
 
 #[tokio::test]
-#[serial]
 #[ignore]
 async fn test_nested_kvbtree_ascending_after_remove() {
     let ctx = TestContext::new().await;
@@ -476,7 +459,6 @@ async fn test_nested_kvbtree_ascending_after_remove() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_nested_kvvecbtree_basic() {
     let ctx = TestContext::new().await;
 
@@ -492,7 +474,6 @@ async fn test_nested_kvvecbtree_basic() {
 }
 
 #[tokio::test]
-#[serial]
 #[ignore]
 async fn test_nested_kvvecbtree_push_and_get() {
     let ctx = TestContext::new().await;
@@ -526,7 +507,6 @@ async fn test_nested_kvvecbtree_push_and_get() {
 }
 
 #[tokio::test]
-#[serial]
 #[ignore]
 async fn test_nested_kvvecbtree_last_n() {
     let ctx = TestContext::new().await;
@@ -554,7 +534,6 @@ async fn test_nested_kvvecbtree_last_n() {
 }
 
 #[tokio::test]
-#[serial]
 #[ignore]
 async fn test_nested_kvvecbtree_delete() {
     let ctx = TestContext::new().await;
@@ -586,7 +565,6 @@ async fn test_nested_kvvecbtree_delete() {
 }
 
 #[tokio::test]
-#[serial]
 #[ignore]
 async fn test_nested_kvvecbtree_multiple_outers() {
     let ctx = TestContext::new().await;

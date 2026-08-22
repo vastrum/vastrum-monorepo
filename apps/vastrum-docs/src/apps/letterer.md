@@ -2,10 +2,6 @@
 
 [Letterer](https://yozq5azfm26qi3vceclwz57fg2727yhqi6ccha5khhnp2uepqj7a.vastrum.net)
 
-Letterer is a heavily vibecoded prototype of a decentralized Google Docs.
-
-It is unclear how viable Letterer would be in production.
-
 Letterer supports
 -   Creating documents and saving them to Vastrum
 -   Sharing documents with others by sharing a invite link.
@@ -65,16 +61,5 @@ impl Contract {
     }
 }
 ```
-
-The current key constraint of Letterer is that everytime a document is saved the complete content is uploaded, to increase upload efficiency some kind of incremental diff upload scheme could be added, this way you only upload the difference from the last save which could reduce blockspace load.
-
-Another problem is of course the blockspace usage, for Letterer to be practical write only writes would need to be implemented.
-
-Also to be a credible alternative to Google Docs good account email recovery would need to be implemented.
-
-
-Interesting things to potentially add
-- Google Sheets analogue
-- Google Slides analogue
 
 [Letterer on Gitter](https://yts27rvo7ppzq5rrjyavmfwecrbyc5ksldmitiggycetgh6zguoa.vastrum.net/repo/vastrum/tree/apps/letterer)

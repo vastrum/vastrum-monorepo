@@ -12,5 +12,4 @@ tokio = { version = "1.49.0", features = ["full", "tracing"] }
 
 [dev-dependencies]
 headless_chrome = "1.0.21"
-serial_test = "3"
 

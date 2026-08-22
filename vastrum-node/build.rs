@@ -1,3 +1,5 @@
+use vastrum_asset_embed::{EmbedRequest, generate};
+
 fn main() {
     //always rebuild web-client to ensure all changes are up to date always
     println!("cargo:rerun-if-changed=ALWAYS_REBUILD");
@@ -14,4 +16,10 @@ fn main() {
         .status()
         .expect("failed to run npm build in web-client/");
     assert!(status.success(), "web-client npm build failed");
+
+    generate(EmbedRequest {
+        folder: "../web-client/app/dist",
+        static_name: "WEB_CLIENT_ASSETS",
+        out_file: "web_client_assets.rs",
+    });
 }

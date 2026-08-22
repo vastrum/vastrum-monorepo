@@ -174,8 +174,8 @@ fn serve_static_asset(state: &AppState, path: &str, accepts_brotli: bool) -> Opt
                 .into_response(),
         )
     } else {
-        let content = webclient_builder::WebClientAssets::get(path)?;
-        Some(([(header::CONTENT_TYPE, mime.clone())], content.data.into_owned()).into_response())
+        let content = embedded_assets::embedded_asset(path)?;
+        Some(([(header::CONTENT_TYPE, mime.clone())], content.data.to_vec()).into_response())
     }
 }
 
@@ -190,6 +190,7 @@ struct AppState {
     webclient: webclient_builder::WebClient,
 }
 
+use super::embedded_assets;
 use super::webclient_builder;
 use crate::{
     consensus::validator_state_machine::EpochState,

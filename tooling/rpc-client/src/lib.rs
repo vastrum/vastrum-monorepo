@@ -7,12 +7,6 @@ pub trait RpcProvider: Sized {
 
     fn get_key_value(&self, key: String) -> impl Future<Output = Option<Vec<u8>>>;
 
-    fn get_key_value_at_height(
-        &self,
-        key: String,
-        height: u64,
-    ) -> impl Future<Output = Option<Vec<u8>>>;
-
     fn get_latest_block_height(&self) -> impl Future<Output = Option<u64>>;
 
     fn get_tx_hash_inclusion_state(

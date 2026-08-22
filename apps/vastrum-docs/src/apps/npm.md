@@ -59,10 +59,3 @@ async fn upload_package(package_name: String, package_bytes: Vec<u8>, private_ke
     client.update_package(package_name, package_bytes).await;
 }
 ```
-
-
-You would probably need some form of moderation and curation of malicious packages and typo squatting, could go fully uncontrolled, or could try to onboard current package repositories and expose certain moderation functionalities.
-
-Would probably also want some way to track downloads or someway to determine the legitimacy of packages instead of assigning same trust score to all packages.
-
-Would also probably want to split uploads up into multiple smaller transactions to allow for packages greater than current transaction size limit of 4 MB.

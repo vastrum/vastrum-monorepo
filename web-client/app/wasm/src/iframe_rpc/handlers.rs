@@ -1,6 +1,6 @@
 pub async fn handle_get_key_value(params: GetKeyValueRequest) -> Result<GetKeyValueResponse> {
     let site_id = get_current_site_id()?;
-    let rpc_response = get_key_value_with_height(site_id, params.key, params.height).await?;
+    let rpc_response = get_key_value(site_id, params.key).await?;
     Ok(GetKeyValueResponse { value: rpc_response.value })
 }
 
@@ -80,7 +80,7 @@ pub async fn update_current_path(params: UpdateCurrentPath) -> Result<UpdateCurr
 
 use crate::crypto::keystore;
 use crate::helios::worker::send_eth_rpc_to_worker;
-use crate::networking::rpc::get_key_value_with_height;
+use crate::networking::rpc::get_key_value;
 use crate::networking::rpc::get_latest_block_height;
 use crate::networking::rpc::get_tx_hash_inclusion_state;
 use crate::networking::rpc::submit_authenticated_call;

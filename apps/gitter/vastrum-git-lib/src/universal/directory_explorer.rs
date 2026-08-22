@@ -1,5 +1,5 @@
-#[derive(Serialize, Debug, Clone, PartialEq, Eq, Tsify)]
-#[tsify(into_wasm_abi)]
+#[derive(Serialize, Debug, Clone, PartialEq, Eq, TsType)]
+#[ts(into_wasm_abi)]
 pub struct ExplorerEntry {
     pub name: String,
     pub is_directory: bool,
@@ -52,19 +52,17 @@ use crate::{
 };
 use gix_hash::ObjectId;
 use serde::Serialize;
-use tsify::Tsify;
+use vastrum_ts_macros::TsType;
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::native::upload::push_to_repo;
     use crate::testing::test_helpers::{TestContext, TestRepoBuilder};
-    use serial_test::serial;
     use std::str::FromStr;
     use vastrum_rpc_client::SentTxBehavior;
 
     #[tokio::test]
-    #[serial]
     async fn test_directory_explorer() {
         let ctx = TestContext::new().await;
         let contract = &ctx.contract;

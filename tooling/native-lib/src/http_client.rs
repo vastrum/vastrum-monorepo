@@ -142,9 +142,8 @@ impl NativeHttpClient {
         &self,
         site_id: Sha256Digest,
         key: String,
-        height: Option<u64>,
     ) -> Result<GetKeyValueResult, HttpError> {
-        let payload = GetKeyValuePayload { key, site_id, height_lock: height };
+        let payload = GetKeyValuePayload { key, site_id };
         let url = format!("{}/getkeyvalue/", self.base_url);
         Ok(self
             .client
@@ -158,25 +157,7 @@ impl NativeHttpClient {
     }
 
     pub async fn get_key_value(&self, site_id: Sha256Digest, key: String) -> Option<Vec<u8>> {
-        self.get_key_value_with_height(site_id, key, None).await
-    }
-
-    pub async fn get_key_value_at_height(
-        &self,
-        site_id: Sha256Digest,
-        key: String,
-        height: u64,
-    ) -> Option<Vec<u8>> {
-        self.get_key_value_with_height(site_id, key, Some(height)).await
-    }
-
-    async fn get_key_value_with_height(
-        &self,
-        site_id: Sha256Digest,
-        key: String,
-        height: Option<u64>,
-    ) -> Option<Vec<u8>> {
-        let payload = GetKeyValuePayload { key, site_id, height_lock: height };
+        let payload = GetKeyValuePayload { key, site_id };
         let url = format!("{}/getkeyvalue/", self.base_url);
 
         let result = self

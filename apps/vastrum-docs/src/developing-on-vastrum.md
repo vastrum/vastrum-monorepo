@@ -1,59 +1,31 @@
 # Developing On Vastrum
 
-If you want to develop a website on Vastrum there are two scaffolds available.
+To develop on Vastrum you need to install Rust and Node first, then you will need to install the Vastrum node to locally test your website. 
 
+There are two scaffolds available to start a new project, these scaffolds will setup a basic frontend and backend along with a deployment script.
 
-## Install CLI and dependencies first
+## 1. Install dependencies
+
 
 Install [Rust](https://rustup.rs)
 
 Install [Node.js](https://nodejs.org)
 
+## 2. Install Vastrum to locally run a Vastrum node to deploy websites on
 ```bash
 curl -sSf https://raw.githubusercontent.com/vastrum/vastrum-monorepo/HEAD/tooling/cli/install.sh | sh
+```
+```bash
 rustup target add wasm32-unknown-unknown
+```
+```bash
 cargo install wasm-pack
 ```
-    
-## Site Scaffold
 
-This scaffolds
+## 3. Scaffold a new site
 
--   React frontend + embedded Rust WASM frontend to communicate with backend contract
--   Rust WASM smart contract backend
--   ABI crate to generate bindings for smart contract
--   Deploy crate to deploy site
-
-Used for developing websites.
-
+### Regular websites such as forums
     vastrum-cli init <name> --template site                                       
 
-
-## ETH dApp scaffold
-
-This scaffold is intended for developing DeFi frontends.
--   React frontend + viem
--   Rust smart contract + deploy + ABI crate 
-    -   Only used in order to deploy the frontend, you only have to care about the react frontend
-
-The EIP-1193 provider can be used with other libraries than viem also.
-
+### DeFi applications
     vastrum-cli init <name> --template eth_dapp   
-
-
-
-
-## Testing
-
-Currently cannot deploy anything to protonet, however can locally deploy and test applications.
-
-    vastrum-cli run-dev
-
-## Vibe coding
-
-If you want to try vibe coding something or you want to use LLMs to help with your coding, download the vastrum-monorepo and try to modify an app. The LLM works much better when it can directly inspect all library code such as vastrum-node, native-lib and runtime-lib.
-
-
-
-----
-*All assets needed by the frontend need to embedded and inlined into a single HTML file, this breaks a lot of common frontend development workflows. You will definitely have problems with this but i am working on a better solution. For now, most of the time you can vibecode a solution for inlining fonts, pictures and other static assets relatively easy.*

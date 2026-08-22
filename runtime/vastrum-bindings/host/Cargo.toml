@@ -4,6 +4,6 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-wasmtime = "42"
+wasmtime = { version = "42", default-features = false, features = ["cranelift", "runtime", "std", "async", "threads", "parallel-compilation", "pooling-allocator"] }
 vastrum-shared-types.workspace = true
 

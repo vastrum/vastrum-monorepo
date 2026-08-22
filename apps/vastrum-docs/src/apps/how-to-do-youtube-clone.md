@@ -12,5 +12,3 @@ However could take a more curated approach to this and have the site administrat
 rely on some kind of curation subscription services where curators rate videos and you follow their recommendations if you like their taste.
 
 Subscriptions to already known channels should also work.
-
-Seems like it could be feasible

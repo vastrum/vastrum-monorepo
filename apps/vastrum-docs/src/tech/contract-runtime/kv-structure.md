@@ -8,7 +8,7 @@ All state in Vastrum is stored in keyvalue storage.
 
 This data is then exposed as a dumb keyvalue API to the client.
 
-There are no view functions or other processing, just raw kv reads.
+There are no view functions or other processing, just raw KV reads.
 
 This makes thing such as state hash merkle tree proof inclusions very simple.
 
@@ -49,7 +49,7 @@ pub fn set(&self, key: &K, value: V)
 pub fn remove(&self, key: &K) 
 ```
 
-KvBtree > a btree implementation using kv db as node storage, allows for ordered lists. This solves the forum bumptime problem.
+KvBtree > a btree implementation using KV DB as node storage, allows for ordered lists. This solves the forum bumptime problem.
  ```rust
 pub fn length(&self) -> u64 
 pub fn is_empty(&self) -> bool 

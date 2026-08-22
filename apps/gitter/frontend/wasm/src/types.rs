@@ -1,9 +1,9 @@
 use vastrum_git_lib::universal::{differ::FileDiff, directory_explorer::ExplorerEntry};
 use serde::Serialize;
-use tsify::Tsify;
+use vastrum_ts_macros::TsType;
 
-#[derive(Serialize, Clone, Debug, Tsify)]
-#[tsify(into_wasm_abi)]
+#[derive(Serialize, Clone, Debug, TsType)]
+#[ts(into_wasm_abi)]
 pub struct GitRepository {
     pub name: String,
     pub description: String,
@@ -12,8 +12,8 @@ pub struct GitRepository {
     pub ssh_key_fingerprint: Option<String>, // "SHA256:<base64-no-pad>" when set
 }
 
-#[derive(Serialize, Clone, Debug, Tsify)]
-#[tsify(into_wasm_abi)]
+#[derive(Serialize, Clone, Debug, TsType)]
+#[ts(into_wasm_abi)]
 pub struct PullRequest {
     pub id: u64,
     pub title: String,
@@ -29,16 +29,16 @@ pub struct PullRequest {
     pub created_at: u64,
 }
 
-#[derive(Serialize, Clone, Debug, Tsify)]
-#[tsify(into_wasm_abi)]
+#[derive(Serialize, Clone, Debug, TsType)]
+#[ts(into_wasm_abi)]
 pub struct PullRequestReply {
     pub content: String,
     pub timestamp: u64,
     pub from: String,
 }
 
-#[derive(Serialize, Clone, Debug, Tsify)]
-#[tsify(into_wasm_abi)]
+#[derive(Serialize, Clone, Debug, TsType)]
+#[ts(into_wasm_abi)]
 pub struct Issue {
     pub id: u64,
     pub title: String,
@@ -48,16 +48,16 @@ pub struct Issue {
     pub reply_count: u64,
 }
 
-#[derive(Serialize, Clone, Debug, Tsify)]
-#[tsify(into_wasm_abi)]
+#[derive(Serialize, Clone, Debug, TsType)]
+#[ts(into_wasm_abi)]
 pub struct IssueReply {
     pub content: String,
     pub timestamp: u64,
     pub from: String,
 }
 
-#[derive(Serialize, Clone, Debug, Tsify)]
-#[tsify(into_wasm_abi)]
+#[derive(Serialize, Clone, Debug, TsType)]
+#[ts(into_wasm_abi)]
 pub struct Discussion {
     pub id: u64,
     pub title: String,
@@ -67,24 +67,24 @@ pub struct Discussion {
     pub reply_count: u64,
 }
 
-#[derive(Serialize, Clone, Debug, Tsify)]
-#[tsify(into_wasm_abi)]
+#[derive(Serialize, Clone, Debug, TsType)]
+#[ts(into_wasm_abi)]
 pub struct DiscussionReply {
     pub content: String,
     pub timestamp: u64,
     pub from: String,
 }
 
-#[derive(Serialize, Clone, Debug, Tsify)]
-#[tsify(into_wasm_abi)]
+#[derive(Serialize, Clone, Debug, TsType)]
+#[ts(into_wasm_abi)]
 pub struct RepoCounts {
     pub issue_count: u64,
     pub pr_count: u64,
     pub discussion_count: u64,
 }
 
-#[derive(Serialize, Tsify)]
-#[tsify(into_wasm_abi)]
+#[derive(Serialize, TsType)]
+#[ts(into_wasm_abi)]
 pub struct GetRepoDetail {
     pub git_repo: GitRepository,
     pub head_commit_author_name: String,
@@ -101,8 +101,8 @@ pub struct GetRepoDetail {
     pub default_branch: String,
 }
 
-#[derive(Serialize, Tsify)]
-#[tsify(into_wasm_abi)]
+#[derive(Serialize, TsType)]
+#[ts(into_wasm_abi)]
 pub enum FrontendMergability {
     CanMerge,
     CannotMergeConflict,
@@ -110,16 +110,16 @@ pub enum FrontendMergability {
     AlreadyMerged,
 }
 
-#[derive(Serialize, Tsify)]
-#[tsify(into_wasm_abi)]
+#[derive(Serialize, TsType)]
+#[ts(into_wasm_abi)]
 pub struct FrontendCommit {
     pub author_name: String,
     pub author_timestamp: u64,
     pub message: String,
 }
 
-#[derive(Serialize, Tsify)]
-#[tsify(into_wasm_abi)]
+#[derive(Serialize, TsType)]
+#[ts(into_wasm_abi)]
 pub struct GetPullRequestDetail {
     pub pull_request: PullRequest,
     pub commits_to_merge: Vec<FrontendCommit>,

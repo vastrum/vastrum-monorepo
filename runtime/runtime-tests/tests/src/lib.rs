@@ -3,14 +3,11 @@ pub use runtime_tests_abi::*;
 #[cfg(test)]
 mod tests {
     use super::*;
-    use serial_test::serial;
 
     mod auth;
     mod batch_db;
-    mod blockchain_indexer;
     mod domain;
     mod kv_delete;
-    mod kv_history;
     mod kvbtree;
     mod kvmap;
     mod kvvec;

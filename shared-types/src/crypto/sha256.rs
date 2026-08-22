@@ -18,9 +18,9 @@ pub fn sha256_hash(data: &[u8]) -> Sha256Digest {
     Hash,
     Serialize,
     Deserialize,
-    Tsify,
+    TsType,
 )]
-#[tsify(into_wasm_abi, from_wasm_abi)]
+#[ts(into_wasm_abi, from_wasm_abi)]
 pub struct Sha256Digest {
     data: [u8; 32],
 }
@@ -69,4 +69,4 @@ use borsh::{BorshDeserialize, BorshSerialize};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::fmt;
-use tsify::Tsify;
+use vastrum_ts_macros::TsType;

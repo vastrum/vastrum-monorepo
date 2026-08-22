@@ -1,7 +1,6 @@
 mod common;
 
 use common::*;
-use serial_test::serial;
 use std::process::Command;
 use tempfile::TempDir;
 use vastrum_git_lib::ContractAbiClient;
@@ -9,7 +8,6 @@ use vastrum_rpc_client::SentTxBehavior;
 use vastrum_shared_types::crypto::ed25519;
 
 #[tokio::test(flavor = "multi_thread")]
-#[serial]
 async fn test_push_main_branch() {
     let shared = ensure_relay().await;
     let contract =
@@ -45,7 +43,6 @@ async fn test_push_main_branch() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-#[serial]
 async fn test_push_first_branch_becomes_default() {
     let shared = ensure_relay().await;
     let contract =
@@ -74,7 +71,6 @@ async fn test_push_first_branch_becomes_default() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-#[serial]
 async fn test_push_multi_branch() {
     let shared = ensure_relay().await;
     let contract =
@@ -121,7 +117,6 @@ async fn test_push_multi_branch() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-#[serial]
 async fn test_push_branch_delete() {
     let shared = ensure_relay().await;
     let contract =
@@ -161,7 +156,6 @@ async fn test_push_branch_delete() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-#[serial]
 async fn test_push_wrong_ssh_key_rejected() {
     let shared = ensure_relay().await;
     let contract =
@@ -202,7 +196,6 @@ async fn test_push_wrong_ssh_key_rejected() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-#[serial]
 async fn test_push_then_clone() {
     let shared = ensure_relay().await;
     let contract =
@@ -252,7 +245,6 @@ async fn test_push_then_clone() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-#[serial]
 async fn test_push_incremental() {
     let shared = ensure_relay().await;
     let contract =
@@ -295,7 +287,6 @@ async fn test_push_incremental() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-#[serial]
 async fn test_push_already_up_to_date() {
     let shared = ensure_relay().await;
     let contract =
@@ -331,7 +322,6 @@ async fn test_push_already_up_to_date() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-#[serial]
 async fn test_clone_multi_branch() {
     let shared = ensure_relay().await;
     let contract =
@@ -384,7 +374,6 @@ async fn test_clone_multi_branch() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-#[serial]
 async fn test_push_no_ssh_key_registered() {
     let shared = ensure_relay().await;
     let contract =
@@ -414,7 +403,6 @@ async fn test_push_no_ssh_key_registered() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-#[serial]
 async fn test_clone_nonexistent_repo() {
     let _ = ensure_relay().await;
 
@@ -428,7 +416,6 @@ async fn test_clone_nonexistent_repo() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-#[serial]
 async fn test_push_nonexistent_repo() {
     let _ = ensure_relay().await;
 
@@ -449,7 +436,6 @@ async fn test_push_nonexistent_repo() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-#[serial]
 async fn test_force_push() {
     let shared = ensure_relay().await;
     let contract =

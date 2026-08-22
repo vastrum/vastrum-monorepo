@@ -36,17 +36,7 @@ pub fn get_latest_block_height(db: &Db) -> GetLatestBlockHeightResponse {
 }
 
 pub fn get_key_value(db: &Db, payload: GetKeyValuePayload) -> GetKeyValueResult {
-    let current_height = db.read_latest_finalized_height();
-    //can only prove current_height -1, if request is above this, then clamp it down to latest provable height
-    let height = match payload.height_lock {
-        Some(h) if h < current_height => h,
-        _ => current_height.saturating_sub(1),
-    };
-
-    let does_not_have_height_in_db = height + KV_RETENTION_WINDOW < current_height;
-    if does_not_have_height_in_db {
-        return GetKeyValueResult::Err(ProvedReadError::OutsideRetentionWindow);
-    }
+    let height = db.read_latest_finalized_height().saturating_sub(1);
 
     match db.read_kv_with_proof(&payload.key, payload.site_id, height) {
         Some((value, state_proof)) => {
@@ -104,7 +94,6 @@ fn resolve_route(db: &Db, site_id: Sha256Digest, path: &str) -> Option<(String, 
 
 use crate::{db::Db, p2p::networking::Networking};
 use vastrum_shared_types::borsh::BorshExt;
-use vastrum_shared_types::limits::KV_RETENTION_WINDOW;
 use vastrum_shared_types::types::storage::PageStorageKey;
 use vastrum_shared_types::{
     crypto::sha256::Sha256Digest,

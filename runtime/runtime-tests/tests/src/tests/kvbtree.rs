@@ -1,7 +1,6 @@
 use super::*;
 
 #[tokio::test]
-#[serial]
 async fn test_kvbtree() {
     let ctx = TestContext::new().await;
 
@@ -73,7 +72,6 @@ async fn test_kvbtree() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_kvbtree_range() {
     let ctx = TestContext::new().await;
 
@@ -115,7 +113,6 @@ async fn test_kvbtree_range() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_kvbtree_descending_entries() {
     let ctx = TestContext::new().await;
 
@@ -148,7 +145,6 @@ async fn test_kvbtree_descending_entries() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_kvbtree_ascending_entries() {
     let ctx = TestContext::new().await;
 
@@ -184,7 +180,6 @@ async fn test_kvbtree_ascending_entries() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_kvbtree_large_insert_and_ordering() {
     let ctx = TestContext::new().await;
 
@@ -228,7 +223,6 @@ async fn test_kvbtree_large_insert_and_ordering() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_kvbtree_large_pagination() {
     let ctx = TestContext::new().await;
 
@@ -289,7 +283,6 @@ async fn test_kvbtree_large_pagination() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_kvbtree_large_delete_and_rebalance() {
     let ctx = TestContext::new().await;
 
@@ -391,7 +384,6 @@ async fn pipeline_removes(client: &ContractAbiClient, keys: impl IntoIterator<It
     }
 }
 #[tokio::test]
-#[serial]
 #[ignore]
 async fn test_kvbtree_stress_1k() {
     let ctx = TestContext::new().await;

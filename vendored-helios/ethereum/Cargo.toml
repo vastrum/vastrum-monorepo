@@ -5,7 +5,6 @@ edition = "2021"
 
 [dependencies]
 # consensus
-alloy-trie = { version = "0.9.1", features = ["ethereum"] }
 tree_hash = "0.10.0"
 revm = { version = "29.0.1", default-features = false, features = [
     "std",
@@ -27,7 +26,7 @@ futures = "0.3.23"
 async-trait = "0.1.57"
 
 # io
-reqwest = { version = "0.12.4", features = ["json", "gzip", "deflate", "zstd", "brotli", "hickory-dns"] }
+reqwest = { version = "0.12.4", default-features = false, features = ["json", "rustls-tls"] }
 
 serde = { version = "1.0.143", features = ["derive"] }
 serde_json = "1.0.85"
@@ -53,12 +52,9 @@ hex = "0.4.3"
 tracing = "0.1.37"
 
 chrono = "0.4.23"
-thiserror = "1.0.37"
-superstruct = "0.7.0"
 
 retri = "0.1.1"
 
-typenum = "1.17.0"
 
 
 # self crates
@@ -67,14 +63,13 @@ helios-core = { path = "../core" }
 helios-consensus-core = { path = "consensus-core" }
 helios-revm-utils = { path = "../revm-utils"  }
 
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+dirs = "5.0.1"
+
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen-futures = "0.4.37"
 getrandom = { version = "0.3.1", features = ["wasm_js"] }
 
-[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-openssl = { version = "0.10", features = ["vendored"] }
-
-dirs = "5.0.1"
 
 [target.wasm32-unknown-unknown.dependencies]
 parking_lot = { version = "0.12.2" }

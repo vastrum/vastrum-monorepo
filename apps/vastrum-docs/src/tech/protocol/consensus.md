@@ -3,17 +3,11 @@
 
 Vastrum uses a variant of the consensus protocol described [here](https://decentralizedthoughts.github.io/2025-06-18-simplex/)
 
-Current testnet deployment is 8 validators (US,AUS,JAP,EU).
-
-
-
 Consensus is implemented in [vastrum-node/src/consensus/validator_state_machine.rs (gitter preview)](https://yts27rvo7ppzq5rrjyavmfwecrbyc5ksldmitiggycetgh6zguoa.vastrum.net/repo/vastrum/tree/vastrum-node/src/consensus/validator_state_machine.rs).
-
-
 
 ## Madsim deterministic testing
 
-I use madsim for deterministic testing of the consensus and P2P, madsim allows you to run "real" P2P test with real nodes + realistic lossy networking conditions with latency.
+Madsim is used for deterministic testing of the consensus and P2P, madsim allows you to run "real" P2P test with real nodes + realistic lossy networking conditions with latency.
 
 Test example
 
@@ -50,13 +44,13 @@ async fn three_live_two_offline_network_does_not_reach_consensus() {
 The greatest benefit is deterministic testing, if any Madsim test fails, you can rerun it with the same seed to exactly reproduce the error conditions. Otherwise it is very common to have flaky errors that are hard to debug "heisenbugs".
 
 
-                                                            
+```                                                         
     context: node=0 "madsim-main", task=4 (spawned at /home/./.cargo/registry/sr 
     c/index.crates.io-1949cf8c6b5b557f/madsim-0.2.34/src/sim/runtime/mod.rs:129:19) 
     note: run with `MADSIM_TEST_SEED=1773259308922493051` environment variable to   
     reproduce this error                                                            
     test minority_partition_halts_then_recovers ... FAILED      
-
+```
 
 
 
@@ -70,23 +64,6 @@ This is an amazing talk about deterministic testing
 
 [Testing a Single-Node, Single Threaded, Distributed System Written in 1985 By Will Wilson](https://www.youtube.com/watch?v=m3HwXlQPCEU)
 
-
-The Commonware blog is also pretty good
-
-[Commonware Runtime](https://commonware.xyz/blogs/commonware-runtime)
-
-
-
-Link to madsim Github
-
-[Madsim (Github)](https://github.com/madsim-rs/madsim)
-
-
 Madsim testing code inside vastrum-node
 
 [vastrum-node/tests/sim_consensus.rs](https://yts27rvo7ppzq5rrjyavmfwecrbyc5ksldmitiggycetgh6zguoa.vastrum.net/repo/vastrum/tree/vastrum-node/tests/sim_consensus.rs)
-
-
----
-
-*I based most of the sync implementation on Commonwares simplex implementation [commonware-consensus docs](https://docs.rs/commonware-consensus/latest/commonware_consensus/simplex/index.html)*

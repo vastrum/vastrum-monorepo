@@ -1,7 +1,6 @@
 use super::*;
 
 #[tokio::test]
-#[serial]
 async fn test_kvmap_set_and_get() {
     let ctx = TestContext::new().await;
 
@@ -20,7 +19,6 @@ async fn test_kvmap_set_and_get() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_kvmap_overwrite() {
     let ctx = TestContext::new().await;
 
@@ -38,7 +36,6 @@ async fn test_kvmap_overwrite() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_kvmap_remove() {
     let ctx = TestContext::new().await;
 
@@ -69,7 +66,6 @@ async fn test_kvmap_remove() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_kvmap_edge_values() {
     let ctx = TestContext::new().await;
 
@@ -84,7 +80,6 @@ async fn test_kvmap_edge_values() {
 }
 
 #[tokio::test]
-#[serial]
 #[ignore]
 async fn test_kvmap_bulk_insert() {
     let ctx = TestContext::new().await;

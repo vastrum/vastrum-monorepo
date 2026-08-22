@@ -4,9 +4,7 @@ members = [
     "core",
     "ethereum",
     "ethereum/consensus-core",
-    "helios-ts",
-    "helios-tests"
-    #"tests/test-utils",      
+    "revm-utils",
 ]
 resolver = "2"
 

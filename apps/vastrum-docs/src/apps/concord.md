@@ -2,27 +2,9 @@
 
 [Concord](https://x647757zpbejyzxcw7ruqcju32otdmi7vphrg36vhhzglkjccaqq.vastrum.net)
 
-Concord is a heavily vibecoded attempt at creating a credible decentralized alternative to Discord.
-
-
-
-I believe it is possible to achieve feature parity with Discord, some of the remaining features needed for that
-- Revokable invite links
-    - Limited amount of joined users per invite link
-- Good application level anti spam tooling
-- P2P voice chat without leaking IP (would have to go outside blockchain for this)
-    -   Video probably also
-    -   Streaming desktop also
-- Good moderation tools
-- Good account recovery ux (ie email recovery)
-- Rich embeddings in messages (pictures, videos, pdfs)
-- Native desktop/mobile application
-    
+Concord is a prototype for a decentralized version of Discord.
 
 ## How it works
-
-This is parts of the contract for Concord.
-
 
 ```rust
 #[contract_state]
@@ -101,20 +83,6 @@ struct Channel {
     messages: KvVecBTree<u64, ChannelMessage>,
 }
 ```
-
-
-Concord has a lot of half baked vibecoded features like member lists and similar
-
-Anybody can "join" a server there is no onchain checks, the only hard checks is having access to the private key so you can actually decrypt and see the messages in the server
-
-The notification systems is also pretty bad and hacked so that users get notifications from messages. This adds quite a bit of complexity to the contract.
-
-There is most probably better ways of doing all of these, but it is mostly a proof of concept. The primary goal was to emulate as many of Discord features as possible, even when it did not make sense to do so in a smart contract context.
-
-
-
-
-
 
 ## Specific implementation details
 

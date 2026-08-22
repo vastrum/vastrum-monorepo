@@ -3,7 +3,6 @@ use std::time::Duration;
 use tokio::time::sleep;
 
 #[tokio::test]
-#[serial]
 async fn test_kvvecbtree_create_and_get() {
     let ctx = TestContext::new().await;
 
@@ -31,7 +30,6 @@ async fn test_kvvecbtree_create_and_get() {
 }
 
 #[tokio::test]
-#[serial]
 #[ignore]
 async fn test_kvvecbtree_ordering_and_pagination() {
     let ctx = TestContext::new().await;
@@ -94,7 +92,6 @@ async fn test_kvvecbtree_ordering_and_pagination() {
 }
 
 #[tokio::test]
-#[serial]
 #[ignore]
 async fn test_kvvecbtree_update_bumps_to_top() {
     let ctx = TestContext::new().await;
@@ -124,7 +121,6 @@ async fn test_kvvecbtree_update_bumps_to_top() {
 }
 
 #[tokio::test]
-#[serial]
 #[ignore]
 async fn test_kvvecbtree_multiple_updates() {
     let ctx = TestContext::new().await;
@@ -152,7 +148,6 @@ async fn test_kvvecbtree_multiple_updates() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_kvvecbtree_update_nonexistent() {
     let ctx = TestContext::new().await;
 
@@ -167,7 +162,6 @@ async fn test_kvvecbtree_update_nonexistent() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_kvvecbtree_remove() {
     let ctx = TestContext::new().await;
 
@@ -186,7 +180,6 @@ async fn test_kvvecbtree_remove() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_kvvecbtree_duplicate_timestamps() {
     let ctx = TestContext::new().await;
 
@@ -202,7 +195,6 @@ async fn test_kvvecbtree_duplicate_timestamps() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_kvvecbtree_empty_fields() {
     let ctx = TestContext::new().await;
 
@@ -216,7 +208,6 @@ async fn test_kvvecbtree_empty_fields() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_kvvecbtree_remove_and_reinsert() {
     let ctx = TestContext::new().await;
 
@@ -244,7 +235,6 @@ async fn test_kvvecbtree_remove_and_reinsert() {
 }
 
 #[tokio::test]
-#[serial]
 #[ignore]
 async fn test_kvvecbtree_remove_middle_ordering() {
     let ctx = TestContext::new().await;

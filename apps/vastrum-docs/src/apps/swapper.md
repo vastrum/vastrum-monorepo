@@ -84,8 +84,8 @@ Currently the Vastrum RPC node handles RPC requests by proxying them to an exter
 11. Helios verifies the responses and returns the data to web-client
 12. Web-client uses postMessage() to send back the response for the RPC request to Swapper
 ---
--   The random RPC node is selected from a bootstrap list embedded in web-client (In future could be read from onchain registry)
--   The genesis validator set is also embedded in web-client and is used by the web-client to verify state proofs (currently static validator set)
+-   The random RPC node is selected from a bootstrap list embedded in web-client
+-   The genesis validator set is also embedded in web-client and is used by the web-client to verify state proofs
 -   Swapper never has any internet connection or access to anything outside sandboxed iframe, web-client handles all network communication
 
 
@@ -103,29 +103,6 @@ Most of the RPC logic is inside Helios, Vastrum only implements a web-worker for
     -   [vastrum-node/src/rpc/handlers/eth_proxy.rs (gitter preview)](https://yts27rvo7ppzq5rrjyavmfwecrbyc5ksldmitiggycetgh6zguoa.vastrum.net/repo/vastrum/tree/vastrum-node/src/rpc/handlers/eth_proxy.rs)
 
 
-
-## Things that need to be done
-
-
-The goal is that any type of DeFi application could be developed and hosted on vastrum, the key missing features currently.
--   Indexing of event data and aggregation of data into more consumable forms, ETH RPC data alone is not enough for most DeFi applications
--   Universal tokenlist solution
--   Faster sync, currently takes 5 seconds to query new state
-    -   Directly read from contract state storage instead of using view functions
-    -   Make Helios web-worker multithreaded   
--   Incentivized RPC node running by having users mine POW hash to pay for RPC node services (mining subsidized by Vastrum network)
--   Currently you cannot sign or create any transactions, just read data from Ethereum.
-
-
-## Why
-
-The hope is by developing a credible full stack alternative to hosting DeFi frontends you achieve this
--   True decentralization
--   True sovereignty
--   Much easier to deploy a new dApp, deploying the frontend is just like deploying the smart contract
--   No recurring hosting cost and operational complexity, just dev and single deploy and done
--   Smart contracts are currently very hard to censor, it is however very easy to censor frontends. By having the blockchain host the frontend also you achieve full stack censorship resistance.
--   True DAO ownership, DAO ownership has never been credible because the centralized labs always controlled the frontend even if they did not control the smart contract, by having a fully decentralized stack the hope is that you could make a fully functioning credible DAO with actual ownership and control of the protocol
 
 [Swapper on Gitter](https://yts27rvo7ppzq5rrjyavmfwecrbyc5ksldmitiggycetgh6zguoa.vastrum.net/repo/vastrum/tree/apps/swapper)
 

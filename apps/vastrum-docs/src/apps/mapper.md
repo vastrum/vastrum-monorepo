@@ -2,15 +2,9 @@
 
 [Mapper](https://lzdtxcpp6ivwje55o74dugj7f4vie6qzrsp6kybqyi7ofo3yt75q.vastrum.net)
 
-Mapper is a heavily vibecoded prototype of a decentralized Google Maps. 
-
-Why? It is kind of cool i guess. 
-
-
-
 Mapper is based on the OpenStreetMaps data. The map data is split into tiles with (x,y) positions + (z) zoom level.
 
-This actually fits very well into the keyvalue database structure of Vastrum.
+This fits very well into the keyvalue database structure of Vastrum.
 
 You just take every tile for every key (x,y) position and (z) zoom level and write it into a KvMap.
 
@@ -82,7 +76,7 @@ struct MapMetadata {
 }
 ```
 
-For the frontend map UI it is based on the mapbox-gl. Basically somehow mapbox-gl is monkeypatched to intercept tile requests and send them to the Vastrum smartcontract instead of the regular source of http fetching. I do not understand how this works, but it seems to work.
+For the frontend map UI it is based on the mapbox-gl.
 
 Frontend WASM reading a tile from the smart contract.
 ```rust
@@ -94,20 +88,5 @@ pub async fn get_tile(x: u8, y: u32, z: u32) -> Vec<u8> {
     return state.tiles.get(&coord).await.unwrap_or_default();
 }
 ```
-
-
-For now only monaco is supported as the worldwide dataset is roughly 70 GB.
-
-## Open questions for mapper
-- How to do POI listings? (stores)
-- How to do POI review?
-- How to do GPS for driving + routing?
-
-
-All of these features could probably be done but huge engineering work and maybe some features requires significant amount of work compared to equivalent web2 solution.
-
-
-## Other cool ideas
-- Some kind of half baked 2017 ico scam idea such as crowd sourced map data but for real
 
 [Mapper on Gitter](https://yts27rvo7ppzq5rrjyavmfwecrbyc5ksldmitiggycetgh6zguoa.vastrum.net/repo/vastrum/tree/apps/mapper)

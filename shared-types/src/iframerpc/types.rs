@@ -78,8 +78,6 @@ pub struct DecryptMessageResponse {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct GetKeyValueRequest {
     pub key: String,
-    #[serde(default)]
-    pub height: Option<u64>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]

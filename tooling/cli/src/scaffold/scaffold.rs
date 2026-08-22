@@ -1,15 +1,12 @@
-use rust_embed::RustEmbed;
 use std::path::Path;
 
 #[cfg(not(madsim))]
-#[derive(RustEmbed)]
-#[folder = "scaffolds/site/"]
-struct SiteTemplate;
+use vastrum_asset_embed::EmbeddedAsset;
 
 #[cfg(not(madsim))]
-#[derive(RustEmbed)]
-#[folder = "scaffolds/eth_dapp/"]
-struct EthDappTemplate;
+include!(concat!(env!("OUT_DIR"), "/site_template.rs"));
+#[cfg(not(madsim))]
+include!(concat!(env!("OUT_DIR"), "/eth_dapp_template.rs"));
 
 pub fn initialize_new_project(name: String, template: String) {
     if !name.chars().next().map_or(false, |c| c.is_ascii_lowercase()) {
@@ -31,8 +28,8 @@ pub fn initialize_new_project(name: String, template: String) {
 
     #[cfg(not(madsim))]
     match template.as_str() {
-        "site" => extract_template::<SiteTemplate>(target, &name, &name_cap),
-        "eth_dapp" => extract_template::<EthDappTemplate>(target, &name, &name_cap),
+        "site" => extract_template(SITE_TEMPLATE, target, &name, &name_cap),
+        "eth_dapp" => extract_template(ETH_DAPP_TEMPLATE, target, &name, &name_cap),
         _ => {
             eprintln!("Error: unknown template '{}'. Use 'site' or 'eth_dapp'", template);
             return;
@@ -56,11 +53,10 @@ pub fn initialize_new_project(name: String, template: String) {
 }
 
 #[cfg(not(madsim))]
-fn extract_template<T: RustEmbed>(target_dir: &Path, name: &str, name_cap: &str) {
+fn extract_template(template: &[EmbeddedAsset], target_dir: &Path, name: &str, name_cap: &str) {
     let name_underscore = name.replace('-', "_");
-    for file_path in T::iter() {
-        let content = T::get(&file_path).unwrap();
-        let content_str = std::str::from_utf8(content.data.as_ref()).unwrap();
+    for asset in template {
+        let content_str = std::str::from_utf8(asset.data).unwrap();
         let processed = content_str
             .replace("{{name_underscore}}", &name_underscore)
             .replace("{{name}}", name)
@@ -68,12 +64,10 @@ fn extract_template<T: RustEmbed>(target_dir: &Path, name: &str, name_cap: &str)
             .replace("{{git_repo}}", "https://github.com/vastrum/vastrum-monorepo")
             .replace("{{react_lib}}", "^0.1.0");
 
-        // RustEmbed skips dotfiles by default, have to replace dot_ with .
+        // Dotfiles are not embedded, so templates ship them as dot_gitignore.
         // Cargo_toml avoids Cargo parsing template files in git checkouts
-        let out_name = file_path
-            .as_ref()
-            .replace("dot_gitignore", ".gitignore")
-            .replace("Cargo_toml", "Cargo.toml");
+        let out_name =
+            asset.path.replace("dot_gitignore", ".gitignore").replace("Cargo_toml", "Cargo.toml");
         let out_path = target_dir.join(&out_name);
         std::fs::create_dir_all(out_path.parent().unwrap()).unwrap();
         std::fs::write(&out_path, processed).unwrap();

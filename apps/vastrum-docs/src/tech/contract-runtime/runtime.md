@@ -1,15 +1,14 @@
 # Runtime
 
+The contract runtime exposes the following host functions:
 
-The contract runtime exposes these host functions
+- **`message_sender()`** - the account which sent the transactions, intended for #[authenticated] functions who need to authenticate actions based on sender
+- **`block_time()`** - returns the current block timestamp
+- **`register_static_route()`** - registers HTML for the site at a given route
+- **`kv_insert()` / `kv_get()`** - read and write to the sites key-value store
+- **`log()`** - For logging
 
-message_sender, the account which sent the transactions, intended for #[authenticated] functions who need to authenticate actions based on sender.
 
-
-register_static_route, register html for website at a route, "" is the catchall route where all page requests fallback to.
-
-
-kv_insert and kv_get, for reading and writing to the sitekv database backed by RocksDB
 
 ```rust
 impl HostRuntime for HostState {

@@ -3,7 +3,6 @@ use vastrum_native_lib::NativeHttpClient;
 use vastrum_native_lib::deployers::deploy::register_domain;
 
 #[tokio::test]
-#[serial]
 async fn test_resolve_domain() {
     let ctx = TestContext::new().await;
     let http = NativeHttpClient::new();
@@ -15,7 +14,6 @@ async fn test_resolve_domain() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_resolve_nonexistent_domain() {
     ensure_network();
     let http = NativeHttpClient::new();
@@ -25,7 +23,6 @@ async fn test_resolve_nonexistent_domain() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_domain_first_wins() {
     let ctx_a = TestContext::new().await;
     let ctx_b = TestContext::new().await;
@@ -39,7 +36,6 @@ async fn test_domain_first_wins() {
 }
 
 // #[tokio::test]
-// #[serial]
 //TODO: renable test when this rejection is added
 // async fn test_reject_domain_that_looks_like_site_id() {
 //     let ctx = TestContext::new().await;

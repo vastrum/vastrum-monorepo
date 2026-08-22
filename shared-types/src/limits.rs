@@ -9,7 +9,7 @@ pub const MAX_WASM_MODULE_SIZE: usize = 1 * 1024 * 1024; //1mb
 pub const MAX_WASM_MEMORY: usize = 256 * 1024 * 1024; //256mb
 pub const MAX_WASM_HOST_BUFFER_SIZE: u32 = MAX_WASM_MEMORY as u32;
 
-pub const KV_RETENTION_WINDOW: u64 = 64;
+pub const KV_RETENTION_WINDOW: u64 = 2;
 
 pub const MAX_RPC_BODY_SIZE: usize = 4 * 1024 * 1024; //4mb
 

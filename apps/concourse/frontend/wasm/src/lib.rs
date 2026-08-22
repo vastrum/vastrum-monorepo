@@ -78,7 +78,7 @@ pub async fn get_post(category_name: String, post_id: u64) -> Option<JSPost> {
 
 use serde::Serialize;
 use vastrum_shared_types::crypto::sha256::Sha256Digest;
-use tsify::Tsify;
+use vastrum_ts_macros::TsType;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
@@ -136,8 +136,8 @@ pub async fn get_my_public_key() -> String {
     return public_key_hex;
 }
 
-#[derive(Serialize, Tsify)]
-#[tsify(into_wasm_abi)]
+#[derive(Serialize, TsType)]
+#[ts(into_wasm_abi)]
 pub struct JSPost {
     pub id: u64,
     pub from: String,
@@ -147,8 +147,8 @@ pub struct JSPost {
     pub last_bump_time: u64,
     pub reply_count: u64,
 }
-#[derive(Serialize, Tsify)]
-#[tsify(into_wasm_abi)]
+#[derive(Serialize, TsType)]
+#[ts(into_wasm_abi)]
 pub struct JSPostReply {
     pub id: u64,
     pub from: String,
@@ -156,8 +156,8 @@ pub struct JSPostReply {
     pub timestamp: u64,
 }
 
-#[derive(Serialize, Tsify)]
-#[tsify(into_wasm_abi)]
+#[derive(Serialize, TsType)]
+#[ts(into_wasm_abi)]
 pub struct JSCategory {
     pub name: String,
     pub description: String,

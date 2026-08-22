@@ -2,7 +2,6 @@ use super::*;
 use std::collections::BTreeMap;
 
 #[tokio::test]
-#[serial]
 async fn test_f32_roundtrip() {
     let ctx = TestContext::new().await;
 
@@ -26,7 +25,6 @@ async fn test_f32_roundtrip() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_f64_roundtrip() {
     let ctx = TestContext::new().await;
 
@@ -47,7 +45,6 @@ async fn test_f64_roundtrip() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_float_infinities() {
     let ctx = TestContext::new().await;
 
@@ -65,7 +62,6 @@ async fn test_float_infinities() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_btreeset_string() {
     let ctx = TestContext::new().await;
     assert!(ctx.client.state().await.tag_set.is_empty());
@@ -91,7 +87,6 @@ async fn test_btreeset_string() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_btreeset_u64_ordered() {
     let ctx = TestContext::new().await;
 
@@ -110,7 +105,6 @@ async fn test_btreeset_u64_ordered() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_bool_roundtrip() {
     let ctx = TestContext::new().await;
     assert!(!ctx.client.state().await.primitives.flag_bool);
@@ -123,7 +117,6 @@ async fn test_bool_roundtrip() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_u8_boundaries() {
     let ctx = TestContext::new().await;
 
@@ -138,7 +131,6 @@ async fn test_u8_boundaries() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_u16_boundaries() {
     let ctx = TestContext::new().await;
 
@@ -150,7 +142,6 @@ async fn test_u16_boundaries() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_u128_boundaries() {
     let ctx = TestContext::new().await;
 
@@ -166,7 +157,6 @@ async fn test_u128_boundaries() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_i8_boundaries() {
     let ctx = TestContext::new().await;
 
@@ -184,7 +174,6 @@ async fn test_i8_boundaries() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_i16_boundaries() {
     let ctx = TestContext::new().await;
 
@@ -196,7 +185,6 @@ async fn test_i16_boundaries() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_i32_boundaries() {
     let ctx = TestContext::new().await;
 
@@ -208,7 +196,6 @@ async fn test_i32_boundaries() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_i64_boundaries() {
     let ctx = TestContext::new().await;
 
@@ -220,7 +207,6 @@ async fn test_i64_boundaries() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_i128_boundaries() {
     let ctx = TestContext::new().await;
 
@@ -232,7 +218,6 @@ async fn test_i128_boundaries() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_option_string_roundtrip() {
     let ctx = TestContext::new().await;
     assert!(ctx.client.state().await.primitives.maybe_string.is_none());
@@ -248,7 +233,6 @@ async fn test_option_string_roundtrip() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_option_int_roundtrip() {
     let ctx = TestContext::new().await;
     assert!(ctx.client.state().await.primitives.maybe_int.is_none());
@@ -264,7 +248,6 @@ async fn test_option_int_roundtrip() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_vec_u32_roundtrip() {
     let ctx = TestContext::new().await;
     assert!(ctx.client.state().await.primitives.numbers.is_empty());
@@ -281,7 +264,6 @@ async fn test_vec_u32_roundtrip() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_fixed_array_roundtrip() {
     let ctx = TestContext::new().await;
     assert_eq!(ctx.client.state().await.primitives.fixed_bytes, [0u8; 4]);
@@ -294,7 +276,6 @@ async fn test_fixed_array_roundtrip() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_tuple_roundtrip() {
     let ctx = TestContext::new().await;
     assert_eq!(ctx.client.state().await.primitives.pair, (0u64, String::new()));
@@ -307,7 +288,6 @@ async fn test_tuple_roundtrip() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_btreemap_roundtrip() {
     let ctx = TestContext::new().await;
     assert!(ctx.client.state().await.primitives.btree.is_empty());

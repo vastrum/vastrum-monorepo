@@ -1,13 +1,5 @@
 pub async fn get_key_value(site_id: Sha256Digest, key: String) -> Result<GetKeyValueResponse> {
-    get_key_value_with_height(site_id, key, None).await
-}
-
-pub async fn get_key_value_with_height(
-    site_id: Sha256Digest,
-    key: String,
-    height: Option<u64>,
-) -> Result<GetKeyValueResponse> {
-    let payload = GetKeyValuePayload { site_id, key: key.clone(), height_lock: height };
+    let payload = GetKeyValuePayload { site_id, key: key.clone() };
     let resp = send_request("getkeyvalue", &payload.encode()).await?;
     let result: GetKeyValueResult = borsh::from_slice(&resp)?;
     let response = match result {
@@ -168,8 +160,8 @@ pub async fn get_page(page_path: String, site_identifier: String) -> Result<JSPa
     return Ok(JSPageResponse { content, site_id });
 }
 
-#[derive(Deserialize, Serialize, Tsify)]
-#[tsify(into_wasm_abi)]
+#[derive(Deserialize, Serialize, TsType)]
+#[ts(into_wasm_abi)]
 pub struct JSPageResponse {
     pub content: String,
     pub site_id: String,
@@ -188,7 +180,7 @@ use crate::{
 };
 use gloo_timers::future::TimeoutFuture;
 use serde::{Deserialize, Serialize};
-use tsify::Tsify;
+use vastrum_ts_macros::TsType;
 use vastrum_shared_types::limits::VALIDITY_WINDOW;
 use vastrum_shared_types::proof_verification;
 use vastrum_shared_types::{

@@ -1,8 +1,8 @@
 use borsh::{BorshDeserialize, BorshSerialize};
-use vastrum_rpc_client::RpcClient;
 use std::fmt;
 use std::io;
 use std::sync::Arc;
+use vastrum_rpc_client::RpcClient;
 
 use crate::{KvBTree, KvVec};
 
@@ -63,48 +63,34 @@ where
     }
 
     pub async fn range(&self, start: &S, end: &S) -> Vec<V> {
-        let height = self.index.get_height().await;
         let from = IndexKey { sort_key: start.clone(), id: 0 };
         let to = IndexKey { sort_key: end.clone(), id: 0 };
-        let entries = self.index.range_at(&from, &to, height).await;
-        let mut futs = Vec::new();
-        for (_, id) in &entries {
-            futs.push(self.vec.get_at_height(*id, height));
-        }
-        let fetched = futures::future::join_all(futs).await;
-        let mut results = Vec::new();
-        for entry in fetched {
-            results.push(entry.unwrap().value);
-        }
-        return results;
+        let entries = self.index.range(&from, &to).await;
+        return self.load_values(&entries).await;
     }
 
     pub async fn get_descending_entries(&self, count: usize, offset: usize) -> Vec<V> {
-        let height = self.index.get_height().await;
-        let entries = self.index.get_descending_entries_at(count, offset, height).await;
-        let mut futs = Vec::new();
-        for (_, id) in &entries {
-            futs.push(self.vec.get_at_height(*id, height));
-        }
-        let fetched = futures::future::join_all(futs).await;
-        let mut results = Vec::new();
-        for entry in fetched {
-            results.push(entry.unwrap().value);
-        }
-        return results;
+        let entries = self.index.get_descending_entries(count, offset).await;
+        return self.load_values(&entries).await;
     }
 
     pub async fn get_ascending_entries(&self, count: usize, offset: usize) -> Vec<V> {
-        let height = self.index.get_height().await;
-        let entries = self.index.get_ascending_entries_at(count, offset, height).await;
-        let mut futs = Vec::new();
-        for (_, id) in &entries {
-            futs.push(self.vec.get_at_height(*id, height));
+        let entries = self.index.get_ascending_entries(count, offset).await;
+        return self.load_values(&entries).await;
+    }
+
+    async fn load_values(&self, entries: &[(IndexKey<S>, u64)]) -> Vec<V> {
+        let mut pending = Vec::with_capacity(entries.len());
+        for (_, id) in entries {
+            pending.push(self.vec.get(*id));
         }
-        let fetched = futures::future::join_all(futs).await;
+        let fetched = futures::future::join_all(pending).await;
+
         let mut results = Vec::new();
         for entry in fetched {
-            results.push(entry.unwrap().value);
+            if let Some(entry) = entry {
+                results.push(entry.value);
+            }
         }
         return results;
     }

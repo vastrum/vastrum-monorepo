@@ -252,16 +252,16 @@ fn create_file_diff(path: impl Into<String>, status: FileStatus, old: &str, new:
     return file_diff;
 }
 
-#[derive(Serialize, Debug, Clone, PartialEq, Eq, Tsify)]
-#[tsify(into_wasm_abi)]
+#[derive(Serialize, Debug, Clone, PartialEq, Eq, TsType)]
+#[ts(into_wasm_abi)]
 pub enum DiffLineType {
     Add,
     Remove,
     Context,
 }
 
-#[derive(Serialize, Debug, Clone, PartialEq, Eq, Tsify)]
-#[tsify(into_wasm_abi)]
+#[derive(Serialize, Debug, Clone, PartialEq, Eq, TsType)]
+#[ts(into_wasm_abi)]
 pub struct DiffLine {
     pub line_type: DiffLineType,
     pub content: String,
@@ -281,8 +281,8 @@ impl DiffLine {
     }
 }
 
-#[derive(Serialize, Debug, Clone, PartialEq, Tsify)]
-#[tsify(into_wasm_abi)]
+#[derive(Serialize, Debug, Clone, PartialEq, TsType)]
+#[ts(into_wasm_abi)]
 pub enum FileStatus {
     Added,
     Modified,
@@ -290,8 +290,8 @@ pub enum FileStatus {
     ModifiedBinary,
 }
 
-#[derive(Serialize, Debug, Clone, Tsify)]
-#[tsify(into_wasm_abi)]
+#[derive(Serialize, Debug, Clone, TsType)]
+#[ts(into_wasm_abi)]
 pub struct FileDiff {
     pub path: String,
     pub status: FileStatus,
@@ -314,7 +314,7 @@ use gix_hash::ObjectId;
 use gix_object::tree::EntryMode;
 use serde::Serialize;
 use std::collections::HashSet;
-use tsify::Tsify;
+use vastrum_ts_macros::TsType;
 
 #[cfg(test)]
 mod tests {
@@ -322,11 +322,9 @@ mod tests {
     use crate::native::upload::push_to_repo;
     use crate::testing::test_helpers::{TestContext, TestRepoBuilder};
 
-    use serial_test::serial;
     use vastrum_rpc_client::SentTxBehavior;
 
     #[tokio::test]
-    #[serial]
     async fn test_diff_repos_added_file() {
         let ctx = TestContext::new().await;
 
@@ -357,7 +355,6 @@ mod tests {
     }
 
     #[tokio::test]
-    #[serial]
     async fn test_diff_repos_modified_file() {
         let ctx = TestContext::new().await;
 
@@ -386,7 +383,6 @@ mod tests {
     }
 
     #[tokio::test]
-    #[serial]
     async fn test_diff_repos_deleted_file() {
         let ctx = TestContext::new().await;
 
@@ -416,7 +412,6 @@ mod tests {
     }
 
     #[tokio::test]
-    #[serial]
     async fn test_diff_commits_multiple_changes() {
         let ctx = TestContext::new().await;
 
@@ -457,7 +452,6 @@ mod tests {
     }
 
     #[tokio::test]
-    #[serial]
     async fn test_diff_nested_directories() {
         let ctx = TestContext::new().await;
 
@@ -546,7 +540,6 @@ mod tests {
     }
 
     #[tokio::test]
-    #[serial]
     async fn test_diff_binary_file() {
         let ctx = TestContext::new().await;
 

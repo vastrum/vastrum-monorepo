@@ -1,7 +1,6 @@
 use super::*;
 
 #[tokio::test]
-#[serial]
 async fn test_kv_delete_basic() {
     let ctx = TestContext::new().await;
 
@@ -19,7 +18,6 @@ async fn test_kv_delete_basic() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_kv_delete_nonexistent() {
     let ctx = TestContext::new().await;
 
@@ -30,7 +28,6 @@ async fn test_kv_delete_nonexistent() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_kv_insert_after_delete() {
     let ctx = TestContext::new().await;
 

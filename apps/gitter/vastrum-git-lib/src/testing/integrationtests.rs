@@ -2,10 +2,8 @@
 mod tests {
     use crate::testing::test_helpers::TestContext;
     use vastrum_rpc_client::SentTxBehavior;
-    use serial_test::serial;
 
     #[tokio::test]
-    #[serial]
     async fn test_issues() {
         let ctx = TestContext::new().await;
 
@@ -40,7 +38,6 @@ mod tests {
     }
 
     #[tokio::test]
-    #[serial]
     async fn test_pull_requests() {
         let ctx = TestContext::new().await;
 
@@ -82,7 +79,6 @@ mod tests {
     }
 
     #[tokio::test]
-    #[serial]
     async fn test_forks() {
         let ctx = TestContext::new().await;
 

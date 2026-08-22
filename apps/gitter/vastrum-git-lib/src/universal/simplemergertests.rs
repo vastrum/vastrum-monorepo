@@ -1,7 +1,6 @@
 #[cfg(test)]
 mod tests {
     use vastrum_rpc_client::SentTxBehavior;
-    use serial_test::serial;
 
     use crate::ContractAbiClient;
     use crate::native::upload::push_to_repo;
@@ -15,7 +14,6 @@ mod tests {
     }
 
     #[tokio::test]
-    #[serial]
     async fn test_push_divergent_rejected() {
         let ctx = TestContext::new().await;
 

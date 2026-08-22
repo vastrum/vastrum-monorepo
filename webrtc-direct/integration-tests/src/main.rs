@@ -196,7 +196,6 @@ mod tests {
     }
 
     #[tokio::test]
-    #[serial]
     async fn stress_test_webrtc_direct() {
         let total = Instant::now();
 
@@ -228,7 +227,6 @@ mod tests {
     use axum::routing::get;
     use axum::{Json, Router};
     use headless_chrome::{Browser, LaunchOptions, Tab};
-    use serial_test::serial;
     use tokio::net::TcpListener;
     use tokio::task::spawn_blocking;
     use tokio::time::timeout;

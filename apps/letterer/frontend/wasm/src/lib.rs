@@ -147,8 +147,8 @@ fn now_secs() -> u64 {
     return (js_sys::Date::now() / 1000.0) as u64;
 }
 
-#[derive(Serialize, Tsify)]
-#[tsify(into_wasm_abi)]
+#[derive(Serialize, TsType)]
+#[ts(into_wasm_abi)]
 pub struct JSDocumentMeta {
     pub id: String,
     pub title: String,
@@ -166,5 +166,5 @@ pub use letterer_abi::*;
 use serde::Serialize;
 use vastrum_shared_types::crypto::ed25519::{PrivateKey, PublicKey};
 use vastrum_shared_types::crypto::sha256::Sha256Digest;
-use tsify::Tsify;
+use vastrum_ts_macros::TsType;
 use wasm_bindgen::prelude::*;

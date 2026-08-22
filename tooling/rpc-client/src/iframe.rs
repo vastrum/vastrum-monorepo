@@ -27,14 +27,6 @@ impl RpcProvider for IFrameRpcClient {
         return Some(res.value);
     }
 
-    async fn get_key_value_at_height(&self, key: String, height: u64) -> Option<Vec<u8>> {
-        let res = vastrum_frontend_lib::get_key_value_at_height(key, height).await?;
-        if res.value.is_empty() {
-            return None;
-        }
-        return Some(res.value);
-    }
-
     async fn get_latest_block_height(&self) -> Option<u64> {
         let height = Some(vastrum_frontend_lib::get_latest_block_height().await);
         return height;

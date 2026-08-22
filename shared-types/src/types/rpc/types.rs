@@ -34,7 +34,6 @@ pub struct GetLatestBlockHeightResponse {
 pub struct GetKeyValuePayload {
     pub site_id: Sha256Digest,
     pub key: String,
-    pub height_lock: Option<u64>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
@@ -54,7 +53,6 @@ pub struct GetKeyValueResponse {
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
 pub enum ProvedReadError {
-    OutsideRetentionWindow,
     ProofUnavailable,
     SiteNotFound,
     PageNotFound,

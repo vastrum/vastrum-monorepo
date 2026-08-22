@@ -71,14 +71,4 @@ where
             return crate::with_deser_client(&self.client, || borsh::from_slice(&bytes).ok());
         }
     }
-
-    pub async fn get_at_height(&self, index: u64, height: u64) -> Option<T> {
-        let key = self.element_key(index);
-        let bytes = self.client.get_key_value_at_height(key, height).await?;
-        if bytes.is_empty() {
-            return None;
-        } else {
-            return crate::with_deser_client(&self.client, || borsh::from_slice(&bytes).ok());
-        }
-    }
 }

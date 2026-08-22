@@ -36,25 +36,20 @@ tokio = { version = "1", features = ["rt", "sync", "macros"] }
 
 
 # io
-reqwest = { version = "0.12.4", features = ["json", "gzip", "deflate", "zstd", "brotli", "hickory-dns"] }
+reqwest = { version = "0.12.4", default-features = false, features = ["json", "rustls-tls"] }
 
 serde = { version = "1.0.143", features = ["derive"] }
-serde_json = "1.0.85"
 
 
 # misc
 eyre = "0.6.8"
 
-hex = "0.4.3"
-
 tracing = "0.1.37"
 
 thiserror = "1.0.37"
-url = { version = "2.5.2", features = ["serde"] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 jsonrpsee = { version = "0.19.0", features = ["full"] }
-openssl = { version = "0.10", features = ["vendored"] }
 
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]

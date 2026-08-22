@@ -1,7 +1,6 @@
 use super::*;
 
 #[tokio::test]
-#[serial]
 async fn test_counter() {
     let ctx = TestContext::new().await;
     let state = ctx.client.state().await;
@@ -23,7 +22,6 @@ async fn test_counter() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_message() {
     let ctx = TestContext::new().await;
     let state = ctx.client.state().await;
@@ -44,7 +42,6 @@ async fn test_message() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_nested_struct() {
     let ctx = TestContext::new().await;
 
@@ -67,7 +64,6 @@ async fn test_nested_struct() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_enum_works() {
     let ctx = TestContext::new().await;
 
@@ -81,7 +77,6 @@ async fn test_enum_works() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_timestamps_sensible() {
     let ctx = TestContext::new().await;
 
@@ -99,7 +94,6 @@ async fn test_timestamps_sensible() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_runtime_functions() {
     let ctx = TestContext::new().await;
 
@@ -108,7 +102,6 @@ async fn test_runtime_functions() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_constructor() {
     ensure_network();
     let client = ContractAbiClient::deploy(

@@ -1,7 +1,6 @@
 use super::*;
 
 #[tokio::test]
-#[serial]
 async fn test_authentication() {
     let ctx = TestContext::new().await;
     let expected_pub_key = ctx.account_key.public_key();

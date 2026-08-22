@@ -1,10 +1,5 @@
 pub async fn get_key_value(key: String) -> Option<GetKeyValueResponse> {
-    let params = GetKeyValueRequest { key, height: None };
-    send_request(params, RpcMethod::GetKeyValue).await.ok()
-}
-
-pub async fn get_key_value_at_height(key: String, height: u64) -> Option<GetKeyValueResponse> {
-    let params = GetKeyValueRequest { key, height: Some(height) };
+    let params = GetKeyValueRequest { key };
     send_request(params, RpcMethod::GetKeyValue).await.ok()
 }
 

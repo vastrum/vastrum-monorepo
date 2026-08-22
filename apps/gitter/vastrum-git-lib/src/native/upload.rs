@@ -241,7 +241,7 @@ use gix::{
     object::tree::EntryKind,
     objs::{Blob, Object},
 };
-use indicatif::ProgressBar;
+use crate::native::progress::ProgressBar;
 use std::collections::HashSet;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use vastrum_rpc_client::SentTxBehavior;
@@ -250,11 +250,9 @@ use vastrum_shared_types::limits::MAX_TRANSACTION_SIZE;
 #[cfg(test)]
 mod tests {
     use gix::{ObjectId, Repository};
-    use serial_test::serial;
     use vastrum_rpc_client::SentTxBehavior;
 
     #[tokio::test]
-    #[serial]
     async fn test_repo_creation() {
         let ctx = TestContext::new().await;
 
@@ -285,7 +283,6 @@ mod tests {
     }
 
     #[tokio::test]
-    #[serial]
     async fn test_repo_roundtrip_push_clone() {
         let ctx = TestContext::new().await;
         let repo_name = "repo1";

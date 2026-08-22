@@ -207,6 +207,6 @@ use gix::{
     worktree,
 };
 use gix_object::CommitRef;
-use indicatif::ProgressBar;
+use crate::native::progress::ProgressBar;
 use std::path::Path;
 use std::sync::atomic::AtomicBool;

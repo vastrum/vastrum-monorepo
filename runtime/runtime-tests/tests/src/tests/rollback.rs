@@ -1,7 +1,6 @@
 use super::*;
 
 #[tokio::test]
-#[serial]
 async fn test_panic_reverts_state() {
     let ctx = TestContext::new().await;
 
@@ -26,7 +25,6 @@ async fn test_panic_reverts_state() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_contract_works_after_panic() {
     let ctx = TestContext::new().await;
 

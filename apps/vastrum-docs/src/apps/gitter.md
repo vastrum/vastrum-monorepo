@@ -2,7 +2,7 @@
 
 [Gitter example-repo](https://yts27rvo7ppzq5rrjyavmfwecrbyc5ksldmitiggycetgh6zguoa.vastrum.net/repo/example-repo)
 
-Gitter is a prototype for a decentralized Github.
+Gitter is a prototype for a decentralized Git forge, an alternative to Github.
 
 <video width="100%" controls>
   <source src="gitter-demo.mp4" type="video/mp4">
@@ -231,7 +231,7 @@ The file explorer, the pull request diff viewer and the in browser pull request 
 
 ### File explorer
 
-The in browser file explorer was feasible to implement because of how git is structured.
+The in browser file explorer was feasible to implement because of how Git is structured.
 
 Git basically has a "tree" object for every directory.
 
@@ -300,17 +300,5 @@ vastrum-cli vastrum-git-push <REPO_NAME> <PRIVATE_KEY>
 
 
 -   You can get the private_key from the wallet modal, the video at the top of the page shows how to get your private key.
-
-
-
-### Remaining features needed
-
-#### Protocol level blockers
--   Need web2 like email account recovery, otherwise very easy to lose access to your repo
--   Need write only writes in order to allow for very cheap git object uploads
-
-#### Interesting to do
--   Encrypted private repos, maybe without leaking metadata also?
--   SHA-1 is not secure, basically fine for now though
 
 [Gitter on Gitter](https://yts27rvo7ppzq5rrjyavmfwecrbyc5ksldmitiggycetgh6zguoa.vastrum.net/repo/vastrum/tree/apps/gitter) | [vastrum-monorepo on Gitter](https://yts27rvo7ppzq5rrjyavmfwecrbyc5ksldmitiggycetgh6zguoa.vastrum.net/repo/vastrum)

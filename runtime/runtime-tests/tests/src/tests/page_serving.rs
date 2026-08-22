@@ -3,7 +3,6 @@ use vastrum_native_lib::NativeHttpClient;
 use vastrum_shared_types::compression::brotli::brotli_compress_html;
 
 #[tokio::test]
-#[serial]
 async fn test_add_page_serves_html() {
     let ctx = TestContext::new().await;
 
@@ -20,7 +19,6 @@ async fn test_add_page_serves_html() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_add_page_named_route() {
     let ctx = TestContext::new().await;
 
@@ -37,7 +35,6 @@ async fn test_add_page_named_route() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_add_page_1mb_html() {
     let ctx = TestContext::new().await;
 
@@ -55,7 +52,6 @@ async fn test_add_page_1mb_html() {
 }
 /*
 #[tokio::test]
-#[serial]
 async fn test_add_page_10mb_html() {
     let ctx = TestContext::new().await;
 

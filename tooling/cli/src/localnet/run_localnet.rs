@@ -55,10 +55,33 @@ fn start_browser() {
     tokio::spawn(async {
         tokio::time::sleep(Duration::from_millis(100)).await;
         let url = format!("http://index.localhost:{HTTP_RPC_PORT}");
-        if let Err(e) = webbrowser::open(&url) {
+        if let Err(e) = open_in_browser(&url) {
             eprintln!("Failed to open browser: {e}");
         }
     });
+}
+
+fn open_in_browser(url: &str) -> std::io::Result<()> {
+    let mut command = if cfg!(target_os = "macos") {
+        let mut c = Command::new("open");
+        c.arg(url);
+        c
+    } else if cfg!(target_os = "windows") {
+        let mut c = Command::new("cmd");
+        c.args(["/C", "start", "", url]);
+        c
+    } else {
+        let mut c = Command::new("xdg-open");
+        c.arg(url);
+        c
+    };
+    let status =
+        command.stdin(Stdio::null()).stdout(Stdio::null()).stderr(Stdio::null()).status()?;
+    if status.success() {
+        Ok(())
+    } else {
+        Err(std::io::Error::other(format!("browser launcher exited with {status}")))
+    }
 }
 
 fn valid_directory() -> bool {
@@ -72,7 +95,11 @@ async fn wait_for_rpc_server() {
     }
 }
 
-use std::{net::SocketAddr, path::Path};
+use std::{
+    net::SocketAddr,
+    path::Path,
+    process::{Command, Stdio},
+};
 use tokio::time::{Duration, sleep};
 use vastrum_node::start_localnet;
 use vastrum_shared_types::ports::HTTP_RPC_PORT;

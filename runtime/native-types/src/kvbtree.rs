@@ -1,3 +1,5 @@
+const MAX_STALE_RETRIES: usize = 4;
+
 pub struct KvBTree<K, V> {
     nonce: u64,
     client: Arc<RpcClient>,
@@ -35,388 +37,283 @@ where
         return Self { nonce, client, _phantom: PhantomData };
     }
 
-    async fn load_inner(&self, height: u64) -> KvBTreeInner<K, V> {
-        return KvBTreeInner::load(self.nonce, self.client.clone(), height).await;
-    }
-
-    pub async fn get_height(&self) -> u64 {
-        return self.client.get_latest_block_height().await.unwrap_or(0);
-    }
-
     pub async fn length(&self) -> u64 {
-        let locked_height = self.get_height().await;
-        let inner = self.load_inner(locked_height).await;
-        return inner.len;
+        return self.load_directory().await.len;
     }
 
     pub async fn is_empty(&self) -> bool {
-        let locked_height = self.get_height().await;
-        let inner = self.load_inner(locked_height).await;
-        return inner.root_node_id.is_none();
+        return self.load_directory().await.leaves.is_empty();
     }
 
     pub async fn get(&self, key: &K) -> Option<V> {
-        let locked_height = self.get_height().await;
-        let inner = self.load_inner(locked_height).await;
-        return inner.get(key).await;
+        for _ in 0..MAX_STALE_RETRIES {
+            let directory = self.load_directory().await;
+            let index = locate(&directory, key)?;
+
+            let Some(leaf) = self.load_leaf(directory.leaves[index].leaf_id).await else {
+                continue;
+            };
+            if !leaf_owns(&leaf, key) {
+                continue;
+            }
+            let entry_index = leaf.entries.binary_search_by(|entry| entry.key.cmp(key)).ok()?;
+            return Some(leaf.entries[entry_index].value.clone());
+        }
+        return None;
     }
 
     pub async fn first(&self) -> Option<(K, V)> {
-        let locked_height = self.get_height().await;
-        let inner = self.load_inner(locked_height).await;
-        return inner.first().await;
+        return self.get_ascending_entries(1, 0).await.pop();
     }
 
     pub async fn last(&self) -> Option<(K, V)> {
-        let locked_height = self.get_height().await;
-        let inner = self.load_inner(locked_height).await;
-        return inner.last().await;
+        return self.get_descending_entries(1, 0).await.pop();
     }
 
     pub async fn range(&self, start: &K, end: &K) -> Vec<(K, V)> {
-        let locked_height = self.get_height().await;
-        let inner = self.load_inner(locked_height).await;
-        return inner.range(start, end).await;
+        for _ in 0..MAX_STALE_RETRIES {
+            let directory = self.load_directory().await;
+            let Some(first_index) = locate(&directory, start) else { return Vec::new() };
+
+            let mut selected = Vec::new();
+            for index in first_index..directory.leaves.len() {
+                let leaf_starts_past_the_range = match &directory.leaves[index].low {
+                    Some(low) => low >= end,
+                    None => false,
+                };
+                if leaf_starts_past_the_range {
+                    break;
+                }
+                selected.push(index);
+            }
+
+            let Some(leaves) = self.fetch_leaves(&directory, &selected).await else { continue };
+
+            let mut results = Vec::new();
+            for leaf in leaves {
+                for entry in leaf.entries {
+                    if entry.key < *start {
+                        continue;
+                    }
+                    if entry.key >= *end {
+                        return results;
+                    }
+                    results.push((entry.key, entry.value));
+                }
+            }
+            return results;
+        }
+        return Vec::new();
     }
 
     pub async fn get_ascending_entries(&self, count: usize, offset: usize) -> Vec<(K, V)> {
-        let locked_height = self.get_height().await;
-        let inner = self.load_inner(locked_height).await;
-        return inner.get_ascending_entries(count, offset).await;
+        return self.paginate(count, offset, false).await;
     }
 
     pub async fn get_descending_entries(&self, count: usize, offset: usize) -> Vec<(K, V)> {
-        let locked_height = self.get_height().await;
-        let inner = self.load_inner(locked_height).await;
-        return inner.get_descending_entries(count, offset).await;
-    }
-
-    /*
-       pub async fn get_at(&self, key: &K, height: u64) -> Option<V> {
-           self.load_inner(height).await.get(key).await
-       }
-
-       pub async fn first_at(&self, height: u64) -> Option<(K, V)> {
-           self.load_inner(height).await.first().await
-       }
-
-       pub async fn last_at(&self, height: u64) -> Option<(K, V)> {
-           self.load_inner(height).await.last().await
-       }
-    */
-    pub async fn range_at(&self, start: &K, end: &K, height: u64) -> Vec<(K, V)> {
-        let inner = self.load_inner(height).await;
-        return inner.range(start, end).await;
-    }
-
-    pub async fn get_ascending_entries_at(
-        &self,
-        count: usize,
-        offset: usize,
-        height: u64,
-    ) -> Vec<(K, V)> {
-        let inner = self.load_inner(height).await;
-        return inner.get_ascending_entries(count, offset).await;
-    }
-
-    pub async fn get_descending_entries_at(
-        &self,
-        count: usize,
-        offset: usize,
-        height: u64,
-    ) -> Vec<(K, V)> {
-        let inner = self.load_inner(height).await;
-        return inner.get_descending_entries(count, offset).await;
+        return self.paginate(count, offset, true).await;
     }
 }
 
-struct KvBTreeInner<K, V> {
-    nonce: u64,
-    root_node_id: Option<u64>,
-    len: u64,
-    locked_height: u64,
-    client: Arc<RpcClient>,
-    _phantom: PhantomData<(K, V)>,
-}
-
-impl<K, V> KvBTreeInner<K, V>
+impl<K, V> KvBTree<K, V>
 where
     K: Ord + Clone + BorshDeserialize,
     V: Clone + BorshDeserialize,
 {
-    async fn load(nonce: u64, client: Arc<RpcClient>, locked_height: u64) -> Self {
-        let key = Self::meta_key(nonce);
-        let (root, len) = match client.get_key_value_at_height(key, locked_height).await {
-            Some(bytes) if !bytes.is_empty() => {
-                let mut reader = &bytes[..];
-                let _nonce = u64::deserialize_reader(&mut reader).unwrap();
-                let root_node_id = Option::<u64>::deserialize_reader(&mut reader).unwrap();
-                let _next_id = u64::deserialize_reader(&mut reader).unwrap();
-                let len = u64::deserialize_reader(&mut reader).unwrap();
-                (root_node_id, len)
-            }
-            _ => (None, 0),
+    fn directory_key(&self) -> String {
+        return format!("n.{}.meta", self.nonce);
+    }
+
+    fn leaf_key(&self, leaf_id: u64) -> String {
+        return format!("n.{}.leaf.{}", self.nonce, leaf_id);
+    }
+
+    async fn load_directory(&self) -> Directory<K> {
+        let empty = Directory { next_leaf_id: 0, len: 0, leaves: Vec::new() };
+        let Some(bytes) = self.client.get_key_value(self.directory_key()).await else {
+            return empty;
         };
-        return Self {
-            nonce,
-            root_node_id: root,
-            len,
-            locked_height,
-            client,
-            _phantom: PhantomData,
-        };
+        if bytes.is_empty() {
+            return empty;
+        }
+        let decoded = crate::with_deser_client(&self.client, || borsh::from_slice(&bytes).ok());
+        return decoded.unwrap_or(empty);
     }
 
-    fn meta_key(nonce: u64) -> String {
-        return format!("n.{}.meta", nonce);
-    }
-
-    fn node_key(&self, id: u64) -> String {
-        return format!("n.{}.node.{}", self.nonce, id);
-    }
-
-    async fn get_node(&self, id: u64) -> Option<Node<K, V>> {
-        let key = self.node_key(id);
-        let bytes = self.client.get_key_value_at_height(key, self.locked_height).await?;
+    async fn load_leaf(&self, leaf_id: u64) -> Option<LeafNode<K, V>> {
+        let bytes = self.client.get_key_value(self.leaf_key(leaf_id)).await?;
         if bytes.is_empty() {
             return None;
-        } else {
-            return crate::with_deser_client(&self.client, || borsh::from_slice(&bytes).ok());
         }
+        return crate::with_deser_client(&self.client, || borsh::from_slice(&bytes).ok());
     }
 
-    async fn get_leaf(&self, id: u64) -> LeafNode<K, V> {
-        let Node::Leaf(leaf) = self.get_node(id).await.unwrap() else { unreachable!() };
-        return leaf;
+    async fn fetch_leaves(
+        &self,
+        directory: &Directory<K>,
+        selected: &[usize],
+    ) -> Option<Vec<LeafNode<K, V>>> {
+        let mut pending = Vec::with_capacity(selected.len());
+        for index in selected {
+            pending.push(self.load_leaf(directory.leaves[*index].leaf_id));
+        }
+        let fetched = futures::future::join_all(pending).await;
+
+        let mut leaves = Vec::with_capacity(fetched.len());
+        for (position, leaf) in fetched.into_iter().enumerate() {
+            let leaf = leaf?;
+            let index = selected[position];
+            let expected_low = directory.leaves[index].low.as_ref();
+            let expected_high = match directory.leaves.get(index + 1) {
+                Some(next) => next.low.as_ref(),
+                None => None,
+            };
+            if leaf.low.as_ref() != expected_low || leaf.high.as_ref() != expected_high {
+                return None;
+            }
+            leaves.push(leaf);
+        }
+        return Some(leaves);
     }
 
-    async fn find_leaf(&self, key: &K) -> Option<LeafNode<K, V>> {
-        let mut current_id = self.root_node_id?;
+    async fn paginate(&self, count: usize, offset: usize, descending: bool) -> Vec<(K, V)> {
+        if count == 0 {
+            return Vec::new();
+        }
 
-        loop {
-            match self.get_node(current_id).await.unwrap() {
-                Node::Leaf(leaf) => return Some(leaf),
-                Node::Internal(internal) => {
-                    let mut child_idx = 0;
-                    for node_key in &internal.keys {
-                        if key < node_key {
-                            break;
+        for _ in 0..MAX_STALE_RETRIES {
+            let directory = self.load_directory().await;
+            let plan = plan_pagination(&directory, count, offset, descending);
+            if plan.selected.is_empty() {
+                return Vec::new();
+            }
+
+            let Some(leaves) = self.fetch_leaves(&directory, &plan.selected).await else {
+                continue;
+            };
+
+            let mut results = Vec::with_capacity(count);
+            let mut skip = plan.skip_in_first_leaf;
+            for leaf in leaves {
+                if descending {
+                    for entry in leaf.entries.into_iter().rev().skip(skip) {
+                        results.push((entry.key, entry.value));
+                        if results.len() >= count {
+                            return results;
                         }
-                        child_idx += 1;
                     }
-                    current_id = internal.children[child_idx];
-                }
-            }
-        }
-    }
-
-    async fn descend_to_position(&self, node: Node<K, V>, pos: u64) -> (LeafNode<K, V>, usize) {
-        let mut current_node = node;
-        let mut position_in_subtree = pos;
-        loop {
-            match current_node {
-                Node::Leaf(leaf) => return (leaf, position_in_subtree as usize),
-                Node::Internal(ref internal) => {
-                    let mut i = 0;
-                    while position_in_subtree >= internal.counts[i] {
-                        position_in_subtree -= internal.counts[i];
-                        i += 1;
+                } else {
+                    for entry in leaf.entries.into_iter().skip(skip) {
+                        results.push((entry.key, entry.value));
+                        if results.len() >= count {
+                            return results;
+                        }
                     }
-                    current_node = self.get_node(internal.children[i]).await.unwrap();
                 }
-            }
-        }
-    }
-
-    async fn get(&self, key: &K) -> Option<V> {
-        let leaf = self.find_leaf(key).await?;
-        let idx = leaf.keys.binary_search(key).ok()?;
-        return Some(leaf.values[idx].clone());
-    }
-
-    async fn first(&self) -> Option<(K, V)> {
-        let mut current_id = self.root_node_id?;
-
-        loop {
-            match self.get_node(current_id).await.unwrap() {
-                Node::Leaf(leaf) => {
-                    return Some((leaf.keys[0].clone(), leaf.values[0].clone()));
-                }
-                Node::Internal(node) => {
-                    current_id = node.children[0];
-                }
-            }
-        }
-    }
-
-    async fn last(&self) -> Option<(K, V)> {
-        let mut current_id = self.root_node_id?;
-
-        loop {
-            match self.get_node(current_id).await.unwrap() {
-                Node::Leaf(leaf) => {
-                    let i = leaf.keys.len() - 1;
-                    return Some((leaf.keys[i].clone(), leaf.values[i].clone()));
-                }
-                Node::Internal(node) => {
-                    current_id = *node.children.last().unwrap();
-                }
-            }
-        }
-    }
-
-    async fn range(&self, start: &K, end: &K) -> Vec<(K, V)> {
-        let mut results = Vec::new();
-
-        let Some(mut leaf) = self.find_leaf(start).await else {
-            return results;
-        };
-
-        loop {
-            for (k, v) in leaf.keys.iter().zip(leaf.values.iter()) {
-                if k >= end {
-                    return results;
-                }
-                if k >= start {
-                    results.push((k.clone(), v.clone()));
-                }
-            }
-
-            let Some(next_id) = leaf.next else { break };
-            leaf = self.get_leaf(next_id).await;
-        }
-
-        return results;
-    }
-
-    async fn get_ascending_entries(&self, count: usize, offset: usize) -> Vec<(K, V)> {
-        if count == 0 {
-            return Vec::new();
-        }
-
-        let Some(root_id) = self.root_node_id else {
-            return Vec::new();
-        };
-        let root_node = self.get_node(root_id).await.unwrap();
-
-        if let Node::Leaf(ref leaf) = root_node {
-            let mut results = Vec::new();
-            for (k, v) in leaf.keys.iter().zip(leaf.values.iter()).skip(offset).take(count) {
-                results.push((k.clone(), v.clone()));
+                skip = 0;
             }
             return results;
         }
-
-        let Node::Internal(ref root) = root_node else { unreachable!() };
-        let total_entries: u64 = root.counts.iter().sum();
-
-        if offset as u64 >= total_entries {
-            return Vec::new();
-        }
-
-        let target = offset as u64;
-        let (leaf, pos_in_leaf) = self.descend_to_position(root_node, target).await;
-
-        let mut results = Vec::new();
-
-        for i in pos_in_leaf..leaf.keys.len() {
-            results.push((leaf.keys[i].clone(), leaf.values[i].clone()));
-            if results.len() >= count {
-                return results;
-            }
-        }
-
-        let mut next_id = leaf.next;
-        while let Some(id) = next_id {
-            let leaf = self.get_leaf(id).await;
-            for (k, v) in leaf.keys.into_iter().zip(leaf.values.into_iter()) {
-                results.push((k, v));
-                if results.len() >= count {
-                    return results;
-                }
-            }
-            next_id = leaf.next;
-        }
-
-        return results;
-    }
-
-    async fn get_descending_entries(&self, count: usize, offset: usize) -> Vec<(K, V)> {
-        if count == 0 {
-            return Vec::new();
-        }
-
-        let Some(root_id) = self.root_node_id else {
-            return Vec::new();
-        };
-        let root_node = self.get_node(root_id).await.unwrap();
-
-        if let Node::Leaf(ref leaf) = root_node {
-            let mut results = Vec::new();
-            for (k, v) in leaf.keys.iter().zip(leaf.values.iter()).rev().skip(offset).take(count) {
-                results.push((k.clone(), v.clone()));
-            }
-            return results;
-        }
-
-        let Node::Internal(ref root) = root_node else { unreachable!() };
-        let total_entries: u64 = root.counts.iter().sum();
-
-        if offset as u64 >= total_entries {
-            return Vec::new();
-        }
-
-        let target = total_entries - offset as u64 - 1;
-        let (leaf, pos_in_leaf) = self.descend_to_position(root_node, target).await;
-
-        let mut results = Vec::new();
-
-        for i in (0..=pos_in_leaf).rev() {
-            results.push((leaf.keys[i].clone(), leaf.values[i].clone()));
-            if results.len() >= count {
-                return results;
-            }
-        }
-
-        let mut prev_id = leaf.prev;
-        while let Some(id) = prev_id {
-            let leaf = self.get_leaf(id).await;
-            for (k, v) in leaf.keys.into_iter().zip(leaf.values.into_iter()).rev() {
-                results.push((k, v));
-                if results.len() >= count {
-                    return results;
-                }
-            }
-            prev_id = leaf.prev;
-        }
-
-        return results;
+        return Vec::new();
     }
 }
 
-#[derive(Clone, BorshDeserialize)]
-struct InternalNode<K> {
-    keys: Vec<K>,
-    children: Vec<u64>,
-    counts: Vec<u64>,
+struct PaginationPlan {
+    selected: Vec<usize>,
+    skip_in_first_leaf: usize,
 }
 
-#[derive(Clone, BorshDeserialize)]
+#[derive(BorshDeserialize)]
+struct Directory<K> {
+    #[allow(dead_code)]
+    next_leaf_id: u64,
+    len: u64,
+    leaves: Vec<LeafRef<K>>,
+}
+
+#[derive(BorshDeserialize, Clone)]
+struct LeafRef<K> {
+    low: Option<K>,
+    leaf_id: u64,
+    count: u64,
+}
+
+#[derive(BorshDeserialize, Clone)]
 struct LeafNode<K, V> {
-    keys: Vec<K>,
-    values: Vec<V>,
-    prev: Option<u64>,
-    next: Option<u64>,
+    low: Option<K>,
+    high: Option<K>,
+    entries: Vec<LeafEntry<K, V>>,
 }
 
-#[derive(Clone, BorshDeserialize)]
-enum Node<K, V> {
-    Internal(InternalNode<K>),
-    Leaf(LeafNode<K, V>),
+#[derive(BorshDeserialize, Clone)]
+struct LeafEntry<K, V> {
+    key: K,
+    value: V,
 }
+
+fn locate<K: Ord>(directory: &Directory<K>, key: &K) -> Option<usize> {
+    if directory.leaves.is_empty() {
+        return None;
+    }
+    let following = directory.leaves.partition_point(|leaf_ref| match &leaf_ref.low {
+        Some(low) => low <= key,
+        None => true,
+    });
+    return Some(following.saturating_sub(1));
+}
+
+fn leaf_owns<K: Ord, V>(leaf: &LeafNode<K, V>, key: &K) -> bool {
+    if let Some(low) = &leaf.low {
+        if key < low {
+            return false;
+        }
+    }
+    if let Some(high) = &leaf.high {
+        if key >= high {
+            return false;
+        }
+    }
+    return true;
+}
+
+fn plan_pagination<K>(
+    directory: &Directory<K>,
+    count: usize,
+    offset: usize,
+    descending: bool,
+) -> PaginationPlan {
+    let mut plan = PaginationPlan { selected: Vec::new(), skip_in_first_leaf: 0 };
+    let mut skip = offset as u64;
+    let mut wanted = count;
+
+    let mut order: Vec<usize> = (0..directory.leaves.len()).collect();
+    if descending {
+        order.reverse();
+    }
+
+    for index in order {
+        if wanted == 0 {
+            break;
+        }
+        let leaf_count = directory.leaves[index].count;
+        if skip >= leaf_count {
+            skip -= leaf_count;
+            continue;
+        }
+        if plan.selected.is_empty() {
+            plan.skip_in_first_leaf = skip as usize;
+        }
+        let available = (leaf_count - skip) as usize;
+        wanted = wanted.saturating_sub(available);
+        skip = 0;
+        plan.selected.push(index);
+    }
+    return plan;
+}
+
 use borsh::BorshDeserialize;
-use vastrum_rpc_client::{RpcClient, RpcProvider};
 use std::fmt;
 use std::io;
 use std::marker::PhantomData;
 use std::sync::Arc;
+use vastrum_rpc_client::{RpcClient, RpcProvider};

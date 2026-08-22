@@ -334,11 +334,9 @@ mod tests {
     use super::*;
     use crate::native::upload::push_to_repo;
     use crate::testing::test_helpers::{TestContext, TestRepoBuilder};
-    use serial_test::serial;
     use vastrum_rpc_client::SentTxBehavior;
 
     #[tokio::test]
-    #[serial]
     async fn test_merge_operations() {
         let ctx = TestContext::new().await;
 
@@ -426,7 +424,6 @@ mod tests {
     }
 
     #[tokio::test]
-    #[serial]
     async fn test_nested_directory_merge() {
         let ctx = TestContext::new().await;
 
@@ -486,7 +483,6 @@ mod tests {
     }
 
     #[tokio::test]
-    #[serial]
     async fn test_delete_modify_conflict() {
         let ctx = TestContext::new().await;
 

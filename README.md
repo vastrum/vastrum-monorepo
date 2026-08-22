@@ -3,12 +3,19 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE.md)
 [![Release](https://github.com/vastrum/vastrum-monorepo/actions/workflows/release.yml/badge.svg)](https://github.com/vastrum/vastrum-monorepo/actions/workflows/release.yml)
 
+See [documentation](https://xpkeuoccopibhnakya3luhrsphalhnqo2ifmxe65murdjft54n3q.vastrum.net)  for more info.
+
+
 Vastrum is an experimental protocol for hosting decentralized websites and services.
 
 Vastrum enables interactive decentralized websites by having the complete website backend and database executed and hosted by the P2P network. 
 
 You directly connect to the P2P network from your browser using WebRTC, no centralized gateways are used.
- 
+
+
+[![Gitter, a decentralized GitHub, serving the vastrum monorepo from the Vastrum network](apps/vastrum-docs/src/apps/gitter.png)](https://yts27rvo7ppzq5rrjyavmfwecrbyc5ksldmitiggycetgh6zguoa.vastrum.net/repo/vastrum)
+
+[Vastrum repo on Gitter hosted on Vastrum](https://yts27rvo7ppzq5rrjyavmfwecrbyc5ksldmitiggycetgh6zguoa.vastrum.net/repo/vastrum)
 
 ## Live demos
 

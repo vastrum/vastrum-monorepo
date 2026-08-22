@@ -23,6 +23,8 @@ members = [
     "tooling/vastrum-lib-rust-frontend",
     "tooling/react-vastrum-lib/wasm",
     "tooling/cli",
+    "tooling/ts-macros",
+    "tooling/asset-embed",
     "apps/gitter/git-relay",
     "tooling/genesis-tool",
 
@@ -106,6 +108,8 @@ vastrum-bindings-guest = { version = "0.1.0", path = "runtime/vastrum-bindings/g
 vastrum-bindings-host = { version = "0.1.0", path = "runtime/vastrum-bindings/host" }
 vastrum-frontend-lib = { version = "0.1.0", path = "tooling/vastrum-lib-rust-frontend" }
 vastrum-abi = { version = "0.1.0", path = "runtime/vastrum-abi" }
+vastrum-ts-macros = { version = "0.1.0", path = "tooling/ts-macros" }
+vastrum-asset-embed = { version = "0.1.0", path = "tooling/asset-embed" }
 vastrum-node = { version = "1.0.0", path = "vastrum-node" }
 
 [profile.release]

@@ -1,7 +1,6 @@
 use super::*;
 
 #[tokio::test]
-#[serial]
 async fn test_kvvec_push_and_get() {
     let ctx = TestContext::new().await;
 
@@ -30,7 +29,6 @@ async fn test_kvvec_push_and_get() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_kvvec_set_existing() {
     let ctx = TestContext::new().await;
 
@@ -44,7 +42,6 @@ async fn test_kvvec_set_existing() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_kvvec_edge_values() {
     let ctx = TestContext::new().await;
 
@@ -61,7 +58,6 @@ async fn test_kvvec_edge_values() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_kvvec_sequential_indices() {
     let ctx = TestContext::new().await;
 
@@ -78,7 +74,6 @@ async fn test_kvvec_sequential_indices() {
 }
 
 #[tokio::test]
-#[serial]
 async fn test_kvvec_struct() {
     let ctx = TestContext::new().await;
 

@@ -245,13 +245,13 @@ fn cache_bucket(key: String, bucket: Vec<PlaceEntry>) {
     BUCKET_CACHE.with(|c| c.borrow_mut().insert(key, bucket));
 }
 
-#[derive(serde::Serialize, Tsify)]
-#[tsify(into_wasm_abi)]
+#[derive(serde::Serialize, TsType)]
+#[ts(into_wasm_abi)]
 pub struct JsSearchResults {
     pub results: Vec<JsPlace>,
 }
 
-#[derive(serde::Serialize, Tsify)]
+#[derive(serde::Serialize, TsType)]
 pub struct JsPlace {
     pub name: String,
     pub lat: f64,
@@ -280,6 +280,6 @@ async fn contract_state() -> std::rc::Rc<NativeContract> {
 }
 
 pub use mapper_abi::*;
-use tsify::Tsify;
+use vastrum_ts_macros::TsType;
 use vastrum_shared_types::crypto::sha256::Sha256Digest;
 use wasm_bindgen::prelude::*;

@@ -4,7 +4,6 @@ async fn main() {}
 #[cfg(test)]
 mod tests {
     use headless_chrome::{Browser, LaunchOptions, Tab};
-    use serial_test::serial;
     use std::time::{Duration, Instant};
     use vastrum_native_lib::deployers::build::run;
     use vastrum_shared_types::ports::HTTP_RPC_PORT;
@@ -225,7 +224,6 @@ mod tests {
     }
 
     #[tokio::test]
-    #[serial]
     #[ignore]
     async fn test_helios_eth_rpc() {
         let total = Instant::now();
@@ -238,7 +236,6 @@ mod tests {
     }
 
     #[tokio::test]
-    #[serial]
     async fn test_vastrum_iframe_rpc() {
         let total = Instant::now();
         let url = deploy_site("../vastrum-frontend").await;
