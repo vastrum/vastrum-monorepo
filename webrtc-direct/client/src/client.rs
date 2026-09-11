@@ -1,8 +1,9 @@
 pub struct WebRtcClient {
-    _connection: RtcPeerConnection,
+    connection: RtcPeerConnection,
     data_channel: RtcDataChannel,
     _on_message: Closure<dyn FnMut(MessageEvent)>,
     _on_close: Closure<dyn FnMut(web_sys::Event)>,
+    close_signal: mpsc::UnboundedSender<Vec<u8>>,
     receiver: RefCell<mpsc::UnboundedReceiver<Vec<u8>>>,
 }
 
@@ -17,15 +18,17 @@ impl WebRtcClient {
         server_addr: SocketAddr,
         server_fingerprint: Fingerprint,
     ) -> Result<Self, WebRtcError> {
-        let (_connection, data_channel) = Self::handshake(server_addr, server_fingerprint).await?;
+        let (connection, data_channel) = Self::handshake(server_addr, server_fingerprint).await?;
 
-        let (_on_message, _on_close, receiver) = Self::start_listener(&data_channel);
+        let (tx, receiver) = mpsc::unbounded();
+        let (_on_message, _on_close) = Self::start_listener(&data_channel, tx.clone());
 
         Ok(Self {
-            _connection,
+            connection,
             data_channel,
             _on_message,
             _on_close,
+            close_signal: tx,
             receiver: RefCell::new(receiver),
         })
     }
@@ -91,12 +94,8 @@ impl WebRtcClient {
 
     fn start_listener(
         dc: &RtcDataChannel,
-    ) -> (
-        Closure<dyn FnMut(MessageEvent)>,
-        Closure<dyn FnMut(web_sys::Event)>,
-        mpsc::UnboundedReceiver<Vec<u8>>,
-    ) {
-        let (tx, rx) = mpsc::unbounded();
+        tx: mpsc::UnboundedSender<Vec<u8>>,
+    ) -> (Closure<dyn FnMut(MessageEvent)>, Closure<dyn FnMut(web_sys::Event)>) {
         let close_tx = tx.clone();
         let on_message = Closure::wrap(Box::new(move |event: MessageEvent| {
             let Ok(buf) = event.data().dyn_into::<js_sys::ArrayBuffer>() else { return };
@@ -108,7 +107,7 @@ impl WebRtcClient {
         }) as Box<dyn FnMut(web_sys::Event)>);
         dc.set_onmessage(Some(on_message.as_ref().unchecked_ref()));
         dc.set_onclose(Some(on_close.as_ref().unchecked_ref()));
-        (on_message, on_close, rx)
+        (on_message, on_close)
     }
 
     pub async fn recv_raw(&self) -> Option<Vec<u8>> {
@@ -124,7 +123,17 @@ impl WebRtcClient {
     }
 
     pub fn close(&self) {
+        self.data_channel.set_onmessage(None);
+        self.data_channel.set_onclose(None);
         self.data_channel.close();
+        self.connection.close();
+        self.close_signal.close_channel();
+    }
+}
+
+impl Drop for WebRtcClient {
+    fn drop(&mut self) {
+        self.close();
     }
 }
 
@@ -134,7 +143,7 @@ use futures::future;
 use std::cell::RefCell;
 use std::net::SocketAddr;
 use std::rc::Rc;
+use vastrum_webrtc_direct_protocol::{Fingerprint, Ufrag, split_chunks};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::JsFuture;
 use web_sys::{MessageEvent, RtcDataChannel, RtcDataChannelState, RtcPeerConnection};
-use vastrum_webrtc_direct_protocol::{Fingerprint, Ufrag, split_chunks};

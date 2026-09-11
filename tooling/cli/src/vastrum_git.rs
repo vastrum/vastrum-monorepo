@@ -48,20 +48,39 @@ async fn resolve_gitter_site_id() -> Result<Sha256Digest> {
 }
 
 fn new_counter_bar(msg: &str) -> ProgressBar {
-    ProgressBar::new_counter(msg)
+    let pb = ProgressBar::new_spinner();
+    pb.set_style(
+        ProgressStyle::with_template("{spinner:.green} {msg}: {pos} objects [{elapsed_precise}]")
+            .unwrap()
+            .tick_chars("⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"),
+    );
+    pb.set_message(msg.to_string());
+    pb.enable_steady_tick(std::time::Duration::from_millis(100));
+    return pb;
 }
 
 fn new_progress_bar(msg: &str) -> ProgressBar {
-    ProgressBar::new_bar(msg)
+    let pb = ProgressBar::new(0);
+    pb.set_style(
+        ProgressStyle::with_template(
+            "{spinner:.green} {msg} [{bar:30.cyan/blue}] {pos}/{len} [{elapsed_precise}]",
+        )
+        .unwrap()
+        .progress_chars("##-")
+        .tick_chars("⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"),
+    );
+    pb.set_message(msg.to_string());
+    pb.enable_steady_tick(std::time::Duration::from_millis(100));
+    return pb;
 }
 
 use anyhow::{Result, anyhow};
+use indicatif::{ProgressBar, ProgressStyle};
 use vastrum_git_lib::{
     ContractAbiClient,
     config::GITTER_DOMAIN,
     native::{
         clone::clone_repo,
-        progress::ProgressBar,
         upload::{PushOutcome, push_to_repo},
     },
     universal::utils::publickey_is_owner_of_repo,

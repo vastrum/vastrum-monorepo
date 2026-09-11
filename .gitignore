@@ -4,3 +4,5 @@ target-wasm
 /genesis
 /deploy
 *.keys
+temprepodeploy
+chrome.log

@@ -241,7 +241,7 @@ use gix::{
     object::tree::EntryKind,
     objs::{Blob, Object},
 };
-use crate::native::progress::ProgressBar;
+use indicatif::ProgressBar;
 use std::collections::HashSet;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use vastrum_rpc_client::SentTxBehavior;
